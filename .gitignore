@@ -53,3 +53,32 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# --- cub3D específico ---
+
+# Binario final
+cub3D
+
+# Carpeta de objetos
+obj/
+
+# MiniLibX (se clona con make, no se versiona)
+minilibx-linux/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS / Linux basura
+.DS_Store
+Thumbs.db
+
+# Logs y temporales
+*.log
+*.tmp
+
+# Tests propios (opcional, si creas carpeta tests/)
+# tests/output/
