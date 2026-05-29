@@ -16,7 +16,9 @@ INC         = -I ./includes/ \
               -I ./$(MLX_PATH)
 
 SRC_PATH    = sources/
-SRC         = main.c
+SRC         =	main.c \
+				error.c
+
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
 
 OBJ_PATH    = obj/

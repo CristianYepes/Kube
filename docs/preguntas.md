@@ -68,8 +68,14 @@ Si el evaluador hace esto en orden, ¿qué pasa en cada paso?
 
 
 
-HEADER.H
+¿Por qué imprimes los errores a stderr (fd 2) y no a stdout (fd 1)? ¿Qué diferencia hay y por qué importa?"
 
-"Estoy escribiendo un archivo .h en C y me he encontrado con esta línea: enum e_output { SUCCESS, FAILURE, ERR, BREAK, CONTINUE };. Como soy principiante con esto, ¿me puedes explicar de forma muy sencilla (1) qué hace esto por debajo, (2) qué valores toma cada palabra y (3) ponerme un ejemplo corto de cómo se usaría en una función?"
 
-si defino una macro por eje con #define SUCESS 0 CUANDO PONGA 0 ESTOY PONINEDO SUCCES COMO FUNCIONA ESO, EN UN RETURN (0) O CUANDO DE UN ERROR TIPICo wque haces una funcion que si hay error retorne 1 como funciona eso ahi
+Pregunta para defensa
+Quiero que pienses dos cosas mientras esperas:
+1. ¿Por qué imprimes a stderr (fd 2) y no a stdout (fd 1)?
+Esto SIEMPRE cae en defensa. Apunta la respuesta en preguntas.md antes de seguir.
+Pista: piensa en lo que hace un usuario con ./cub3D 2>/tmp/err. ¿Por qué existe esa redirección? ¿Qué problema resuelve separar errores y salida normal?
+2. ¿Por qué tu err_msg devuelve un int?
+Podría ser void. ¿Qué ganas devolviendo int?
+Pista: mira tu propio main.c:

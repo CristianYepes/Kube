@@ -80,5 +80,5 @@ Thumbs.db
 *.log
 *.tmp
 
-# Tests propios (opcional, si creas carpeta tests/)
-# tests/output/
+# PDFs (subject de referencia, no se versiona)
+*.pdf

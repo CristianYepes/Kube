@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 23:22:57 by cristian          #+#    #+#             */
-/*   Updated: 2026/05/24 23:23:41 by cristian         ###   ########.fr       */
+/*   Updated: 2026/05/29 10:47:41 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 
 int	main(int argc, char *argv[])
 {
-	(void)argc;
 	(void)argv;
-	return (0);
+	if (argc != 2)
+		return (err_msg(NULL, ERR_USAGE, FAILURE));
+	return (SUCCESS);
 }
