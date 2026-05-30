@@ -6,7 +6,7 @@
 > - **`roadmap.md`** = el **QUÉ** (arquitectura, structs, funciones, teoría).
 > - **`cronograma.md`** (este) = el **CUÁNDO + ORDEN + ESTADO**.
 
-> **Plan total:** 8 semanas · 17 pasos × 2 personas · 8 hitos · 9 sync points.
+> **Plan total:** 8 semanas · mandatory + 5 bonus oficiales del subject · 7 hitos · 6 sync points. (Mods custom — zombies/niebla/HUD — DESCARTADOS del scope: ver `CLAUDE.md`.)
 
 ---
 
@@ -85,21 +85,11 @@
 | **⭐ M5** | 5 | — | **Hito: MANDATORY COMPLETO ✅ (defendible solo)** | — | ☐ |
 | **S10A** | 5-6 | 👤 A | `bonus/minimap/minimap_render.c` + `minimap_image.c` | F7 | ☐ |
 | **S10B** | 5-6 | 👤 B | `bonus/mouse/mouse_handler.c` + edge wrap | F7 | ☐ |
-| **S11AB** | 6 | 👥 | `bonus/doors/*` (parse 'D' + toggle 'E' + render DDA) | F7 | ☐ |
-| **🔄 SYNC6** | 6 | 👥 | **Bonus oficial: minimapa + ratón + puertas operativos** | — | ☐ |
-| **⭐ M6** | 6 | — | **Hito: BONUS OFICIAL COMPLETO** | — | ☐ |
-| **S12B** | 6 | 👤 B | `bonus/sprites/*` (z-buffer + sort + project + render) | F8 | ☐ |
-| **S12A** | 6 | 👤 A | `bonus/zombies/zombie_spawn.c` + `zombie_wave.c` + parser char 'Z' | F9 | ☐ |
-| **🔄 SYNC7** | 6-7 | 👥 | **Sprites estáticos visibles + spawner de zombies funcional** | — | ☐ |
-| **S13B** | 7 | 👤 B | `bonus/zombies/zombie_los.c` + `zombie_ai.c` + `zombie_anim.c` | F9 | ☐ |
-| **S13A** | 7 | 👤 A | `bonus/zombies/zombie_damage.c` + lógica de game over | F9 | ☐ |
-| **🔄 SYNC8** | 7 | 👥 | **Zombies completos: persiguen, atacan, mueren, oleadas escalan** | — | ☐ |
-| **⭐ M7** | 7 | — | **Hito: GAMEPLAY DE ZOMBIES JUGABLE** | — | ☐ |
-| **S14B** | 7-8 | 👤 B | `bonus/fog/fog_init.c` + `fog_apply.c` (LUT + blend) | F10 | ☐ |
-| **S14A** | 7-8 | 👤 A | `bonus/hud/hud_render.c` + `hud_digits.c` + game over screen | F11 | ☐ |
-| **🔄 SYNC9** | 8 | 👥 | **Niebla + HUD integrados, sin caída de FPS** | — | ☐ |
-| **⭐ M8** | 8 | — | **Hito: TODOS LOS MODS COMPLETOS** | — | ☐ |
-| **S15AB** | 8 | 👥 | Testing exhaustivo: 30 mapas malos + 10 buenos + valgrind + asan | — | ☐ |
+| **S11A** | 6 | 👤 A | `bonus/doors/*` (parse 'D' + toggle 'E' + render DDA) | F7 | ☐ |
+| **S12B** | 6-7 | 👤 B | `bonus/sprites/*` — sprites animados (init/sort/project/render + z-buffer + frame cycling) | F8 | ☐ |
+| **🔄 SYNC6** | 7 | 👥 | **Bonus oficial completo: minimapa + ratón + puertas + sprites animados** | — | ☐ |
+| **⭐ M6** | 7 | — | **Hito: BONUS OFICIAL COMPLETO ✅** | — | ☐ |
+| **S15AB** | 7-8 | 👥 | Testing exhaustivo: 30 mapas malos + 10 buenos + valgrind + asan | — | ☐ |
 | **S16AB** | 8 | 👥 | Norminette 100% + README final + ensayo de defensa | — | ☐ |
 | **⭐ M9** | 8 | — | **Hito: LISTO PARA EVALUACIÓN 🎓** | — | ☐ |
 
@@ -149,28 +139,13 @@ Cada hito es un **estado verificable, demostrable y commiteable**. Antes de pasa
 - ✅ Aborta limpio con todos en `maps/bad/`.
 - **Demo:** correr un mapa, moverse, chocar con paredes, salir limpio. Ya es defendible solo el mandatory.
 
-### ⭐ M6 — BONUS OFICIAL COMPLETO (fin de semana 6)
+### ⭐ M6 — BONUS OFICIAL COMPLETO (fin de semana 7)
 - ✅ Minimapa visible (esquina inf izquierda) centrado en jugador.
 - ✅ Mouse rota la cámara, edge wrap funciona.
 - ✅ Puertas (`'D'` en mapa) se abren/cierran con tecla `E`.
+- ✅ Sprites animados visibles con z-buffer (no aparecen detrás de muros) y ciclo de frames.
 - ✅ `make bonus` compila sin warnings.
-- **Demo:** abrir mapa con puertas y minimapa, navegar con mouse, abrir/cerrar una puerta.
-
-### ⭐ M7 — GAMEPLAY DE ZOMBIES (fin de semana 7)
-- ✅ Sprites con z-buffer (no aparecen detrás de muros).
-- ✅ Zombies aparecen al iniciar oleada 1.
-- ✅ Zombies persiguen al jugador con LOS.
-- ✅ Animaciones (walk, attack, die) fluidas.
-- ✅ Daño con cooldown, HP llega a 0 → game over.
-- ✅ Oleada N+1 más difícil que N.
-- **Demo:** sobrevivir oleada 1, ver oleada 2 más numerosa, morir y ver pantalla de game over.
-
-### ⭐ M8 — MODS COMPLETOS (semana 8 inicio)
-- ✅ Niebla aplicada a paredes y sprites.
-- ✅ HUD muestra HP (con color), oleada, kills.
-- ✅ Game over screen completo.
-- ✅ FPS estable (sin caídas grandes con niebla activa).
-- **Demo:** atmósfera de horror funcional + HUD informativo + game over polished.
+- **Demo:** abrir mapa con puertas, minimapa, sprite animado en el escenario; navegar con mouse, abrir/cerrar puertas.
 
 ### ⭐ M9 — LISTO PARA EVALUACIÓN (fin de semana 8)
 - ✅ Todos los checklists del `roadmap.md` (sección Checklist Final) pasan.
@@ -205,16 +180,11 @@ Cada hito es un **estado verificable, demostrable y commiteable**. Antes de pasa
 | **S08A** | S07A done | Movimiento + colisiones X/Y separado | (mandatory casi listo) |
 | **S08B** | S07B done | Rotación + render frame loop | cleanup |
 | **S09AB** | M4 alcanzado | Cleanup chain + valgrind clean | **MANDATORY COMPLETO** |
-| **S10A** | M5 alcanzado | Minimapa | mouse + puertas + mods |
-| **S10B** | M5 alcanzado | Mouse + edge wrap | minimapa + puertas + mods |
-| **S11AB** | S10A+B done | Sistema de puertas | sprites + zombies + niebla + HUD |
-| **S12B** | M6 alcanzado | Sistema de sprites + z-buffer | zombies que usen sprites |
-| **S12A** | M6 alcanzado | Spawn + sistema de oleadas | IA y daño |
-| **S13B** | S12B done | IA + LOS + animación de zombies | daño + HUD |
-| **S13A** | S12A done | Daño + game over básico | HUD visual |
-| **S14B** | S13B done | Niebla con LUT | (mods casi listos) |
-| **S14A** | S13A done | HUD: barra HP + dígitos + game over screen | (mods casi listos) |
-| **S15AB** | M8 alcanzado | Testing exhaustivo + valgrind + asan | norminette + defensa |
+| **S10A** | M5 alcanzado | Minimapa | mouse + puertas + sprites |
+| **S10B** | M5 alcanzado | Mouse + edge wrap | minimapa + puertas + sprites |
+| **S11A** | S10A done | Sistema de puertas | sprites animados |
+| **S12B** | S10B+S11A done | Sprites animados (infra + z-buffer + frame cycling) | testing + defensa |
+| **S15AB** | M6 alcanzado | Testing exhaustivo + valgrind + asan | norminette + defensa |
 | **S16AB** | S15AB done | Norminette + README + ensayo | **EVALUACIÓN** |
 
 ---
@@ -247,20 +217,11 @@ graph TD
     S09AB --> M5{⭐M5 MANDATORY ✅}
     M5 --> S10A
     M5 --> S10B
-    S10A --> S11AB
-    S10B --> S11AB
-    S11AB --> M6{⭐M6 Bonus oficial}
-    M6 --> S12A
-    M6 --> S12B
-    S12A --> S13A
-    S12B --> S13B
-    S13A --> M7{⭐M7 Zombies}
-    S13B --> M7
-    M7 --> S14A
-    M7 --> S14B
-    S14A --> M8{⭐M8 Mods completos}
-    S14B --> M8
-    M8 --> S15AB
+    S10A --> S11A
+    S11A --> S12B
+    S10B --> S12B
+    S12B --> M6{⭐M6 Bonus oficial}
+    M6 --> S15AB
     S15AB --> S16AB
     S16AB --> M9{🎓 EVALUACIÓN}
 ```
@@ -284,7 +245,7 @@ Tener un repo compilable con la estructura completa, `cub3d.h` con typedefs vac�
 - `.gitignore` — copia de `roadmap.md` sección "Workflow de Git" → `.gitignore mínimo`.
 - `Makefile` — versión mínima que solo compile un `main.c` que devuelva 0 (ampliada en S01B).
 - `README.md` — placeholder con título, descripción, autores.
-- `includes/cub3d.h` — esqueleto: includes + macros + typedefs vacíos de `t_data`, `t_player`, `t_map`, `t_img`, `t_ray`, `t_keys`, `t_bonus`, `t_sprite`, `t_zombie`, `t_wave`, `t_fog`, `t_hud`. Ver `roadmap.md` sección "TODAS LAS STRUCTS".
+- `includes/cub3d.h` — esqueleto: includes + macros + typedefs según necesidad (el cronograma S00 antiguo pedía typedefs vacíos especulativos; ya está descartado por YAGNI, ver `CLAUDE.md`). Ver `roadmap.md` sección "TODAS LAS STRUCTS" para referencia.
 - `includes/error_msg.h` — placeholder, vacío salvo `#ifndef`.
 - `includes/colors.h` — copia del de mcombeau (códigos ANSI).
 - `sources/main.c` — `int main(void) { return 0; }`.
@@ -303,8 +264,8 @@ git submodule add https://github.com/42Paris/minilibx-linux.git
 # (libft: git submodule add tu-url-libft)
 
 # 2. Crear estructura
-mkdir -p includes sources/{init,parsing,render,movement,exit,debug,bonus/{minimap,mouse,doors,sprites,zombies,fog,hud}}
-mkdir -p textures/{walls,sprites,zombies,hud} maps/{good,bad}
+mkdir -p includes sources/{init,parsing,render,movement,exit,debug,bonus/{minimap,mouse,doors,sprites}}
+mkdir -p textures/{walls,sprites} maps/{good,bad}
 
 # 3. Compilar MLX
 make -C minilibx-linux
@@ -1024,7 +985,7 @@ Renderizar un minimapa centrado en el jugador (vista parcial, no todo el mapa) e
 - [ ] Merge a `dev`.
 
 ### 🔓 Desbloquea
-- **S11AB** (puertas).
+- **S11A** (puertas).
 
 ---
 
@@ -1052,17 +1013,16 @@ Rotación de cámara con el ratón, con wrap-around al llegar a los bordes.
 - [ ] Merge a `dev`.
 
 ### 🔓 Desbloquea
-- **S11AB**.
+- **S12B** (sprites animados).
 
 ---
 
-# 🟦 SEMANA 6 — Bonus oficial + arranque Mods
+# 🟦 SEMANAS 6-7 — Bonus oficial completo
 
-## S11AB — `bonus/doors/*` (👥 A+B · 2-3 días)
+## S11A — `bonus/doors/*` (👤 A · 2-3 días)
 
 ### 🟦 Pre-requisitos
 - ✅ S10A done.
-- ✅ S10B done.
 
 ### 🎯 Objetivo
 Sistema de puertas: char `'D'` en el mapa. Tecla `E` cuando estás delante abre/cierra. DDA respeta el estado.
@@ -1088,41 +1048,32 @@ Sistema de puertas: char `'D'` en el mapa. Tecla `E` cuando estás delante abre/
 - [ ] Merge a `dev`.
 
 ### 🔓 Desbloquea
-- **🔄 SYNC6** + **⭐ M6** + **S12A**, **S12B** (mods).
+- **S12B** (sprites animados — último bonus oficial pendiente).
 
 ---
 
-## 🔄 SYNC6 — Mediados Semana 6 (👥 A+B juntos)
+## S12B — `bonus/sprites/*` — Sprites animados (👤 B · 3-4 días)
 
-### Verificaciones conjuntas
-- [ ] `make bonus` compila sin warnings.
-- [ ] Minimapa visible y correcto.
-- [ ] Mouse rota.
-- [ ] Puertas funcionan con E.
-- [ ] valgrind clean en `make bonus`.
-- [ ] **Demostración del hito ⭐ M6**.
-- [ ] **Tag `v2.0-bonus`** en el repo.
-
----
-
-## S12B — `bonus/sprites/*` (👤 B · 3-4 días)
+> Cumple el bonus oficial **#4 "Animated sprites"** del subject (Chapter VII).
 
 ### 🟦 Pre-requisitos
-- ✅ M6 alcanzado.
+- ✅ S10B done (mouse).
+- ✅ S11A done (puertas) — para que el flujo de bonus oficial sea coherente.
 
 ### 🎯 Objetivo
-Sistema completo de sprites: carga de texturas, z-buffer por columna, ordenado por distancia, proyección y renderizado con transparencia.
+Sistema completo de sprites animados: carga de N frames por sprite, z-buffer por columna, ordenado por distancia, proyección, render con transparencia, y ciclo de frames por temporizador para que el sprite muestre animación visible.
 
 ### 📁 Archivos
-- `sources/bonus/sprites/sprite_init.c` — nuevo.
+- `sources/bonus/sprites/sprite_init.c` — nuevo: carga de cada frame XPM como textura indexada.
 - `sources/bonus/sprites/sprite_sort.c` — nuevo.
 - `sources/bonus/sprites/sprite_project.c` — nuevo.
-- `sources/bonus/sprites/sprite_render.c` — nuevo.
+- `sources/bonus/sprites/sprite_render.c` — nuevo: usa el tex_id actual del sprite (frame en curso).
+- `sources/bonus/sprites/sprite_anim.c` — nuevo: acumula `anim_timer` con `dt` y avanza `tex_id` cuando supera el umbral; loop modular sobre los N frames.
 - `sources/render/raycasting.c` — añadir `data->z_buffer[x] = ray.wall_dist;` por columna.
-- `sources/render/render.c` — añadir `if (BONUS) render_all_sprites(data);` después del raycast.
+- `sources/render/render.c` — añadir `if (BONUS) { tick_sprite_anim(data, dt); render_all_sprites(data); }` después del raycast.
 
 ### 🔧 Funciones (ver roadmap.md → Fase 8)
-- `int init_sprite_textures(t_game *game)`
+- `int init_sprite_textures(t_game *game)` — carga `N` frames por sprite (e.g. antorcha con 4 frames).
 - `int init_z_buffer(t_game *game)`
 - `void compute_sprite_distances(...)`
 - `void sort_sprites_by_distance(...)`
@@ -1132,232 +1083,35 @@ Sistema completo de sprites: carga de texturas, z-buffer por columna, ordenado p
 - `void render_all_sprites(t_game *game)`
 - `void render_sprite(t_game *game, t_sprite *s)`
 - `void draw_sprite_column(...)`
+- `void tick_sprite_anim(t_game *game, double dt)` — recorre la lista, acumula `anim_timer`, avanza `frame_idx` modular sobre `frame_count`, actualiza `tex_id`.
 
 ### ✅ Definition of Done
-- [ ] Crear `maps/good/sprite_test.cub` con char `'B'` (barril) para testear.
-- [ ] Cargar `textures/sprites/barrel.xpm`.
-- [ ] El barril aparece en la posición correcta del mapa.
+- [ ] Crear `maps/good/sprite_test.cub` con char `'B'` (sprite genérico) para testear.
+- [ ] Cargar 3-4 frames XPM en `textures/sprites/` (ej: antorcha con `torch_0..3.xpm`).
+- [ ] El sprite aparece en la posición correcta del mapa.
 - [ ] Caminar alrededor → siempre encarado al jugador (billboarding).
-- [ ] Pasar detrás de un muro → barril se oculta.
+- [ ] Pasar detrás de un muro → sprite se oculta (z-buffer).
 - [ ] Píxeles transparentes (negro o magenta) no se pintan.
+- [ ] **Animación visible:** el sprite cicla frames de forma fluida (ej: 8-12 fps de animación, no fps del render).
 - [ ] norminette + valgrind clean.
 - [ ] Merge a `dev`.
 
 ### 🔓 Desbloquea
-- **S13B** (IA de zombies usa sprites).
+- **🔄 SYNC6** + **⭐ M6** (bonus oficial completo).
 
 ---
 
-## S12A — `bonus/zombies/zombie_spawn.c` + `zombie_wave.c` (👤 A · 3 días)
-
-### 🟦 Pre-requisitos
-- ✅ M6 alcanzado.
-- ✅ Parser permite char `'Z'` en mapa para spawn (modificar `check_map.c` cuando BONUS).
-
-### 🎯 Objetivo
-Sistema de spawn por celdas marcadas + sistema de oleadas con dificultad creciente. (Sin IA todavía, eso es S13B.)
-
-### 📁 Archivos
-- `sources/bonus/zombies/zombie_spawn.c` — nuevo.
-- `sources/bonus/zombies/zombie_wave.c` — nuevo.
-- `sources/parsing/check_map.c` — aceptar `'Z'` como char válido (BONUS).
-- `sources/parsing/create_game_map.c` — guardar coordenadas de cada `'Z'` en `wave.spawn_cells[]`, luego convertir `'Z'` → `'0'`.
-
-### 🔧 Funciones (ver roadmap.md → Fase 9)
-- `int init_wave(t_game *game, int max_zombies)`
-- `int spawn_zombie_at(t_game *game, double x, double y)`
-- `int spawn_zombie_random(t_game *game)`
-- `int find_spawn_cells(t_game *game)`
-- `void update_wave(t_game *game, double dt)`
-- `void next_wave(t_game *game)`
-- `void start_between_waves(t_game *game)`
-- `void tick_between_waves(t_game *game, double dt)`
-
-### ✅ Definition of Done
-- [ ] `maps/good/zombies_arena.cub` con varias celdas `'Z'`.
-- [ ] Al iniciar oleada 1, se spawnean 5 zombies (sin IA, quietos).
-- [ ] Si pones `printf("Wave %d: %d zombies\n", ...);` ves la info correcta.
-- [ ] Pool fijo (no malloc por zombie).
-- [ ] Spawn solo en celdas no visibles al jugador.
-- [ ] norminette + valgrind clean.
-- [ ] Merge a `dev`.
-
-### 🔓 Desbloquea
-- **S13A** (daño + game over).
-
----
-
-## 🔄 SYNC7 — Final Semana 6 / Inicio Semana 7 (👥 A+B juntos)
+## 🔄 SYNC6 — Final Semana 7 (👥 A+B juntos)
 
 ### Verificaciones conjuntas
-- [ ] `make bonus && ./cub3D maps/good/zombies_arena.cub`:
-  - Sprites estáticos visibles (zombies aparecen como sprites, aún quietos).
-  - Z-buffer funciona (zombies se ocultan tras paredes).
-- [ ] Si hay sprite del barril: aparece y se oculta correctamente.
-- [ ] valgrind clean.
-
----
-
-# 🟦 SEMANA 7 — IA de zombies + Niebla + HUD
-
-## S13B — `bonus/zombies/zombie_los.c` + `zombie_ai.c` + `zombie_anim.c` (👤 B · 4-5 días)
-
-### 🟦 Pre-requisitos
-- ✅ S12B done (sprites).
-- ✅ S12A done (zombies existen aunque quietos).
-
-### 🎯 Objetivo
-Hacer que los zombies persigan al jugador con state machine y animación de frames.
-
-### 📁 Archivos
-- `sources/bonus/zombies/zombie_los.c` — nuevo.
-- `sources/bonus/zombies/zombie_ai.c` — nuevo.
-- `sources/bonus/zombies/zombie_anim.c` — nuevo.
-
-### 🔧 Funciones (ver roadmap.md → Fase 9)
-- `int has_line_of_sight(t_game *game, double x1, double y1, double x2, double y2)`
-- `double distance_squared(...)`
-- `void update_zombies(t_game *game, double dt)`
-- `void update_zombie_ai(t_game *game, t_zombie *z, double dt)`
-- `void transition_state(t_zombie *z, int new_state)`
-- `void move_zombie_toward_player(t_game *game, t_zombie *z, double dt)`
-- `void tick_zombie_anim(t_zombie *z, double dt)`
-- `int get_zombie_tex_id(t_zombie *z)`
-
-### ✅ Definition of Done
-- [ ] Si jugador está en LOS, zombies caminan hacia él.
-- [ ] Si pierden LOS, vuelven a IDLE tras N segundos.
-- [ ] Animación de walk visible (3-4 frames cíclicos).
-- [ ] Zombies respetan colisiones (no atraviesan muros).
-- [ ] Sin caída de FPS notable con 10 zombies activos.
-- [ ] norminette + valgrind clean.
-- [ ] Merge a `dev`.
-
-### 🔓 Desbloquea
-- **S14B** (niebla).
-
----
-
-## S13A — `bonus/zombies/zombie_damage.c` + game over básico (👤 A · 2-3 días)
-
-### 🟦 Pre-requisitos
-- ✅ S12A done.
-
-### 🎯 Objetivo
-Sistema de daño cuando zombie en rango. Lógica de game over cuando HP = 0.
-
-### 📁 Archivos
-- `sources/bonus/zombies/zombie_damage.c` — nuevo.
-- `sources/render/render.c` — añadir `check_player_death(data);` por frame.
-
-### 🔧 Funciones (ver roadmap.md → Fase 9)
-- `void apply_zombie_attack(t_game *game, t_zombie *z)`
-- `void kill_zombie(t_zombie *z, t_wave *wave)`
-- `void check_player_death(t_game *game)`
-
-### ✅ Definition of Done
-- [ ] Zombie a < `ATTACK_RANGE` te quita 10 HP cada 1 segundo (cooldown).
-- [ ] HP visible (printf por ahora; luego HUD).
-- [ ] Si HP <= 0, `game.game_over = 1`.
-- [ ] (Pantalla de game over visual es S14A.)
-- [ ] norminette + valgrind clean.
-- [ ] Merge a `dev`.
-
-### 🔓 Desbloquea
-- **S14A** (HUD + pantalla game over).
-
----
-
-## 🔄 SYNC8 — Mediados Semana 7 (👥 A+B juntos)
-
-### Verificaciones conjuntas
-- [ ] Iniciar partida → oleada 1 con 5 zombies.
-- [ ] Zombies persiguen al jugador con LOS.
-- [ ] Zombies te atacan, HP baja.
-- [ ] Si te dejas matar, `game.game_over = 1`.
-- [ ] Al matar todos, oleada 2 empieza con 7 zombies.
-- [ ] **Demostración del hito ⭐ M7**.
-
----
-
-## S14B — `bonus/fog/*` (👤 B · 2 días)
-
-### 🟦 Pre-requisitos
-- ✅ S13B done.
-
-### 🎯 Objetivo
-Niebla aplicada a paredes y sprites según distancia, con LUT precomputada para no perder FPS.
-
-### 📁 Archivos
-- `sources/bonus/fog/fog_init.c` — nuevo.
-- `sources/bonus/fog/fog_apply.c` — nuevo.
-- `sources/render/texture.c` — añadir `color = apply_fog_to_color(...);` antes de pintar pared.
-- `sources/bonus/sprites/sprite_render.c` — lo mismo para sprites.
-
-### 🔧 Funciones (ver roadmap.md → Fase 10)
-- `void init_fog(t_game *game)`
-- `void build_fog_lut(t_fog *fog)`
-- `void free_fog(t_fog *fog)`
-- `int apply_fog_to_color(t_fog *fog, int color, double distance)`
-- `int blend_colors(int c1, int c2, double f)`
-
-### ✅ Definition of Done
-- [ ] Paredes lejanas se ven más grises que las cercanas.
-- [ ] Sprites/zombies lejanos también atenuados.
-- [ ] FPS baja menos del 5% comparado con sin niebla.
-- [ ] LUT se libera al cerrar (sin leaks).
-- [ ] norminette + valgrind clean.
-- [ ] Merge a `dev`.
-
-### 🔓 Desbloquea
-- **🔄 SYNC9**, **⭐ M8**.
-
----
-
-## S14A — `bonus/hud/*` + game over screen (👤 A · 3 días)
-
-### 🟦 Pre-requisitos
-- ✅ S13A done.
-
-### 🎯 Objetivo
-HUD visible con barra HP de color variable, número de oleada, contador de kills. Pantalla game over al morir.
-
-### 📁 Archivos
-- `sources/bonus/hud/hud_render.c` — nuevo.
-- `sources/bonus/hud/hud_digits.c` — nuevo.
-- `textures/hud/digits_0.xpm` ... `digits_9.xpm` — pre-renderizar (Aseprite, GIMP, o copiar de assets libres).
-- `sources/render/render.c` — añadir `if (BONUS) render_hud(data);` al final.
-
-### 🔧 Funciones (ver roadmap.md → Fase 11)
-- `int init_hud(t_game *game)`
-- `void render_hud(t_game *game)`
-- `void render_hp_bar(t_game *game)`
-- `void render_game_over(t_game *game)`
-- `void draw_number(t_game *game, int n, int x, int y)`
-- `void draw_label(t_game *game, char *str, int x, int y)`
-
-### ✅ Definition of Done
-- [ ] Barra HP visible esquina sup-izq.
-- [ ] Color cambia: verde > 60%, amarillo > 30%, rojo ≤ 30%.
-- [ ] Número oleada y kills visibles.
-- [ ] Al morir, pantalla "GAME OVER" centrada con "PRESS ESC".
-- [ ] norminette + valgrind clean.
-- [ ] Merge a `dev`.
-
-### 🔓 Desbloquea
-- **🔄 SYNC9**, **⭐ M8**.
-
----
-
-## 🔄 SYNC9 — Final Semana 7 / Inicio Semana 8 (👥 A+B juntos)
-
-### Verificaciones conjuntas
-- [ ] Niebla activa, atmósfera de horror funciona.
-- [ ] HUD muestra info correcta.
-- [ ] Game over screen aparece y permite salir con ESC.
-- [ ] FPS estable (>= 30) con todo activo.
-- [ ] **Demostración del hito ⭐ M8**.
-- [ ] **Tag `v3.0-mods`** en el repo.
+- [ ] `make bonus` compila sin warnings (con `-DBONUS=1`).
+- [ ] Minimapa visible y correcto.
+- [ ] Mouse rota la cámara.
+- [ ] Puertas se abren/cierran con E.
+- [ ] Sprites animados visibles, ciclan frames, ocultos detrás de muros (z-buffer).
+- [ ] valgrind clean en `make bonus`.
+- [ ] **Demostración del hito ⭐ M6**.
+- [ ] **Tag `v2.0-bonus`** en el repo.
 
 ---
 
@@ -1366,7 +1120,7 @@ HUD visible con barra HP de color variable, número de oleada, contador de kills
 ## S15AB — Testing exhaustivo (👥 A+B · 2-3 días)
 
 ### 🟦 Pre-requisitos
-- ✅ M8 alcanzado.
+- ✅ M6 alcanzado.
 
 ### 🎯 Objetivo
 Probar TODO. Encontrar y arreglar TODOS los bugs antes de la evaluación.
@@ -1383,7 +1137,7 @@ Probar TODO. Encontrar y arreglar TODOS los bugs antes de la evaluación.
 3. AddressSanitizer: `make CFLAGS="-Wall -Wextra -Werror -g3 -fsanitize=address" re && ./cub3D maps/good/*.cub`.
 4. Stress test: jugar 20 minutos seguidos, vigilar `htop` por leaks crecientes.
 5. Probar cerrar con ESC, X, Ctrl+C — todos limpios.
-6. Probar TODOS los mods: oleada 1, 2, 3, 5, 10. Sin crash. HUD correcto.
+6. Probar todos los bonus oficiales: minimapa visible y centrado, mouse rota con wrap, puertas con E abren/cierran, sprite animado cicla frames y se oculta tras muros.
 7. Compilar en otra distro si tienes acceso (Ubuntu / Arch / Debian).
 
 ### ✅ Definition of Done
@@ -1419,7 +1173,7 @@ Pulir lo último: norma, README, y ensayar defensa con un compañero externo.
 3. Pedir a un compañero (no del equipo) que actúe como evaluador:
    - Que pregunte por el algoritmo de raycasting.
    - Que pregunte por el parser y los casos de error.
-   - Que pregunte por la IA de zombies.
+   - Que pregunte por el sistema de sprites animados y el z-buffer.
    - Que pregunte qué pasa si lo ejecutas con `./cub3D` sin args.
    - Que pregunte la diferencia entre KeyPress y KeyRelease en MLX.
 4. Anotar las preguntas que no supiste responder bien → estudiar.
@@ -1488,9 +1242,6 @@ Pulir lo último: norma, README, y ensayar defensa con un compañero externo.
 ### "norminette se queja de algo que no entiendo"
 → Lee el mensaje exacto. Suele ser: variables no al inicio, líneas > 80 cols, tabs vs espacios. Hay extensión "42 norm" en VSCode.
 
-### "Los zombies atraviesan paredes"
-→ `move_zombie_toward_player` no está usando `validate_move`. Aplicar la misma colisión X/Y separada que el jugador.
-
 ### "Los sprites parpadean / aparecen detrás de muros"
 → ¿Estás llenando el `z_buffer[x]` en cada raycast? ¿Lo lees antes de pintar el sprite? Verificar con `printf("col %d zbuf=%f sprite_ty=%f\n", ...)`.
 
@@ -1533,21 +1284,11 @@ Pulir lo último: norma, README, y ensayar defensa con un compañero externo.
 | ⭐M5 | — | S09AB | **MANDATORY COMPLETO ✅** | Tag v1.0-mandatory |
 | S10A | A | M5 | `bonus/minimap/*` | Minimapa visible |
 | S10B | B | M5 | `bonus/mouse/*` | Mouse rota cámara |
-| S11AB | A+B | S10A+B | `bonus/doors/*` | Tecla E abre/cierra puertas |
-| 🔄6 | A+B | S11AB | Sync semana 6 | Demo: bonus oficial completo |
+| S11A | A | S10A | `bonus/doors/*` | Tecla E abre/cierra puertas |
+| S12B | B | S10B+S11A | `bonus/sprites/*` (animados, z-buffer, frame cycling) | Sprite animado visible, oculto tras muros |
+| 🔄6 | A+B | S12B | Sync semana 7 | Demo: bonus oficial completo |
 | ⭐M6 | — | 🔄6 | **BONUS OFICIAL COMPLETO** | Tag v2.0-bonus |
-| S12B | B | M6 | `bonus/sprites/*` | Sprite estático visible + z-buffer |
-| S12A | A | M6 | `bonus/zombies/zombie_spawn.c` + `zombie_wave.c` | Zombies spawnean (quietos) |
-| 🔄7 | A+B | S12A+B | Sync inicio semana 7 | Sprites + spawner OK |
-| S13B | B | S12B | `bonus/zombies/zombie_los.c` + `zombie_ai.c` + `zombie_anim.c` | Zombies persiguen con LOS |
-| S13A | A | S12A | `bonus/zombies/zombie_damage.c` | Daño + game over básico |
-| 🔄8 | A+B | S13A+B | Sync semana 7 | Demo zombies completos |
-| ⭐M7 | — | 🔄8 | **GAMEPLAY DE ZOMBIES** | |
-| S14B | B | S13B | `bonus/fog/*` | Niebla aplicada, FPS OK |
-| S14A | A | S13A | `bonus/hud/*` + game over screen | HUD visible, pantalla final |
-| 🔄9 | A+B | S14A+B | Sync inicio semana 8 | Demo: niebla + HUD |
-| ⭐M8 | — | 🔄9 | **MODS COMPLETOS** | Tag v3.0-mods |
-| S15AB | A+B | M8 | Testing exhaustivo + valgrind + asan | run_all.sh pasa al 100% |
+| S15AB | A+B | M6 | Testing exhaustivo + valgrind + asan | run_all.sh pasa al 100% |
 | S16AB | A+B | S15AB | Norminette + README + ensayo defensa | norma 100%, ensayo hecho |
 | ⭐M9 | — | S16AB | **LISTO PARA EVALUACIÓN 🎓** | Tag v4.0-final |
 

@@ -1,7 +1,8 @@
 # 🗺️ ROADMAP DE IMPLEMENTACIÓN — cub3D
 
-> Proyecto en pareja · Mandatory + Bonus + Mods avanzados (zombies + niebla + HUD) · MiniLibX · Linux nativo
+> Proyecto en pareja · Mandatory + 5 bonus oficiales del subject (collisions / minimap / doors / animated sprites / mouse) · MiniLibX · Linux nativo
 > Ventana recomendada: **1280×720** (buen balance rendimiento/visual)
+> **Scope locked:** mods custom (zombies, niebla, HUD) DESCARTADOS — ver `CLAUDE.md`.
 
 ---
 
@@ -16,9 +17,9 @@ Este documento está diseñado para que **cualquier persona pueda construir cub3
 - **Teoría** — fórmulas, algoritmos, diagramas.
 - **Checklist** — qué verificar antes de pasar a la siguiente fase.
 
-Las fases están numeradas y coloreadas. Las fases **Mandatory** son obligatorias (1-6). Las fases **Bonus** (7) son las que pide el subject oficial. Las fases **Mods** (8-11) son extensiones propias de este proyecto: sistema de sprites, zombies con oleadas e IA, niebla y HUD.
+Las fases están numeradas y coloreadas. Las fases **Mandatory** son obligatorias (F1-F6). Las fases **Bonus oficial** del subject Chapter VII se cubren en F7 (minimap + mouse + doors) y **F8 (sprites animados)**. No hay más fases — los mods custom originales (F9-F11: zombies, niebla, HUD) están descartados del scope.
 
-**Reparto sugerido:** Persona A se encarga del parsing + controles + bonus de gameplay. Persona B se encarga del motor gráfico + raycasting + sprites. Detalles al final.
+**Reparto sugerido:** Persona A = parsing + controles + minimap + puertas. Persona B = motor gráfico + raycasting + texturas + mouse + sprites animados. Detalles al final.
 
 ---
 
@@ -75,7 +76,7 @@ norminette sources/ includes/   # Norma 42 al 100%
 
 ### Naming
 
-- **Tipos**: `t_*` para typedefs (`t_data`, `t_player`, `t_zombie`).
+- **Tipos**: `t_*` para typedefs (`t_game`, `t_player`, `t_sprite`).
 - **Estructuras anónimas**: `s_*` (`struct s_data`).
 - **Enums**: `e_*` (`e_output`, `e_state`).
 - **Macros**: `MAYÚSCULAS_CON_GUIONES` (`WIN_WIDTH`, `MOVE_SPEED`).
@@ -97,7 +98,7 @@ norminette sources/ includes/   # Norma 42 al 100%
 | `dev` | Integración de features antes de merge a `main` |
 | `feature/parser-A` | Persona A trabaja aquí (parsing, controles) |
 | `feature/render-B` | Persona B trabaja aquí (raycaster, sprites) |
-| `feature/bonus-zombies` | Mods avanzados, una vez Mandatory esté estable |
+| `feature/bonus-sprites` | Bonus oficial #4 (animated sprites), una vez Mandatory esté estable |
 
 - **Commit pequeño y atómico** (un commit por idea). Mensajes claros: `parse: validate RGB range`, no `cambios`.
 - **No commitear binarios, `.o`, `cub3D`** — añadir a `.gitignore`.
@@ -116,11 +117,7 @@ classDiagram
     t_game *-- t_tex
     t_game *-- t_keys
     t_game *-- t_bonus
-    t_game *-- t_wave
-    t_game *-- t_fog
-    t_game *-- t_hud
-    t_wave *-- t_zombie
-    t_zombie *-- t_sprite
+    t_game *-- t_sprite
 
     class t_game {
         void *mlx
@@ -135,9 +132,8 @@ classDiagram
         t_ray ray
         t_bonus bonus
         double z_buffer[WIN_W]
-        t_wave wave
-        t_fog fog
-        t_hud hud
+        t_sprite *sprites
+        t_tex *sprite_tex
         +init_game()
         +game_loop()
         +cleanup_game()
@@ -214,9 +210,6 @@ classDiagram
     class t_bonus {
         int minimap_on
         int mouse_on
-        int hud_on
-        int fog_on
-        int zombies_on
         int **door_grid
     }
 
@@ -224,43 +217,11 @@ classDiagram
         double pos_x
         double pos_y
         int tex_id
-        double distance
-        int alive
-    }
-
-    class t_zombie {
-        t_sprite sprite
-        double dir_x
-        double dir_y
-        e_state state
-        int hp
-        int anim_frame
+        int frame_count
+        int frame_idx
         double anim_timer
-        double attack_cooldown
-    }
-
-    class t_wave {
-        int current_wave
-        int alive_count
-        int total_count
-        double spawn_timer
-        int max_zombies
-        t_zombie *list
-    }
-
-    class t_fog {
-        int color
-        double start_dist
-        double end_dist
-        double *factor_lut
-    }
-
-    class t_hud {
-        int hp
-        int wave
-        int kill_count
-        t_img bar
-        t_img digits
+        double distance
+        int visible
     }
 ```
 
@@ -291,23 +252,15 @@ cub3D/
 │   │   ├── south.xpm
 │   │   ├── west.xpm
 │   │   └── east.xpm
-│   ├── sprites/                  ← Objetos del mundo (decoración)
-│   │   ├── barrel.xpm
-│   │   └── lamp.xpm
-│   ├── zombies/                  ← Frames de animación zombie
-│   │   ├── walk_0.xpm  walk_1.xpm  walk_2.xpm  walk_3.xpm
-│   │   ├── attack_0.xpm  attack_1.xpm  attack_2.xpm
-│   │   └── die_0.xpm  die_1.xpm  die_2.xpm  die_3.xpm
-│   └── hud/                      ← Dígitos numéricos para HUD
-│       └── digits_0..9.xpm
+│   └── sprites/                  ← Sprites animados (bonus oficial #4): N frames por sprite
+│       └── torch_0..3.xpm        ← ejemplo: antorcha con 4 frames de animación
 │
 ├── maps/
 │   ├── good/                     ← Mapas válidos (mínimo 10)
 │   │   ├── subject_map.cub       ← El del subject oficial
 │   │   ├── library.cub
 │   │   ├── square_map.cub
-│   │   ├── whitespace.cub        ← Stress-test de whitespace
-│   │   └── zombies_arena.cub     ← Mapa con celdas spawn de zombies
+│   │   └── whitespace.cub        ← Stress-test de whitespace
 │   └── bad/                      ← Mapas inválidos para testear errores (mínimo 30)
 │       ├── empty.cub
 │       ├── filetype_wrong.buc
@@ -374,24 +327,12 @@ cub3D/
 │       │   ├── door_parse.c      ← Parser char 'D' en mapa
 │       │   ├── door_toggle.c     ← Tecla E abre/cierra
 │       │   └── door_render.c     ← DDA tratando 'D' como wall/floor
-│       ├── sprites/
-│       │   ├── sprite_init.c     ← Carga texturas + lista
-│       │   ├── sprite_sort.c     ← Ordenar por distancia (lejano primero)
-│       │   ├── sprite_project.c  ← Matriz inversa cámara → screen X/Y
-│       │   └── sprite_render.c   ← Bucle columnas + z-buffer compare
-│       ├── zombies/
-│       │   ├── zombie_spawn.c    ← Crea zombie en celda Z o aleatoria
-│       │   ├── zombie_wave.c     ← Lógica de oleadas (timer, dificultad)
-│       │   ├── zombie_ai.c       ← State machine (idle/chase/attack/die)
-│       │   ├── zombie_los.c      ← Line-of-sight raycast hasta player
-│       │   ├── zombie_anim.c     ← Cicla frames según anim_timer
-│       │   └── zombie_damage.c   ← Daño al jugador + cooldown
-│       ├── fog/
-│       │   ├── fog_init.c        ← Precomputa LUT de fog_factor
-│       │   └── fog_apply.c       ← Blend de pixel con fog_color
-│       └── hud/
-│           ├── hud_render.c      ← HP bar + dígitos de oleada/kills
-│           └── hud_digits.c      ← Blittea dígitos pre-renderizados
+│       └── sprites/
+│           ├── sprite_init.c     ← Carga N frames XPM por sprite
+│           ├── sprite_sort.c     ← Ordenar por distancia (lejano primero)
+│           ├── sprite_project.c  ← Matriz inversa cámara → screen X/Y
+│           ├── sprite_render.c   ← Bucle columnas + z-buffer compare
+│           └── sprite_anim.c     ← Ciclo de frames por temporizador
 ```
 
 > **Nota sobre `bonus/`:** todo lo de `bonus/` se compila condicional con `#if BONUS` o se incluye en SRC solo cuando `BONUS=1`. Ver sección Makefile.
@@ -498,8 +439,6 @@ typedef struct s_player
     int     move_y;     // Flag input walk: -1 atrás, 0, +1 adelante
     int     rotate;     // Flag input rotación: -1 izq, 0, +1 der
     int     has_moved;  // Si > 0, debe re-renderizar (perf opt)
-    int     hp;         // [Mods] HP del jugador (default: 100)
-    double  damage_cooldown; // [Mods] Frames hasta poder recibir daño
 }   t_player;
 
 /* ── Rayo (se recalcula por cada columna x) ──────────── */
@@ -552,89 +491,27 @@ typedef struct s_map
     int     player_y;       // Posición inicial Y (entero del mapa)
 }   t_map;
 
-/* ── Bonus + Mods ────────────────────────────────────── */
+/* ── Bonus oficiales ─────────────────────────────────── */
 typedef struct s_bonus
 {
-    int     minimap_on;     // [Bonus] ¿Mostrar minimapa?
-    int     mouse_on;       // [Bonus] ¿Rotación con ratón activa?
-    int     **door_grid;    // [Bonus] Grid de puertas (0=cerrada, 1=abierta)
-    int     hud_on;         // [Mods] ¿Mostrar HUD (HP, oleada, kills)?
-    int     fog_on;         // [Mods] ¿Aplicar niebla distance-fog?
-    int     zombies_on;     // [Mods] ¿Sistema de oleadas activo?
+    int     minimap_on;     // ¿Mostrar minimapa?
+    int     mouse_on;       // ¿Rotación con ratón activa?
+    int     **door_grid;    // Grid de puertas (0=cerrada, 1=abierta)
     int     debug_on;       // ¿Mostrar overlay debug (FPS, pos, etc)?
 }   t_bonus;
 
-/* ── [Mods] Sprite genérico ──────────────────────────── */
+/* ── Sprite (bonus oficial: animated sprites) ────────── */
 typedef struct s_sprite
 {
-    double  pos_x;      // Posición en el mapa (centro)
+    double  pos_x;          // Posición en el mapa (centro)
     double  pos_y;
-    int     tex_id;     // Índice de textura en data->sprite_tex[]
-    double  distance;   // Cuadrado de la distancia al jugador (para sort)
-    int     alive;      // 0=muerto/inactivo, 1=visible, 2=animando muerte
+    int     tex_id;         // Índice de textura actual (frame en curso)
+    int     frame_count;    // Nº de frames de animación (≥1)
+    int     frame_idx;      // Frame actual dentro del ciclo [0..frame_count)
+    double  anim_timer;     // Acumulador para avanzar de frame
+    double  distance;       // Cuadrado de distancia al jugador (para sort)
+    int     visible;        // 0 = oculto, 1 = render activo
 }   t_sprite;
-
-/* ── [Mods] Estados del zombie ───────────────────────── */
-enum e_zombie_state
-{
-    Z_IDLE     = 0,     // Quieto o random walk
-    Z_CHASING  = 1,     // Persigue al jugador (LOS confirmada)
-    Z_ATTACKING= 2,     // En rango de ataque
-    Z_DYING    = 3,     // Animación de muerte (3-4 frames)
-    Z_DEAD     = 4      // Sprite oculto, slot reciclable
-};
-
-/* ── [Mods] Zombie individual ────────────────────────── */
-typedef struct s_zombie
-{
-    t_sprite    sprite;          // Posición + textura + alive
-    double      dir_x;           // Dirección de movimiento (normalizada)
-    double      dir_y;
-    double      speed;           // Velocidad (~0.02, menor que el jugador)
-    int         state;           // Ver enum e_zombie_state
-    int         hp;              // HP del zombie (default: 30)
-    int         anim_frame;      // Frame actual (0..N) dentro del estado
-    double      anim_timer;      // Acumulador para cambiar de frame
-    double      attack_cooldown; // Frames hasta poder atacar de nuevo
-    double      los_check_timer; // Cooldown para no recalcular LOS cada frame
-}   t_zombie;
-
-/* ── [Mods] Sistema de oleadas ───────────────────────── */
-typedef struct s_wave
-{
-    int         current_wave;    // Oleada actual (1, 2, 3, …)
-    int         alive_count;     // Zombies vivos en esta oleada
-    int         total_count;     // Zombies que se han spawneado en esta oleada
-    int         max_zombies;     // Tope simultáneo (e.g. 30)
-    double      spawn_timer;     // Acumulador para próximo spawn
-    double      spawn_interval;  // Segundos entre spawns
-    t_zombie    *list;           // Pool fijo de zombies (size = max_zombies)
-    int         wave_active;     // 0 = entre oleadas, 1 = oleada en curso
-    double      between_waves_t; // Cuenta atrás para próxima oleada
-}   t_wave;
-
-/* ── [Mods] Niebla (distance fog) ────────────────────── */
-typedef struct s_fog
-{
-    int         color;           // Color de la niebla (0x808080 gris)
-    double      start_dist;      // Distancia donde empieza la niebla
-    double      end_dist;        // Distancia donde la niebla es total (=color)
-    double      *factor_lut;     // LUT precomputada [0..end_dist*RESOLUTION]
-    int         lut_size;        // Tamaño de la LUT
-}   t_fog;
-
-/* ── [Mods] HUD del juego ────────────────────────────── */
-typedef struct s_hud
-{
-    int         hp;              // Cache del HP del jugador (para no leer cada frame)
-    int         wave;            // Cache de la oleada actual
-    int         kill_count;      // Total de zombies abatidos
-    t_img       digits[10];      // Texturas pre-renderizadas '0'..'9'
-    int         bar_width;       // Ancho de la barra de HP en píxeles
-    int         bar_height;      // Alto
-    int         bar_x;           // Posición X (esquina superior izq)
-    int         bar_y;           // Posición Y
-}   t_hud;
 
 /* ── Estructura Principal ────────────────────────────── */
 typedef struct s_game
@@ -650,15 +527,13 @@ typedef struct s_game
     int         **tex_pixels;    // Buffer 2D del frame (raycast → render)
     t_ray       ray;             // Datos del rayo actual
     t_keys      keys;            // Estado de teclas
-    t_bonus     bonus;           // Flags de bonus + mods
-    double      *z_buffer;       // [Mods] perp_dist por columna (sprites)
-    t_tex       *sprite_tex;     // [Mods] Texturas de sprites/zombies
-    int         sprite_tex_count;// [Mods] Nº de texturas de sprites cargadas
-    t_wave      wave;            // [Mods] Sistema de oleadas de zombies
-    t_fog       fog;             // [Mods] Datos de niebla
-    t_hud       hud;             // [Mods] HUD del juego
+    t_bonus     bonus;           // Flags de bonus oficiales
+    double      *z_buffer;       // perp_dist por columna (necesario para sprites)
+    t_sprite    *sprites;        // Lista de sprites en el mundo
+    int         sprite_count;    // Nº de sprites activos
+    t_tex       *sprite_tex;     // Texturas de sprites (todos los frames concatenados)
+    int         sprite_tex_count;// Nº de texturas de sprites cargadas
     long        last_tick_ms;    // Timestamp del último frame (delta time)
-    int         game_over;       // [Mods] 1 = HP<=0, mostrar pantalla final
 }   t_game;
 ```
 
@@ -691,7 +566,7 @@ enum e_output
 | **Colores** | `ERR_COLOR_FLOOR`, `ERR_COLOR_CEILING`, `ERR_COLOR_MISSING`, `ERR_FLOOR_CEILING` |
 | **Mapa** | `ERR_INVALID_MAP`, `ERR_INV_LETTER`, `ERR_NUM_PLAYER`, `ERR_PLAYER_DIR`, `ERR_PLAYER_POS`, `ERR_MAP_MISSING`, `ERR_MAP_TOO_SMALL`, `ERR_MAP_NO_WALLS`, `ERR_MAP_LAST` |
 | **Sistema** | `ERR_MALLOC`, `ERR_MLX_START`, `ERR_MLX_WIN`, `ERR_MLX_IMG` |
-| **[Mods]** | `ERR_SPRITE_LIMIT`, `ERR_ZOMBIE_TEX_MISSING`, `ERR_FOG_PARAM` |
+| **[Bonus]** | `ERR_SPRITE_LIMIT`, `ERR_SPRITE_TEX_MISSING` |
 
 ### API de logging
 
@@ -747,7 +622,7 @@ enum e_output
 
 Separar el `SRC` en dos variables:
 - `SRC_MANDATORY` — fuentes que van siempre (`main.c`, `error.c`, `init/*`, `parsing/*`, `render/*` core, `movement/*`, `exit/*`, `debug/*`).
-- `SRC_BONUS` — fuentes solo en bonus (`bonus/minimap/*`, `bonus/mouse/*`, `bonus/doors/*`, `bonus/sprites/*`, `bonus/zombies/*`, `bonus/fog/*`, `bonus/hud/*`).
+- `SRC_BONUS` — fuentes solo en bonus (`bonus/minimap/*`, `bonus/mouse/*`, `bonus/doors/*`, `bonus/sprites/*`).
 
 Selección condicional:
 ```makefile
@@ -781,9 +656,6 @@ $(OBJ_PATH):
 	@mkdir -p $(OBJ_PATH)/bonus/mouse
 	@mkdir -p $(OBJ_PATH)/bonus/doors
 	@mkdir -p $(OBJ_PATH)/bonus/sprites
-	@mkdir -p $(OBJ_PATH)/bonus/zombies
-	@mkdir -p $(OBJ_PATH)/bonus/fog
-	@mkdir -p $(OBJ_PATH)/bonus/hud
 
 $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 	$(CC) $(CFLAGS) -DBONUS=$(BONUS) -c $< -o $@ $(INC)
@@ -1252,18 +1124,18 @@ valgrind --leak-check=full --show-leak-kinds=all ./cub3D maps/test.cub
 
 ---
 
-## 🟤 FASE 8 — Sistema de Sprites + Z-buffer (👤 Persona B)
+## 🟤 FASE 8 — Sprites Animados (bonus oficial #4) (👤 Persona B)
 
-> **Objetivo:** dibujar objetos del mundo (decoraciones primero, luego zombies) usando el algoritmo de sprites de Lode con un z-buffer por columna.
+> **Objetivo:** cumplir el bonus oficial **"Animated sprites"** del subject (Chapter VII): dibujar sprites en el mundo usando el algoritmo de Lode con z-buffer por columna, **y ciclar frames** por temporizador para que muestren animación visible.
 > **Dependencias:** Fases 3 + 4 completadas (raycasting con texturas).
-> **Archivos:** `bonus/sprites/sprite_init.c`, `sprite_sort.c`, `sprite_project.c`, `sprite_render.c`. Modificar `render/raycasting.c` para llenar el `z_buffer`.
-> **Pre-requisito conceptual:** un sprite es una imagen que se dibuja "billboarded" (siempre mirando al jugador). No tiene profundidad propia; es 2D en el espacio 3D.
+> **Archivos:** `bonus/sprites/sprite_init.c`, `sprite_sort.c`, `sprite_project.c`, `sprite_render.c`, `sprite_anim.c`. Modificar `render/raycasting.c` para llenar el `z_buffer`.
+> **Pre-requisito conceptual:** un sprite es una imagen 2D "billboarded" (siempre encarada al jugador). La "animación" se logra avanzando un índice de textura (`tex_id`) sobre una lista de N frames cuando un acumulador temporal supera un umbral.
 
 ### 📁 `bonus/sprites/sprite_init.c` — Carga e inicialización
 
 | Función | Prototipo | Qué hace |
 |---|---|---|
-| `init_sprite_textures` | `int init_sprite_textures(t_game *game)` | Carga todas las texturas de sprites desde `textures/sprites/` y `textures/zombies/`. Las guarda en `game->sprite_tex[]`. |
+| `init_sprite_textures` | `int init_sprite_textures(t_game *game)` | Carga N frames XPM por sprite desde `textures/sprites/`. Los guarda concatenados en `game->sprite_tex[]`. |
 | `init_z_buffer` | `int init_z_buffer(t_game *game)` | `malloc` `double[win_w]`. Se rellena cada frame durante el raycast de paredes. |
 | `add_sprite_from_map` | `int add_sprite_from_map(t_game *game, char c, int x, int y)` | Llamada por el parser cuando encuentra un char de sprite (`Z`, `B`, etc.). Lo añade a la lista correspondiente. |
 
@@ -1332,272 +1204,6 @@ Pintar de lejos a cerca evita necesitar comparación profunda píxel a píxel. P
 
 ---
 
-## ⚫ FASE 9 — Zombies con IA y Oleadas (👤 Persona A + B)
-
-> **Objetivo:** spawnear zombies por oleadas, que persigan al jugador con line-of-sight, ataquen al estar en rango, mueran al recibir disparos (o al impactar), y reciclen sus slots para la siguiente oleada.
-> **Dependencias:** Fase 8 (sprites + z-buffer) completada. Movimiento del jugador OK.
-> **Archivos:** `bonus/zombies/zombie_spawn.c`, `zombie_wave.c`, `zombie_ai.c`, `zombie_los.c`, `zombie_anim.c`, `zombie_damage.c`. Modificar parser para reconocer celdas de spawn `'Z'`.
-
-### 📁 `bonus/zombies/zombie_spawn.c` — Generación de zombies
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `init_wave` | `int init_wave(t_game *game, int max_zombies)` | `malloc` pool fijo de `t_zombie[max_zombies]`. Inicializa `wave.list[i].state = Z_DEAD` para todos. |
-| `spawn_zombie_at` | `int spawn_zombie_at(t_game *game, double x, double y)` | Busca primer slot con `state == Z_DEAD`. Lo activa: `state = Z_IDLE`, `pos = (x+0.5, y+0.5)`, `hp = 30`, frame = 0. Devuelve índice o -1 si no hay slots. |
-| `spawn_zombie_random` | `int spawn_zombie_random(t_game *game)` | Elige una celda `'Z'` del mapa que NO esté en línea de vista del jugador. Llama a `spawn_zombie_at`. |
-| `find_spawn_cells` | `int find_spawn_cells(t_game *game)` | Recorre el mapa al inicio, lista todas las celdas marcadas `'Z'` (que se convierten luego a `'0'`). Almacena en `game->wave.spawn_cells[]`. |
-
-### 📁 `bonus/zombies/zombie_wave.c` — Lógica de oleadas
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `update_wave` | `void update_wave(t_game *game, double dt)` | Tick principal. Si `wave_active` y `total_count < max_for_this_wave`, decrementa `spawn_timer`. Si llega a 0: spawn + reset timer. Si `alive_count == 0 && total_count == max`: termina oleada, inicia `between_waves_t`. |
-| `next_wave` | `void next_wave(t_game *game)` | Incrementa `current_wave`. Recalcula dificultad: `max_for_this_wave = 5 + 2*current_wave`; `spawn_interval *= 0.9`; HP zombies aumenta `+5*current_wave`. |
-| `start_between_waves` | `void start_between_waves(t_game *game)` | Pone `wave_active = 0`, arranca cuenta atrás `between_waves_t = 5.0` (segundos). |
-| `tick_between_waves` | `void tick_between_waves(t_game *game, double dt)` | Decrementa `between_waves_t`. Cuando llega a 0, llama a `next_wave` y reactiva. |
-
-### 📁 `bonus/zombies/zombie_ai.c` — State machine
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `update_zombies` | `void update_zombies(t_game *game, double dt)` | Itera todos los zombies vivos. Para cada uno llama a `update_zombie_ai`. |
-| `update_zombie_ai` | `void update_zombie_ai(t_game *game, t_zombie *z, double dt)` | Switch sobre `z->state`. Cada estado tiene su lógica (ver tabla abajo). |
-| `transition_state` | `void transition_state(t_zombie *z, int new_state)` | Cambia `state`, resetea `anim_frame=0`, `anim_timer=0`. |
-| `move_zombie_toward_player` | `void move_zombie_toward_player(t_game *game, t_zombie *z, double dt)` | Calcula vector unitario hacia el jugador. Aplica colisión separada en X/Y (igual que el jugador). Si colisiona en ambos ejes, intenta movimiento perpendicular (steering simple). |
-
-### Estados y transiciones
-
-| Estado | Comportamiento | Transición a |
-|---|---|---|
-| `Z_IDLE` | Random walk lento (cambia dirección cada N segundos). | `Z_CHASING` si LOS al jugador. |
-| `Z_CHASING` | Mueve hacia el jugador. Recalcula LOS cada `los_check_timer` (e.g. 0.3s). | `Z_ATTACKING` si distancia < `ATTACK_RANGE`. `Z_IDLE` si pierde LOS por > N segundos. |
-| `Z_ATTACKING` | Detiene movimiento. Anima ataque. Aplica daño en frame específico. Cooldown. | `Z_CHASING` si jugador se aleja. `Z_DYING` si muere. |
-| `Z_DYING` | Anima muerte (3-4 frames). Sin colisión. | `Z_DEAD` cuando termina la animación. |
-| `Z_DEAD` | Slot reciclable, sprite oculto, no se actualiza. | (ninguna) Reusable por `spawn_zombie_at`. |
-
-### 📁 `bonus/zombies/zombie_los.c` — Line of Sight
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `has_line_of_sight` | `int has_line_of_sight(t_game *game, double x1, double y1, double x2, double y2)` | DDA simplificado desde `(x1,y1)` hasta `(x2,y2)`. Devuelve 1 si NO golpea pared antes de llegar al destino. Reutiliza el algoritmo del raycaster de paredes pero con bound = distancia objetivo. |
-| `distance_squared` | `double distance_squared(double x1, double y1, double x2, double y2)` | `(x1-x2)^2 + (y1-y2)^2`. Para evitar `sqrt`. |
-
-### 📁 `bonus/zombies/zombie_anim.c` — Animación
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `tick_zombie_anim` | `void tick_zombie_anim(t_zombie *z, double dt)` | `anim_timer += dt`. Si supera `FRAME_DURATION` (e.g. 0.15s), incrementa `anim_frame` y resetea timer. Si llega al final del ciclo, vuelve a 0 (loop) o transiciona a otro estado (e.g. `Z_DYING` → `Z_DEAD`). |
-| `get_zombie_tex_id` | `int get_zombie_tex_id(t_zombie *z)` | Devuelve el índice de textura en `game->sprite_tex[]` según `state` y `anim_frame`. Tabla: `Z_IDLE/CHASING` usa `walk_0..3`, `Z_ATTACKING` usa `attack_0..2`, `Z_DYING` usa `die_0..3`. |
-
-### 📁 `bonus/zombies/zombie_damage.c` — Daño y combate
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `apply_zombie_attack` | `void apply_zombie_attack(t_game *game, t_zombie *z)` | Si `z->attack_cooldown <= 0` y dist < `ATTACK_RANGE`: `player.hp -= 10`, `z->attack_cooldown = 1.0` (segundos). Sonido o flash de pantalla opcional. |
-| `kill_zombie` | `void kill_zombie(t_zombie *z, t_wave *wave)` | `z->state = Z_DYING`, `wave->alive_count--`, `wave->kill_count++`. |
-| `check_player_death` | `void check_player_death(t_game *game)` | Si `player.hp <= 0`: `game->game_over = 1`. Mostrar pantalla final + esperar input para salir. |
-
-### Macros sugeridas (en `cub3d.h`)
-
-| Macro | Valor | Significado |
-|---|---|---|
-| `ZOMBIE_HP_BASE` | `30` | HP inicial de un zombie en oleada 1 |
-| `ZOMBIE_SPEED` | `0.02` | Unidades/frame (más lento que jugador) |
-| `ZOMBIE_ATTACK_RANGE` | `0.7` | Distancia mínima para atacar |
-| `ZOMBIE_ATTACK_DAMAGE` | `10` | HP que quita por golpe |
-| `ZOMBIE_ATTACK_COOLDOWN` | `1.0` | Segundos entre ataques |
-| `WAVE_FIRST_SIZE` | `5` | Zombies en oleada 1 |
-| `WAVE_GROWTH` | `2` | +N zombies por oleada |
-| `WAVE_BREAK` | `5.0` | Segundos entre oleadas |
-| `LOS_CHECK_INTERVAL` | `0.3` | Frecuencia de re-check de LOS |
-| `ANIM_FRAME_DURATION` | `0.15` | Segundos por frame de animación |
-
-### 🧠 Teoría Fase 9
-
-**Pool fijo vs dinámico:**
-Usamos pool fijo (`malloc` único de `max_zombies`). Pros: no fragmentación, no malloc en hot loop, slot reciclable. Con (e.g.) 30 slots y 10 zombies activos, el resto está en `Z_DEAD`. Cuando un zombie muere y termina su anim, su slot vuelve a `Z_DEAD` y puede usarse para spawnear otro.
-
-**Greedy steering vs pathfinding completo:**
-Para cub3D, **greedy steering** es suficiente: vector hacia jugador + colisión X/Y separada + LOS check. No necesitas A*. Si quieres más sofisticación: BFS sobre grid, recalculado cada N segundos, almacena solo el siguiente paso.
-
-**Line of Sight (LOS) eficiente:**
-Llamar al DDA en cada frame por cada zombie es caro. Optimizaciones:
-1. Solo recalcular cada `LOS_CHECK_INTERVAL` segundos por zombie.
-2. Solo recalcular si el zombie está dentro de un radio razonable (e.g. < 20 celdas).
-3. Cachear resultado en el zombie (`int has_los`).
-
-**Spawn fuera de vista:**
-Al spawnear, comprobar que la celda no esté en LOS del jugador (o al menos a > N distancia). Esto evita que aparezcan zombies "de la nada" delante del jugador → mucho más inmersivo, especialmente con niebla.
-
-**Daño con cooldown:**
-Sin cooldown, un zombie podría hacer daño en cada frame (60+ FPS → 600 daño/segundo). Cooldown de 1s = balance razonable.
-
-**Game Over:**
-Cuando `hp <= 0`, mostrar pantalla "GAME OVER - WAVE X SURVIVED" + "Press ESC to quit". No salir directamente, dar feedback.
-
-### ✅ Checklist Fase 9
-
-- [ ] Al iniciar el juego con `BONUS=1`, comienza la oleada 1 con N zombies.
-- [ ] Los zombies respetan colisiones con paredes (no atraviesan).
-- [ ] Si el jugador no está en LOS, los zombies hacen `Z_IDLE` (no chase magic).
-- [ ] Si el jugador entra en LOS, transición visible a `Z_CHASING`.
-- [ ] Animaciones se ven fluidas (≥4 frames de walk, ≥2 de attack).
-- [ ] Al matar todos los zombies de una oleada, hay pausa y luego empieza la siguiente.
-- [ ] La oleada N+1 tiene más zombies que la N.
-- [ ] Si el jugador recibe `hp` daño suficiente, aparece pantalla de game over.
-- [ ] Al cerrar (ESC o X), libera correctamente el pool de zombies (sin leaks).
-
----
-
-## 🌫️ FASE 10 — Niebla (Distance Fog) (👤 Persona B)
-
-> **Objetivo:** aplicar niebla volumétrica simple al render para crear atmósfera de horror y reducir visibilidad de zombies lejanos. Sinergia perfecta con Fase 9.
-> **Dependencias:** Fases 4 (texturas paredes) y 8 (sprites).
-> **Archivos:** `bonus/fog/fog_init.c`, `fog_apply.c`. Modificar `render/texture.c` y `bonus/sprites/sprite_render.c` para llamar a `apply_fog`.
-
-### 📁 `bonus/fog/fog_init.c` — LUT precomputada
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `init_fog` | `void init_fog(t_game *game)` | Configura `fog.color`, `fog.start_dist`, `fog.end_dist`. Llama a `build_fog_lut`. |
-| `build_fog_lut` | `void build_fog_lut(t_fog *fog)` | `malloc` `lut[lut_size]`. Para `i` de 0 a `lut_size`: `dist = (i / RESOLUTION); fog.factor_lut[i] = clamp((dist - start_dist) / (end_dist - start_dist), 0.0, 1.0);`. |
-| `free_fog` | `void free_fog(t_fog *fog)` | `free(fog.factor_lut)`. |
-
-### 📁 `bonus/fog/fog_apply.c` — Blend de píxel
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `apply_fog_to_color` | `int apply_fog_to_color(t_fog *fog, int color, double distance)` | Calcula índice en LUT: `idx = clamp((int)(distance * RESOLUTION), 0, lut_size-1)`. Lee `f = fog.factor_lut[idx]`. Devuelve color blendeado: ver fórmula abajo. |
-| `blend_colors` | `int blend_colors(int c1, int c2, double f)` | `r = (1-f)*R(c1) + f*R(c2); g = …; b = …;` Empaqueta de vuelta a `int`. |
-
-### Macros sugeridas
-
-| Macro | Valor | Significado |
-|---|---|---|
-| `FOG_COLOR` | `0x808080` | Gris medio (color de niebla) |
-| `FOG_START` | `2.0` | Distancia donde empieza la niebla |
-| `FOG_END` | `12.0` | Distancia donde la niebla es total |
-| `FOG_LUT_RESOLUTION` | `100` | Pasos por unidad → LUT de 1200 entradas para FOG_END=12 |
-
-### 🧠 Teoría Fase 10
-
-**Fórmula de blending:**
-Color final = `(1 - f) * color_original + f * fog_color`, donde `f ∈ [0, 1]`.
-- `f = 0` → sin niebla (color original).
-- `f = 1` → niebla total (color = fog_color).
-- Linear interpolation por canal RGB.
-
-**Por qué LUT:**
-Calcular `f` por píxel implica una división y dos comparaciones. En 1280×720 = ~920K píxeles → caro. La LUT cambia a 1 acceso a array → órdenes de magnitud más rápido.
-
-**Aplicación a paredes:**
-En `update_texture_pixels` (Fase 4), después de leer el color de la textura: `color = apply_fog_to_color(&game->fog, color, ray.perp_wall_dist);`. La distancia es `perp_wall_dist` para esa columna.
-
-**Aplicación a sprites:**
-En `draw_sprite_column` (Fase 8): `color = apply_fog_to_color(&game->fog, color, ty);`. La distancia del sprite es `ty` (transform_y).
-
-**Aplicación a suelo y techo (opcional):**
-Si solo hay color plano, no hay distancia "por píxel" — pero podemos atenuar verticalmente: cuanto más cerca del horizonte (`y == win_h/2`), más niebla. Aproximación: `dist = win_h / (2 * abs(y - win_h/2))` y aplicar `apply_fog`.
-
-**Tuning:**
-- `FOG_START` muy bajo → niebla pegada al jugador (claustrofóbico).
-- `FOG_END` muy bajo → mundo "termina" muy cerca (visibilidad mínima).
-- Para horror: `FOG_START=1.5`, `FOG_END=8.0`, `FOG_COLOR=0x404040` (gris oscuro).
-- Para atmósfera lluviosa: `FOG_COLOR=0xC0C0C0` (gris claro).
-
-**Sinergia con zombies:**
-Con niebla agresiva, los zombies aparecen como sombras antes de ser visibles claramente → tensión + susto. La IA puede aprovechar esto: spawn fuera de niebla = invisible, entra al rango "claro" justo antes de atacar.
-
-### ✅ Checklist Fase 10
-
-- [ ] Las paredes lejanas se ven más grises/borrosas que las cercanas.
-- [ ] Al moverse, la transición es suave (sin "saltos" de color).
-- [ ] Los sprites/zombies lejanos también se ven afectados.
-- [ ] No hay artefactos en la unión pared-suelo o pared-techo.
-- [ ] Cambiar `FOG_END` a runtime (tecla F) muestra el efecto.
-- [ ] Sin impacto significativo en el FPS (LUT funciona).
-- [ ] Liberar `factor_lut` en `free_fog` (sin leaks).
-
----
-
-## 🟪 FASE 11 — HUD del Juego (👤 Persona A)
-
-> **Objetivo:** mostrar info del jugador en pantalla: HP, oleada actual, kill count.
-> **Dependencias:** Fases 9 (zombies) y 6 (game loop).
-> **Archivos:** `bonus/hud/hud_render.c`, `hud_digits.c`. Texturas en `textures/hud/`.
-
-### 📁 `bonus/hud/hud_render.c` — Composición del HUD
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `init_hud` | `int init_hud(t_game *game)` | Carga texturas de dígitos `0..9` + barra HP. Configura posiciones. |
-| `render_hud` | `void render_hud(t_game *game)` | Llamada al final del frame, después del raycast/sprites. Dibuja: barra de HP, número de oleada, número de kills. |
-| `render_hp_bar` | `void render_hp_bar(t_game *game)` | Dibuja rectángulo `bar_width * bar_height` en `(bar_x, bar_y)`. Color según porcentaje: verde > 60%, amarillo > 30%, rojo ≤ 30%. Borde negro. |
-| `render_game_over` | `void render_game_over(t_game *game)` | Si `game->game_over == 1`: oscurece pantalla, escribe "GAME OVER" centrado + "WAVE X SURVIVED" + "PRESS ESC". |
-
-### 📁 `bonus/hud/hud_digits.c` — Dígitos pre-renderizados
-
-| Función | Prototipo | Qué hace |
-|---|---|---|
-| `draw_number` | `void draw_number(t_game *game, int n, int x, int y)` | Convierte `n` a string. Por cada dígito, blittea la textura correspondiente en `(x + i*digit_w, y)`. |
-| `draw_label` | `void draw_label(t_game *game, char *str, int x, int y)` | Versión simple usando `mlx_string_put` (limitado a ASCII básico, solo blanco). Para títulos como "WAVE:" y "HP:". |
-
-### Macros sugeridas
-
-| Macro | Valor | Significado |
-|---|---|---|
-| `HUD_BAR_WIDTH` | `200` | Ancho de la barra HP en píxeles |
-| `HUD_BAR_HEIGHT` | `20` | Alto de la barra HP |
-| `HUD_BAR_X` | `20` | Posición X (esquina superior izq) |
-| `HUD_BAR_Y` | `20` | Posición Y |
-| `HUD_DIGIT_W` | `16` | Ancho de cada dígito XPM |
-| `HUD_DIGIT_H` | `24` | Alto |
-| `HP_GREEN` | `0x00FF00` | Color barra HP > 60% |
-| `HP_YELLOW` | `0xFFFF00` | Color barra HP > 30% |
-| `HP_RED` | `0xFF0000` | Color barra HP ≤ 30% |
-
-### 🧠 Teoría Fase 11
-
-**Texto en MLX sin librería de fuentes:**
-MLX expone `mlx_string_put(mlx, win, x, y, color, str)`. Limitaciones:
-- Solo color blanco (en muchas distros, ignora el `color`).
-- Pinta directamente sobre la ventana, NO sobre tu buffer → puede causar parpadeo.
-- Solo ASCII básico.
-
-Por eso: para números grandes y vistosos (HP, oleada) → texturas XPM pre-renderizadas de los dígitos `0` a `9`. Para etiquetas estáticas ("WAVE:", "HP:") → `mlx_string_put` es aceptable.
-
-**Orden de render para evitar parpadeo:**
-1. `render_raycast` → escribe en `tex_pixels[][]`.
-2. `render_frame` → vuelca `tex_pixels` a la imagen MLX.
-3. `render_sprites` → escribe sprites con z-buffer.
-4. `apply_fog` → blendea fog (Fase 10).
-5. `render_minimap` (Fase 7).
-6. `render_hud` → escribe HUD encima de TODO.
-7. `mlx_put_image_to_window` → un solo volcado a ventana.
-
-**HP bar:**
-Dos rectángulos: uno de fondo (negro o gris oscuro, ancho fijo) + uno superpuesto (color según %, ancho proporcional al HP).
-
-```
-hp_pct = player.hp / 100.0
-fill_w = (int)(HUD_BAR_WIDTH * hp_pct)
-draw_rect(HUD_BAR_X, HUD_BAR_Y, HUD_BAR_WIDTH, HUD_BAR_HEIGHT, BLACK)
-draw_rect(HUD_BAR_X, HUD_BAR_Y, fill_w, HUD_BAR_HEIGHT, color_for_hp(hp_pct))
-```
-
-### ✅ Checklist Fase 11
-
-- [ ] Barra de HP visible en esquina superior izquierda.
-- [ ] Color de la barra cambia según HP (verde → amarillo → rojo).
-- [ ] Número de oleada visible (esquina superior derecha).
-- [ ] Contador de kills visible.
-- [ ] Pantalla de game over aparece al morir.
-- [ ] HUD no parpadea (todo en mismo buffer antes de volcar).
-- [ ] HUD se redibuja cada frame (HP cambia en tiempo real).
-
----
-
-# ═══════════════════════════════════════════════════════
 # 📊 REPARTO DE TRABAJO
 # ═══════════════════════════════════════════════════════
 
@@ -1609,9 +1215,6 @@ draw_rect(HUD_BAR_X, HUD_BAR_Y, fill_w, HUD_BAR_HEIGHT, color_for_hp(hp_pct))
 | **Fase 5** | Controles (WASD, flechas, ESC) + colisiones | `movement/input_handler.c`, `player_*.c` |
 | **Fase 6** | Cleanup de memoria + game loop integration | `exit/exit.c`, `exit/free_data.c` |
 | **Fase 7a** | Minimapa + Puertas (bonus oficial) | `bonus/minimap/*`, `bonus/doors/*` |
-| **Fase 9a** | Spawn + lógica de oleadas (Mods) | `bonus/zombies/zombie_spawn.c`, `zombie_wave.c` |
-| **Fase 9c** | Daño + game over (Mods) | `bonus/zombies/zombie_damage.c` |
-| **Fase 11** | HUD: barra HP + dígitos + game over screen (Mods) | `bonus/hud/*` |
 
 ## 👤 Persona B — "El Motor + Gráficos"
 
@@ -1622,24 +1225,20 @@ draw_rect(HUD_BAR_X, HUD_BAR_Y, fill_w, HUD_BAR_HEIGHT, color_for_hp(hp_pct))
 | **Fase 4** | Texturas en paredes + shading N/E | `render/texture.c` (update_texture_pixels) |
 | **Fase 6** | Game loop + render hook + has_moved opt | `main.c` (game_loop), `render/render.c` |
 | **Fase 7b** | Rotación con ratón (bonus oficial) | `bonus/mouse/mouse_handler.c` |
-| **Fase 8** | Sistema de Sprites + Z-buffer (Mods) | `bonus/sprites/*` |
-| **Fase 9b** | IA + LOS + animación zombies (Mods) | `bonus/zombies/zombie_ai.c`, `zombie_los.c`, `zombie_anim.c` |
-| **Fase 10** | Niebla con LUT (Mods) | `bonus/fog/*` |
+| **Fase 8** | Sprites animados (bonus oficial #4): infra + z-buffer + frame cycling | `bonus/sprites/*` |
 
-## ⏱️ Timeline sugerido (extendido con Mods)
+## ⏱️ Timeline sugerido
 
 ```
 Semana 1:  Fase 1 (A)        ║ Fase 2 (B)              → En paralelo
-Semana 2:  Fase 5 (A)        ║ Fase 3 (B)              → En paralelo
-Semana 3:  Fase 6 (A+B)                                 → Integración Mandatory ✅
-Semana 4:  Fase 7a (A)       ║ Fase 7b (B)             → Bonus oficial ✅
-Semana 5:  Fase 9a spawn (A) ║ Fase 8 sprites (B)      → Mods preparación
-Semana 6:  Fase 9c daño (A)  ║ Fase 9b IA (B)          → Zombies completos
-Semana 7:  Fase 11 HUD (A)   ║ Fase 10 niebla (B)      → Atmósfera + UI
+Semana 2:  Fase 1 (A)        ║ Fase 3 (B)              → Parser avanza + raycasting
+Semana 3:  Fase 1 (A)        ║ Fase 3 (B)              → Parser cierra + DDA completo
+Semana 4:  Fase 5 (A)        ║ Fase 4 (B)              → Controles + texturas
+Semana 5:  Fase 6 (A+B)                                 → Integración Mandatory ✅
+Semana 6:  Fase 7a minimap (A) ║ Fase 7b mouse (B)     → Bonus oficial parcial
+Semana 7:  Fase 7a doors (A)   ║ Fase 8 sprites (B)    → Bonus oficial completo ✅
 Semana 8:  Pulido + testing exhaustivo + valgrind + norminette → Listo evaluación
 ```
-
-> **Sincronización crítica:** Fase 9b necesita Fase 8 lista (los zombies son sprites). Fase 11 necesita Fase 9c lista (HUD muestra HP que afecta zombies).
 
 ### Matriz de propiedad de archivos (evita conflictos en git)
 
@@ -1654,10 +1253,7 @@ Semana 8:  Pulido + testing exhaustivo + valgrind + norminette → Listo evaluac
 | `bonus/minimap/*` | A | |
 | `bonus/mouse/*` | B | |
 | `bonus/doors/*` | A | |
-| `bonus/sprites/*` | B | |
-| `bonus/zombies/*` | A+B | spawn/wave/damage = A; ai/los/anim = B |
-| `bonus/fog/*` | B | |
-| `bonus/hud/*` | A | |
+| `bonus/sprites/*` | B | Incluye sprite_anim.c para frame cycling |
 | `Makefile` | Compartido | Cambios coordinados, commit aparte |
 | `includes/cub3d.h` | Compartido | Coordinar antes de añadir structs/macros |
 
@@ -1727,33 +1323,6 @@ Semana 8:  Pulido + testing exhaustivo + valgrind + norminette → Listo evaluac
 - [ ] Múltiples sprites se renderizan en orden (lejos → cerca)
 - [ ] No hay parpadeo al mover el jugador alrededor de un sprite
 
-### Fase 9 — Zombies con IA y Oleadas (Mods)
-- [ ] Zombies aparecen al iniciar la oleada 1
-- [ ] Zombies respetan colisiones con paredes
-- [ ] Sin LOS, los zombies hacen idle/random walk
-- [ ] Con LOS, los zombies persiguen al jugador
-- [ ] Animaciones de walk/attack/die se ven fluidas
-- [ ] Daño por proximidad funciona con cooldown
-- [ ] HP del jugador llega a 0 → game over screen
-- [ ] Al matar todos, espera y arranca siguiente oleada
-- [ ] Oleada N+1 tiene más zombies que la N
-- [ ] Pool de zombies se libera correctamente al cerrar (sin leaks)
-
-### Fase 10 — Niebla (Mods)
-- [ ] Paredes lejanas se ven más grises (blend con FOG_COLOR)
-- [ ] Sprites lejanos también se ven afectados por niebla
-- [ ] Transición suave (sin saltos de color)
-- [ ] LUT precomputada → sin caída de FPS
-- [ ] `factor_lut` se libera (sin leaks)
-
-### Fase 11 — HUD (Mods)
-- [ ] Barra de HP visible y se actualiza en tiempo real
-- [ ] Color de barra: verde / amarillo / rojo según %
-- [ ] Número de oleada visible
-- [ ] Contador de kills visible
-- [ ] Pantalla de game over al morir, esperando ESC
-- [ ] HUD no parpadea (escrito en buffer antes del volcado)
-
 ### ✅ Checklist GLOBAL (antes de evaluación)
 
 - [ ] Compila con `make` (mandatory) sin warnings
@@ -1790,7 +1359,6 @@ Semana 8:  Pulido + testing exhaustivo + valgrind + norminette → Listo evaluac
 | `large.cub` | Mapa grande (>50×50) → testea performance |
 | `irregular.cub` | Filas de longitud variable, zonas ' ' interiores |
 | `pos_north.cub`, `pos_south.cub`, `pos_east.cub`, `pos_west.cub` | Una por cada dirección de spawn |
-| `zombies_arena.cub` | Mapa con celdas `'Z'` para spawn de zombies (Mods) |
 
 ## ❌ Mapas inválidos (`maps/bad/`) — basado en mcombeau
 
@@ -2014,22 +1582,14 @@ Detecta use-after-free, buffer overflow, double-free. Si MLX se queja: `ASAN_OPT
 - Compilar en WSL2 con WSLg.
 - Una vez compila en todos → estás listo para evaluación.
 
-## Test específico de Mods
+## Test específico de Bonus oficial
 
-### Zombies
-- Ejecutar mapa con muchas celdas `Z`. Verificar que solo spawnea fuera de LOS.
-- Atacar zombie hasta matarlo. Animación de muerte completa.
-- Ser atacado hasta morir. Game over screen aparece.
-- Sobrevivir 5 oleadas. Cada una más difícil.
-
-### Niebla
-- Ajustar `FOG_END` en runtime (tecla F si la implementas, sino recompila). Verificar transición visual.
-- Comparar FPS con y sin niebla activa. Diferencia < 5%.
-
-### HUD
-- HP llega a 30% → barra cambia a amarillo. A 10% → rojo.
-- Matar zombie → contador de kills incrementa.
-- Avanzar oleada → número actualiza.
+### Sprites animados
+- Cargar un sprite con 4 frames (ej: `torch_0..3.xpm`) en el mapa.
+- Verificar que cicla frames visiblemente (no se queda en uno fijo).
+- Pasar detrás de un muro → sprite se oculta (z-buffer).
+- Caminar alrededor → siempre encarado al jugador (billboarding).
+- Múltiples sprites (≥3): se ordenan por distancia, no parpadean.
 
 ---
 
@@ -2070,7 +1630,7 @@ Detecta use-after-free, buffer overflow, double-free. Si MLX se queja: `ASAN_OPT
 
 ## Game AI básico
 
-- **Steering behaviors (Reynolds)** — para greedy steering de zombies: https://www.red3d.com/cwr/steer/
+- **Steering behaviors (Reynolds)** — referencia clásica de movimiento procedural en juegos 2D: https://www.red3d.com/cwr/steer/
 - **Red Blob Games — Pathfinding** — si quieres meter A* o BFS: https://www.redblobgames.com/pathfinding/
 
 ## Trigonometría / movement
@@ -2112,7 +1672,7 @@ XPM debe ser cuadrado y potencia de 2 para que la fast-mask `& (size-1)` funcion
 | `main` | Permanente | Solo merges desde `dev`, listos para evaluar |
 | `dev` | Permanente | Integración antes de `main` |
 | `feature/<persona>-<fase>` | Temporal (1 fase) | Trabajo individual; e.g. `feature/A-fase1-parser` |
-| `feature/bonus-<feature>` | Temporal | Mods avanzados; e.g. `feature/bonus-zombies-ai` |
+| `feature/bonus-<feature>` | Temporal | Bonus oficial; e.g. `feature/bonus-sprites` |
 | `fix/<bug>` | Temporal | Hotfix urgente; merge directo a `dev` y `main` si crítico |
 
 ## Flujo de trabajo
@@ -2215,8 +1775,7 @@ norminette sources/ includes/ || {
 - [ ] No se atraviesan paredes
 - [ ] Texturas correctas en N/S/E/W (pasea alrededor de un muro y verifica)
 - [ ] Suelo y techo del color correcto
-- [ ] **Bonus:** minimapa visible, ratón rota, puertas abren/cierran
-- [ ] **Mods:** zombies aparecen, persiguen, atacan; HUD visible; niebla activa
+- [ ] **Bonus oficial:** minimapa visible, ratón rota, puertas abren/cierran, sprites animados ciclan frames y respetan z-buffer
 - [ ] README explica cómo compilar y jugar
 - [ ] Repo en GitHub limpio, sin binarios commiteados
 - [ ] Saber explicar TODA tu parte del código (defensa con evaluador)
