@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/05/29 18:07:09 by cristian         ###   ########.fr       */
+/*   Updated: 2026/05/30 23:17:01 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,9 @@
 
 /*Error strings*/
 # define ERR_USAGE "Usage: ./cub3D <map.cub>"
-
+# define ERR_FILE_NOT_CUB "Not a .cub file"
+/*ERROR*/
 int	err_msg(char *detail, char *str, int code);
+/*PARSING*/
+int	check_file(char *arg);
 #endif

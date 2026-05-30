@@ -17,7 +17,8 @@ INC         = -I ./includes/ \
 
 SRC_PATH    = sources/
 SRC         =	main.c \
-				error.c
+				error.c \
+				parsing/check_args.c
 
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
 
