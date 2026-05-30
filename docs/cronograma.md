@@ -55,8 +55,8 @@
 
 | ID | Sem | Persona | Título | Fase roadmap | Estado |
 |---|---|---|---|---|---|
-| **S00** | 0 | 👥 | Setup repo, libft, MLX, Makefile base, `cub3d.h` esqueleto | — | ☐ |
-| **S01A** | 1 | 👤 A | `error.c` + `enum e_output` + constantes `ERR_*` | F1 | ☐ |
+| **S00** | 0 | 👥 | Setup repo, libft, MLX, Makefile base, `cub3d.h` esqueleto | — | ✅ |
+| **S01A** | 1 | 👤 A | `error.c` + `enum e_output` + constantes `ERR_*` | F1 | ✅ |
 | **S01B** | 1 | 👤 B | Makefile profesional (BONUS flag, `objects/`, subdirs) | F2 | ☐ |
 | **S02A** | 1 | 👤 A | `parsing/check_args.c` (extension, dir, exists) | F1 | ☐ |
 | **S02B** | 1 | 👤 B | `init/init_data.c` + `init/init_mlx.c` (ventana negra) | F2 | ☐ |
