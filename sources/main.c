@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 23:22:57 by cristian          #+#    #+#             */
-/*   Updated: 2026/05/30 23:21:55 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/07 20:53:55 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,16 @@
 
 int	main(int argc, char *argv[])
 {
+	t_data	data;
+
+	data = (t_data){0};
 	if (argc != 2)
 		return (err_msg(NULL, ERR_USAGE, FAILURE));
 	if (check_file(argv[1]) == FAILURE)
+		return (FAILURE);
+	if (parse_memory(argv[1], &data) == FAILURE)
+		return (FAILURE);
+	if (get_file_data(&data) == FAILURE)
 		return (FAILURE);
 	return (SUCCESS);
 }
