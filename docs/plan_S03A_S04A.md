@@ -77,12 +77,34 @@ Beneficio: tus fixtures NO necesitan .xpm reales.
 
 ---
 
-### D5 — Propiedad de memoria
+### D5 — Propiedad de memoria (PENDIENTE — resolver antes de T10 final)
 
-- **Lineas del fichero:** las posee la struct hasta acabar el parsing; liberalas cuando ya no las uses (decide: tras construir grid en S05A, o copias y liberas ya?). Documenta.
-- **Rutas textura:** `ft_strdup` -> struct -> free global (S09AB).
-- **Cualquier rama de error:** libera lo alocado + drena GNL a NULL antes de `return (FAILURE)`. Tienes `ft_free_strs(char**, char**, char**)` en tu libft (libft.h:100) para arrays.
-- **DoD:** valgrind clean tambien con un input que falla (no solo el feliz).
+**Leak 1: `data->file_lines` (array + cada linea)**
+- `parse_memory` aloca el array con `malloc(sizeof(char *) * (count + 1))`.
+- `fill_lines` guarda cada linea (alocada por GNL) en `file_lines[i]`.
+- **Cuando liberar:** tras terminar todo el parsing (despues de S05A, cuando el grid del mapa ya este construido). Hacer `free(file_lines[i])` en bucle + `free(file_lines)`.
+- **Donde:** crear funcion `free_file_lines(t_data *data)` y llamarla al final del parsing en main.
+
+**Leak 2: `data->tex_paths[0..3]` (rutas de textura)**
+- `ft_strtrim` aloca cada ruta en `extract_texture`.
+- **Cuando liberar:** en el cleanup global (S09AB, `exit/free_data.c`).
+- **Donde:** `free(data->tex_paths[i])` para i=0..3 si != NULL.
+
+**Leak 3: rama de error a mitad de `fill_lines`**
+- Si GNL falla a mitad de lectura (caso raro: disco lleno, fichero borrado):
+  - Liberar las lineas ya guardadas en `file_lines[0..i-1]`.
+  - Liberar el array `file_lines`.
+  - Drenar GNL a NULL (llamar en bucle hasta que devuelva NULL) para limpiar su buffer estatico.
+- **Herramienta:** `ft_free_strs(char**, char**, char**)` en libft (libft.h:100).
+
+**Leak 4: rama de error en `get_file_data` (duplicado/path vacio)**
+- Si `extract_texture` falla, ya se alocaron lineas en `file_lines` y quiza alguna ruta previa en `tex_paths`.
+- **Solucion:** antes de `return (FAILURE)` en main, liberar todo lo alocado. Centralizar en una funcion `free_parsing(t_data *data)`.
+
+**DoD memoria:** `valgrind --leak-check=full` con 0 definitely lost en:
+- Caso feliz (fichero valido completo).
+- Caso error (duplicado, path vacio, fichero vacio, fichero inexistente).
+- Resolver ANTES del commit final de S03A+S04A.
 
 ---
 
