@@ -109,3 +109,26 @@ Lo que SI tiene que no estaba en su cronograma aun:
 
 Rodrigo se adelanto al raycasting sin hacer la base. Esta refactorizacion
 nos pone al dia reusando su logica dentro de la estructura correcta.
+
+---
+
+## Estado actual (2026-06-07)
+
+### Completado
+- Cluster 1: rama creada, structs integradas (t_player, t_img, t_ray en cub3d.h)
+- Cluster 2: todos los ficheros migrados y reformateados (norminette clean)
+- Cluster 3: integrado con nuestro codigo (cub3d.h, Makefile, main.c)
+- Cluster 4: compila, norminette OK, ventana se abre, raycasting funciona, parser OK
+
+### Bugs conocidos (esperados, NO bloquean merge)
+- Core dump al salir del mapa (sin colisiones) -> se arregla en S08A
+- Movimiento "raro" (jugador puede atravesar muros) -> se arregla en S08A
+- Posicion de inicio arbitraria (centro ventana) -> se arregla en S05A (parser da posicion del jugador)
+- Mapa hardcodeado en init_game.c (get_temp_map) -> se sustituye cuando parser construya grid (S05A)
+- Velocidad sin ajustar -> se calibra tras colisiones (S08A)
+- No hay suelo/techo coloreado -> S04B (depende de S04A)
+- No hay texturas en muros (solo color blanco plano) -> S07B
+
+### Pendiente
+- Cluster 5: merge a dev + push
+- Quitar get_temp_map() cuando el parser provea el mapa real

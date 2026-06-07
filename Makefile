@@ -20,7 +20,14 @@ SRC         =	main.c \
 				error.c \
 				parsing/check_args.c \
 				parsing/get_file_data.c \
-				parsing/parsing_data.c
+				parsing/parsing_data.c \
+				init/init_game.c \
+				render/render_utils.c \
+				render/raycasting.c \
+				render/game_loop.c \
+				movement/player.c \
+				movement/input.c \
+				exit/exit_game.c
 
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
 

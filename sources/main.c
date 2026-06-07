@@ -25,5 +25,11 @@ int	main(int argc, char *argv[])
 		return (FAILURE);
 	if (get_file_data(&data) == FAILURE)
 		return (FAILURE);
+	init_game(&data);
+	mlx_hook(data.win, 2, 1L << 0, key_press, &data);
+	mlx_hook(data.win, 3, 1L << 1, key_release, &data);
+	mlx_hook(data.win, 17, 0L, close_window, &data);
+	mlx_loop_hook(data.mlx, game_loop, &data);
+	mlx_loop(data.mlx);
 	return (SUCCESS);
 }
