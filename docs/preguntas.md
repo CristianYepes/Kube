@@ -79,3 +79,58 @@ Pista: piensa en lo que hace un usuario con ./cub3D 2>/tmp/err. ¿Por qué exist
 2. ¿Por qué tu err_msg devuelve un int?
 Podría ser void. ¿Qué ganas devolviendo int?
 Pista: mira tu propio main.c:
+
+
+tema bits:
+
+Qué es un color en int?
+
+  Un int tiene 32 bits. MiniLibX espera el color en
+  este formato:
+
+  bits:  31......24  23......16  15.......8
+  7........0
+         [  vacío  ] [   ROJO  ] [  VERDE  ] [  AZUL
+   ]
+
+  Si tienes R=220, G=100, B=0, quieres un solo int
+  que sea:
+
+  00000000  11011100  01100100  00000000
+            R=220     G=100     B=0
+
+  ---
+  ¿Qué hace << (bit shift)?
+
+  Mueve los bits a la izquierda N posiciones:
+
+  ft_atoi("220") = 220       → 00000000 00000000
+  00000000 11011100
+  220 << 16                   → 00000000 11011100
+  00000000 00000000
+                                         ^^^^^^^^ ←
+  R ya está en su sitio
+
+  ft_atoi("100") = 100       → 00000000 00000000
+  00000000 01100100
+  100 << 8                    → 00000000 00000000
+  01100100 00000000
+
+  ^^^^^^^^ ← G en su sitio
+
+  ft_atoi("0") = 0           → 00000000 00000000
+  00000000 00000000
+                                ← B ya está en su
+  sitio (no necesita shift)
+
+  ---
+  ¿Qué hace | (OR)?
+
+  Combina los tres en uno solo — cada uno ocupa su
+  "franja" sin pisar al otro:
+
+  (220 << 16) | (100 << 8) | 0  =  00000000 11011100
+  01100100 00000000
+                                              R
+    G        B
+

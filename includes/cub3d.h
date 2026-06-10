@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/07 20:36:03 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/11 00:36:41 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,8 @@
 # define ERR_EMPTY_FILE "Empty file"
 # define ERR_DUPLICATE_TEXTURE "Duplicate Texture"
 # define ERR_EMPTY_PATH "Empty path"
+# define ERR_DUPLICATE_COLOR "Duplicate color"
+# define ERR_INVALID_COLOR "Invalid color format"
 
 /*Structs*/
 typedef struct s_img
@@ -131,6 +133,7 @@ int				err_msg(char *detail, char *str, int code);
 int				check_file(char *arg);
 int				parse_memory(char *path, t_data *data);
 int				get_file_data(t_data *data);
+int				fill_color_textures(char *line, t_data *data);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);

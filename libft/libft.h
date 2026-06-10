@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   libft.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cyepes <cyepes@student.42.fr>              +#+  +:+       +#+        */
+/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/26 11:00:07 by cyepes            #+#    #+#             */
-/*   Updated: 2024/10/15 02:00:13 by cyepes           ###   ########.fr       */
+/*   Updated: 2026/06/10 10:47:24 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ char				*ft_strtrim(char const *s1, char const *set);
 char				*ft_substr(char const *s, unsigned int start, size_t len);
 int					ft_tolower(int c);
 int					ft_toupper(int c);
+void				ft_free_split(char **split);
 
 /*parte bonus*/
 

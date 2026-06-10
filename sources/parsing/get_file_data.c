@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/31 16:30:05 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/07 20:41:37 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/11 00:52:06 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ static int	process_line(char *line, int type, t_data *data)
 	if (type == TYPE_TEXTURE)
 		return (extract_texture(line, data));
 	if (type == TYPE_COLOR)
-		return (SUCCESS);
+		return (fill_color_textures(line, data));
 	if (type == TYPE_MAP)
 		return (SUCCESS);
 	return (0);

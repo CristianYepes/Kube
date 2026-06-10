@@ -40,6 +40,7 @@ SRCS =	ft_bzero.c \
 		ft_putendl_fd.c \
 		ft_putnbr_fd.c \
 		ft_split.c \
+		ft_free_split.c \
 		get_next_line.c \
 		get_next_line_utils.c \
 
