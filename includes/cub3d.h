@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3d.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/07 20:36:03 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/12 13:53:01 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,9 @@
 # define WIN_W 1280
 # define WIN_H 720
 
-/*Raycasting*/
-# define BLOCK 64
-# define FOV 1.0471975512f
+/*movement*/
+# define MOVE_SPEED 0.05
+# define ROT_SPEED 0.03
 
 /*Keycodes*/
 # define KEY_W 119
@@ -77,9 +77,12 @@ typedef struct s_img
 
 typedef struct s_player
 {
-	float	x;
-	float	y;
-	float	angle;
+	double	pos_x;
+	double	pos_y;
+	double	dir_x;
+	double	dir_y;
+	double	plane_x;
+	double	plane_y;
 	int		key_up;
 	int		key_down;
 	int		key_left;
@@ -90,14 +93,13 @@ typedef struct s_player
 
 typedef struct s_ray
 {
-	float	angle;
-	float	dir_x;
-	float	dir_y;
-	float	delta_x;
-	float	delta_y;
-	float	side_x;
-	float	side_y;
-	float	wall_dist;
+	double	dir_x;
+	double	dir_y;
+	double	delta_x;
+	double	delta_y;
+	double	side_x;
+	double	side_y;
+	double	wall_dist;
 	int		map_x;
 	int		map_y;
 	int		step_x;
@@ -139,6 +141,7 @@ void			put_pixel(t_data *data, int x, int y, int color);
 void			clear_image(t_data *data);
 void			cast_rays(t_data *data);
 int				game_loop(t_data *data);
+void    		paint_floor_ceiling(t_data *data);
 /*MOVEMENT*/
 int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);

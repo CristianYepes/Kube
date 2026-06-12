@@ -37,6 +37,8 @@ void	init_game(t_data *data)
 {
 	init_player(&data->player);
 	data->map = get_temp_map();
+	data->ceiling_color = 0x87CEEB;
+	data->floor_color = 0x8B4513;
 	data->mlx = mlx_init();
 	data->win = mlx_new_window(data->mlx, WIN_W, WIN_H, "cub3D");
 	data->img.img = mlx_new_image(data->mlx, WIN_W, WIN_H);

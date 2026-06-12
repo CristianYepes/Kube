@@ -25,6 +25,7 @@ SRC         =	main.c \
 				render/render_utils.c \
 				render/raycasting.c \
 				render/game_loop.c \
+				render/floor_ceeling.c \
 				movement/player.c \
 				movement/input.c \
 				exit/exit_game.c

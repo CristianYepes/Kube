@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   raycasting.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/07 21:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/12 13:51:22 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,41 +14,38 @@
 
 static void	init_ray(t_ray *ray, t_player *p, int x)
 {
-	ray->angle = p->angle - FOV / 2 + (x / (float)WIN_W) * FOV;
-	ray->dir_x = cos(ray->angle);
-	ray->dir_y = sin(ray->angle);
-	ray->map_x = (int)(p->x / BLOCK);
-	ray->map_y = (int)(p->y / BLOCK);
-	ray->delta_x = fabs(1.0f / ray->dir_x);
-	ray->delta_y = fabs(1.0f / ray->dir_y);
+	double	camera_x;
+
+	camera_x = 2.0 * x / (double)WIN_W - 1.0;
+	ray->dir_x = p->dir_x + p->plane_x * camera_x;
+	ray->dir_y = p->dir_y + p->plane_y * camera_x;
+	ray->map_x = (int)p->pos_x;
+	ray->map_y = (int)p->pos_y;
+	ray->delta_x = fabs(1.0 / ray->dir_x);
+	ray->delta_y = fabs(1.0 / ray->dir_y);
 }
 
 static void	init_step(t_ray *ray, t_player *p)
 {
-	float	pos_x;
-	float	pos_y;
-
-	pos_x = p->x / BLOCK;
-	pos_y = p->y / BLOCK;
 	if (ray->dir_x < 0)
 	{
 		ray->step_x = -1;
-		ray->side_x = (pos_x - ray->map_x) * ray->delta_x;
+		ray->side_x = (p->pos_x - ray->map_x) * ray->delta_x;
 	}
 	else
 	{
 		ray->step_x = 1;
-		ray->side_x = (ray->map_x + 1.0f - pos_x) * ray->delta_x;
+		ray->side_x = (ray->map_x + 1.0 - p->pos_x) * ray->delta_x;
 	}
 	if (ray->dir_y < 0)
 	{
 		ray->step_y = -1;
-		ray->side_y = (pos_y - ray->map_y) * ray->delta_y;
+		ray->side_y = (p->pos_y - ray->map_y) * ray->delta_y;
 	}
 	else
 	{
 		ray->step_y = 1;
-		ray->side_y = (ray->map_y + 1.0f - pos_y) * ray->delta_y;
+		ray->side_y = (ray->map_y + 1.0 - p->pos_y) * ray->delta_y;
 	}
 }
 
@@ -84,7 +81,6 @@ static void	draw_wall_column(t_data *data, t_ray *ray, int x)
 		ray->wall_dist = ray->side_x - ray->delta_x;
 	else
 		ray->wall_dist = ray->side_y - ray->delta_y;
-	ray->wall_dist *= cos(data->player.angle - ray->angle);
 	line_h = (int)(WIN_H / ray->wall_dist);
 	start = -line_h / 2 + WIN_H / 2;
 	end = line_h / 2 + WIN_H / 2;
