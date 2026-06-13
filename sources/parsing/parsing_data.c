@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/31 16:29:02 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/06 17:01:47 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/13 18:49:17 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,10 +46,15 @@ static int	fill_lines(char *path, t_data *data)
 	if (fd == -1)
 		return (err_msg(path, strerror(errno), FAILURE));
 	line = get_next_line(fd);
-	while (line != NULL)
+	while (line != NULL && i < data->file_nb_lines)
 	{
 		data->file_lines[i] = line;
 		i++;
+		line = get_next_line(fd);
+	}
+	while (line != NULL)
+	{
+		free(line);
 		line = get_next_line(fd);
 	}
 	data->file_lines[i] = NULL;

@@ -134,6 +134,9 @@ int				check_file(char *arg);
 int				parse_memory(char *path, t_data *data);
 int				get_file_data(t_data *data);
 int				fill_color_textures(char *line, t_data *data);
+/*PARSING UTILS*/
+int				is_a_white_space(char c);
+char			*skip_spaces(char *str);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);
