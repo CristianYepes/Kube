@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/13 19:15:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/13 19:15:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/13 19:31:41 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,4 +24,34 @@ char	*skip_spaces(char *str)
 	while (*str == ' ' || *str == '\t')
 		str++;
 	return (str);
+}
+
+void	free_file_lines(t_data *data)
+{
+	int	i;
+
+	i = 0;
+	if (!data->file_lines)
+		return ;
+	while (i < data->file_nb_lines)
+	{
+		free(data->file_lines[i]);
+		i++;
+	}
+	free(data->file_lines);
+	data->file_lines = NULL;
+}
+
+void	free_parsing(t_data *data)
+{
+	int	i;
+
+	i = 0;
+	free_file_lines(data);
+	while (i < 4)
+	{
+		if (data->tex_paths[i])
+			free(data->tex_paths[i]);
+		i++;
+	}
 }

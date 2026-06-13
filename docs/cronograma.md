@@ -62,9 +62,9 @@
 | **S02B** | 1 | 👤 B | `init/init_data.c` + `init/init_mlx.c` (ventana negra) | F2 | ☐ |
 | **🔄 SYNC1** | 1 | 👥 | Ventana se abre, ESC cierra, parser rechaza fichero malo | — | ☐ |
 | **⭐ M1** | 1 | — | **Hito: Hello world** | — | ☐ |
-| **S03A** | 2 | 👤 A | `parsing/parse_data.c` + `get_file_data.c` (lee fichero, branch ID/mapa) | F1 | ☐ |
+| **S03A** | 2 | 👤 A | `parsing/parse_data.c` + `get_file_data.c` (lee fichero, branch ID/mapa) | F1 | ✅ |
 | **S03B** | 2 | 👤 B | `init/init_textures.c` (XPM → buffer int[]) + `image_utils.c` | F2 | ☐ |
-| **S04A** | 2 | 👤 A | `parsing/fill_color_textures.c` (RGB con validación) | F1 | ☐ |
+| **S04A** | 2 | 👤 A | `parsing/fill_color_textures.c` (RGB con validación) | F1 | ✅ |
 | **S04B** | 2 | 👤 B | `render/draw_floor_ceil.c` (suelo + techo planos) | F3 | ☐ |
 | **🔄 SYNC2** | 2 | 👥 | Suelo + techo se ven, parser acepta NO/SO/WE/EA/F/C válidos | — | ☐ |
 | **⭐ M2** | 2 | — | **Hito: Parser básico + render base** | — | ☐ |

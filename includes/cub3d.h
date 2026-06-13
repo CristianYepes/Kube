@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/11 00:36:41 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/13 19:31:51 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,6 +137,8 @@ int				fill_color_textures(char *line, t_data *data);
 /*PARSING UTILS*/
 int				is_a_white_space(char c);
 char			*skip_spaces(char *str);
+void			free_file_lines(t_data *data);
+void			free_parsing(t_data *data);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);
