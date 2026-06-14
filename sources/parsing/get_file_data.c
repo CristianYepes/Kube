@@ -53,7 +53,7 @@ static int	extract_texture(char *line, t_data *data)
 		return (err_msg(NULL, ERR_DUPLICATE_TEXTURE, FAILURE));
 	data->tex_paths[index] = ft_strtrim(&line[2], " \t\n\r");
 	if (!data->tex_paths[index])
-		return (FAILURE);
+		return (err_msg(NULL, strerror(errno), FAILURE));
 	if (data->tex_paths[index][0] == '\0')
 		return (err_msg(NULL, ERR_EMPTY_PATH, FAILURE));
 	return (SUCCESS);

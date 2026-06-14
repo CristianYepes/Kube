@@ -2,15 +2,50 @@
 
 > S05A: `parsing/create_game_map.c` + `parsing/parsing_utils.c` — construir `data->map[][]` desde `file_lines`, dimensiones, espacios→muro.
 > S06A: `check_map.c` + `check_map_borders.c` + `check_textures.c` — validacion completa + spawn del jugador + swap del mapa temporal (SYNC3).
-> Prerequisito: PARTE 0 cerrada (deuda S03A/S04A). Sin Parte 0 NO se empieza S05A.
+> Prerequisito: PARTE 0 cerrada (S03A/S04A) + LOS DOS MERGES hechos. Sin eso NO se empieza S05A.
+
+---
+
+## ESTADO DE DEV — orden de merges y modelo VECTORIAL (leer primero)
+
+Rodrigo (raycasting2) cambio el motor de ANGULAR a VECTORIAL. Este plan asume
+que dev YA tiene los dos merges hechos. Orden:
+
+1. **`fase1_error` → `dev`** (fast-forward, sin conflictos). Cierra tu lado A.
+2. **`raycasting2` → `dev`**. UNICO conflicto real: cabecera de `cub3d.h`
+   (`By:`/`Updated`, trivial). Lo demas auto-fusiona (Makefile, prototipos,
+   structs — verificado con merge-tree).
+
+Tras ambos, dev tiene el modelo nuevo (definido por Rodrigo en cub3d.h):
+- `t_player`: `pos_x, pos_y, dir_x, dir_y, plane_x, plane_y` (double). FUERA `angle`.
+- `t_ray`: campos `double`, sin `angle`.
+- Defines: FUERA `BLOCK` y `FOV`; entran `MOVE_SPEED`, `ROT_SPEED`.
+- Coordenadas en CELDAS (1 celda = 1.0), no pixeles: `map[(int)pos_y][(int)pos_x]`.
+- Render nuevo: `paint_floor_ceiling` (suelo/techo planos ya pintados).
+
+### Bugs del lado B — NO arreglar en fase1_error, SI tras el 2o merge
+Estan en ficheros que Rodrigo REESCRIBE en raycasting2 (raycasting.c, player.c,
+init_game.c). Tocarlos en tu rama ahora = trabajo perdido + conflicto de merge.
+Se arreglan sobre la version vectorial ya integrada, idealmente con Rodrigo:
+- **init_game.c**: no comprueba NULL de `mlx_init`/`mlx_new_window`/`mlx_new_image`
+  → si MLX no arranca, segfault. Mandatory pide salida limpia.
+- **raycasting (DDA bounds)**: indexa `map[y][x]` sin verificar que `x` este
+  dentro de la fila → seguro solo con mapa rectangular (S05A) + cerrado (S06A).
+- **raycasting (wall_dist→0)**: `linea = WIN_H / wall_dist`; un rayo axial puede
+  dar `inf` y `(int)inf` es UB. `put_pixel` evita el crash, pero conviene guard.
+- **core dump al atravesar muro** (sin colisiones) → S08A wall-sliding.
 
 ---
 
 ## PARTE 0 — Cierre de deuda S03A/S04A (gate bloqueante)
 
-Bugs A1-A4 de la revision 2026-06-12 (/tmp/cub3d_review/fase1_review.md). S05A se
-construye LITERALMENTE encima de A2: si line_type clasifica mal, create_map coge
-mal el inicio del mapa. Pagar antes de construir.
+> ✅ **COMPLETADA** (commits c6c29ef + cc4bab5 + cierre de leaks/errores).
+> A1-A4 cerrados, fixtures creados, S03A/S04A ✅ en tabla maestra.
+> Auditoria completa pre-merge en docs/checklist_pre_merge.md.
+
+Bugs A1-A4 de la revision 2026-06-12. S05A se construye LITERALMENTE encima de
+A2: si line_type clasifica mal, create_map coge mal el inicio del mapa. Pagado
+antes de construir.
 
 ### P0.1 — A1: comas malformadas en parse_color
 - `ft_split` colapsa delimitadores (ft_split.c:24-25, :72-73): `"220,100,0,,"`,
@@ -87,13 +122,15 @@ mal el inicio del mapa. Pagar antes de construir.
 - cronograma S05A/S06A habla de `t_mapinfo`/`t_texinfo` (cronograma.md:624,
   :692, :698). Ese modelo MURIO en el plan S03A/S04A (D0/D1): el header real
   tiene `char **map`, `tex_paths[4]`, `floor_color`/`ceiling_color`.
-- El raycaster integrado consume `data->map` como `char **` NULL-terminated y
-  muro == '1' (raycasting.c:55, :72). Ese contrato NO se toca.
+- El raycaster VECTORIAL de Rodrigo consume `data->map` como `char **`
+  NULL-terminated y muro == '1' (indexa `map[(int)pos_y][(int)pos_x]`). Ese
+  contrato NO se toca: tu grid es char** NULL-terminated con '1' = muro.
 - Anadir a `t_data` (bloque /*Scene*/): `int map_height; int map_width;`
   y al bloque /*Parsing*/: `int map_start;` (transitorio, indice de la primera
   linea de mapa en file_lines).
-- `cub3d.h` es COMPARTIDO: cambio aditivo (3 ints + defines + prototipos), sin
-  renombrar nada de Rodrigo. Mensaje a Rodrigo ANTES de commitear el header.
+- `cub3d.h` (ya fusionado con el vectorial tras el 2o merge): tu cambio es
+  ADITIVO (3 ints + defines de error + prototipos), sin renombrar nada de
+  Rodrigo. Avisarle igualmente del diff del header.
 - `check_valid_rgb`/`convert_rgb_to_hex` del listado S06A (cronograma.md:696-697):
   YA HECHOS en S04A (fill_color_textures compone el int). No se reimplementan.
 
@@ -116,7 +153,7 @@ mal el inicio del mapa. Pagar antes de construir.
 - Cada fila del grid: malloc(width + 1), copiar char a char convirtiendo
   `' '` → `'1'` durante la copia, rellenar el resto hasta width con `'1'`,
   terminar en `'\0'`. Array de height + 1 punteros, ultimo = NULL
-  (el DDA de Rodrigo depende del NULL-terminated: raycasting.c:72).
+  (el DDA vectorial de Rodrigo depende del NULL-terminated y de filas rectangulares).
 - `change_space_into_wall` como funcion separada (cronograma.md:626) se
   DISUELVE en el bucle de copia: una sola pasada, un archivo de ≤5 funciones.
   Mismo efecto, justificacion para defensa: espacio == zona no jugable ==
@@ -143,10 +180,11 @@ mal el inicio del mapa. Pagar antes de construir.
 | `tex_paths[4]` | extract_texture | exit_game / free_parsing | idem |
 - create_map en fallo interno libera SUS filas parciales + array y deja
   `data->map = NULL` antes de devolver FAILURE (cada alocador limpia lo suyo).
-- TRAMPA exit_game.c:27-28: hoy hace `free(data->map)` con filas LITERALES
-  (get_temp_map). Liberar filas antes del swap = segfault (free de no-heap);
-  no liberarlas despues del swap = leak. El cambio de exit_game (bucle de
-  filas + tex_paths) va EN EL MISMO COMMIT que el swap (T-S06A.5).
+- exit_game YA llama `free_parsing` (file_lines + tex_paths) — hecho en P0.
+  TRAMPA pendiente: hoy `free(data->map)` libera el ARRAY de filas LITERALES
+  (get_temp_map). Cuando S06A traiga filas malloc'd hay que liberar fila a fila
+  ANTES del array → ese cambio va EN EL MISMO COMMIT que el swap (T-S06A.5).
+  Liberar filas literales = segfault; no liberar las malloc'd = leak.
 
 ### D4 — Validacion S06A: bordes en vez de flood fill (bendecido por roadmap)
 - Con espacios ya convertidos a '1' y grid rectangular, "mapa cerrado" ⇔
@@ -169,38 +207,35 @@ mal el inicio del mapa. Pagar antes de construir.
   Un mapa 2xN no puede tener jugador en celda cerrada → cae en
   ERR_PLAYER_COUNT o ERR_MAP_NOT_CLOSED. Mensaje generico pero correcto. YAGNI.
 
-### D5 — Spawn del jugador + swap del mapa temporal (commit SYNC3)
-- El cronograma PONE la posicion del jugador en el DoD de S06A
-  (cronograma.md:704: "pos_x/pos_y con +0.5 centro de celda"). Pero S07A
-  (cronograma.md:775-784) habla de `dir_x/plane_x`: modelo vector+plano que
-  NUESTRO motor NO usa — el raycaster integrado va por ANGULO
-  (t_player.angle, raycasting.c:17). Reconciliacion:
-  - Spawn en S06A: `player.x = (col + 0.5) * BLOCK`, `player.y = (fila + 0.5)
-    * BLOCK` (pixeles, convencion del motor: raycasting.c:20-21 divide por
-    BLOCK), y angulo por letra (pantalla y-abajo):
-    | Letra | angle |
-    |---|---|
-    | E | 0 |
-    | S | M_PI / 2 |
-    | W | M_PI |
-    | N | 3 * M_PI / 2 |
-  - Tras el spawn: `grid[fila][col] = '0'` (la letra ya no pinta nada; DDA y
-    futuras colisiones ven suelo).
+### D5 — Spawn del jugador (VECTORIAL) + swap del mapa temporal (commit SYNC3)
+- Modelo de Rodrigo (raycasting2, estilo Lodev). El spawn setea posicion +
+  vectores, NO angulo. Coordenadas en CELDAS (sin BLOCK):
+  - `player.pos_x = col + 0.5`, `player.pos_y = fila + 0.5` (centro de celda).
+  - dir/plane por letra (plane = dir girado 90o, modulo 0.66 → FOV ~66o):
+    | Letra | dir_x | dir_y | plane_x | plane_y |
+    |---|---|---|---|---|
+    | N |  0 | -1 |  0.66 |  0    |
+    | S |  0 |  1 | -0.66 |  0    |
+    | E |  1 |  0 |  0    |  0.66 |
+    | W | -1 |  0 |  0    | -0.66 |
+  - El SIGNO del plane evita la imagen en espejo. Si al probar el mundo sale
+    invertido izquierda/derecha, invertir el signo del plane (defensa: el plane
+    define el sentido del barrido de columnas).
+  - Tras el spawn: `grid[fila][col] = '0'` (la letra ya no es contenido; DDA y
+    colisiones ven suelo).
   - S07A queda REDUCIDO: hooks ya integrados (input.c), ESC/X ya funcionan,
-    direccion inicial la da este spawn. Al llegar, revisar S07A contra la
+    dir/plane iniciales los da este spawn. Al llegar, revisar S07A contra la
     realidad y recortar el cronograma (anotarlo, no hacerlo ahora).
-- Swap en init_game.c: eliminar `get_temp_map` (init_game.c:15-34) y la
-  asignacion :39; el mapa real ya viene en data->map. TRAMPA init_game.c:38:
-  `init_player` (player.c:15-26) PISA x/y/angle hardcodeados — quitar de
-  init_player las lineas de pos/angle (quedan los flags de teclas a 0; pos y
-  angulo los puso el spawn ANTES de init_game).
-- init_game.c, exit_game.c y player.c son ficheros del lado B integrado →
-  avisar a Rodrigo del diff (3 cambios pequenos) antes del commit.
-- Hasta S08A (colisiones) sigue vivo el bug conocido: si te metes DENTRO de
-  un muro andando, el origen del rayo queda fuera de zona cerrada y el DDA
-  puede salirse (raycasting.c:72 no tiene bounds). Con mapa validado y spawn
-  legal el render es seguro MIENTRAS no atravieses muros. Documentado, no se
-  arregla aqui (es S08A wall-sliding, y B ya tiene el sintoma anotado).
+- Swap en init_game.c: eliminar `get_temp_map` y su asignacion; el mapa real ya
+  viene en `data->map`. TRAMPA: `init_player` (player.c, version vectorial de
+  Rodrigo) inicializa pos/dir/plane → si corre DESPUES del spawn lo PISA. Orden
+  correcto: el spawn (en check_map, S06A) escribe player ANTES de init_game, e
+  init_player NO debe re-tocar pos/dir/plane (dejar solo flags de teclas a 0).
+- init_game.c y player.c son del lado B (ya vectorial tras el 2o merge) →
+  cambios pequenos, avisar a Rodrigo. exit_game.c ya quedo listo en P0.
+- Hasta S08A (colisiones) sigue vivo el bug: atravesar un muro deja el origen
+  del rayo fuera de zona cerrada y el DDA puede salirse. Con mapa validado y
+  spawn legal el render es seguro MIENTRAS no atravieses muros. S08A lo cierra.
 
 ### D6 — Errores nuevos (aditivos en cub3d.h, junto a los existentes)
 `ERR_MAP_MISSING`, `ERR_EMPTY_LINE_IN_MAP`, `ERR_ID_AFTER_MAP`,
@@ -232,8 +267,8 @@ con el path como detail — ya lo da err_msg, sin define nuevo.
 3. `(t_data){0}` ≠ map_start=-1 → init explicito en parse_memory.
 4. size_t vs int con -Werror → longitudes en int.
 5. skip_spaces del dispatcher debe propagarse a los handlers (leen line[0..2]).
-6. exit_game: filas literales hoy / malloc manana → cambio en el commit del swap.
-7. init_player pisa el spawn → adelgazarlo en el mismo commit.
+6. exit_game: free_parsing YA hecho; queda free(map) array→filas en el commit del swap (S06A).
+7. init_player (vectorial) pisa pos/dir/plane del spawn → adelgazarlo en el mismo commit.
 8. DDA sin bounds: seguro solo con mapa validado + origen dentro (hasta S08A).
 9. parsing_utils.c nace con 5 funciones JUSTAS (is_a_white_space, skip_spaces,
    find_biggest_len, free_file_lines, free_parsing) — la sexta utilidad que
@@ -301,18 +336,19 @@ Missing ids + .xpm + open/read/EISDIR (D4).
 **Verify:** textures_missing.cub, tex_not_xpm.cub, tex_is_dir.cub,
 tex_nonexistent.cub → error con detail del path.
 
-### T4 — Spawn (D5)
+### T4 — Spawn VECTORIAL (D5)
 set_player_spawn en check_map.c (≤5 funcs/fichero) o fichero propio si no cabe:
-celda→pixeles, tabla de angulos, letra→'0'.
-**Verify:** printf-debug temporal: N→4.712..., E→0.0; celda del jugador
-contiene '0' tras spawn.
+`pos = celda + 0.5`, tabla dir/plane por letra (N/S/E/W), letra→'0'.
+**Verify:** printf-debug temporal: N→dir(0,-1) plane(0.66,0); E→dir(1,0)
+plane(0,0.66); celda del jugador contiene '0' tras spawn.
 
-### T5 — Swap + exit_game + init_player (commit de integracion, 🔄 avisar a Rodrigo)
-Eliminar get_temp_map; exit_game libera filas+array+tex_paths; init_player
-solo teclas. TODO en un commit (trampas 6-7).
+### T5 — Swap + init_player (commit de integracion, 🔄 avisar a Rodrigo)
+Eliminar get_temp_map; cambiar `free(data->map)` de exit_game a liberar fila a
+fila + array (ya no son literales); init_player (vectorial) deja de tocar
+pos/dir/plane (lo pone el spawn). TODO en un commit (trampas 6-7).
 **Verify:** `./cub3D maps/good/subject_map.cub` renderiza el mapa REAL del
-subject y apareces donde esta la N. ESC → valgrind 0 definitely lost
-(MLX aparte: si X11/MLX ensucia el informe, crear mlx.supp AHORA y anotarlo).
+subject y apareces donde esta la N mirando bien (no en espejo). ESC → valgrind
+0 definitely lost (MLX aparte: si X11/MLX ensucia, crear mlx.supp y anotarlo).
 
 ### T6 — Bateria de fixtures S05A/S06A
 `maps/bad/`: wall_hole_north.cub, open_side.cub, player_none.cub,
@@ -328,8 +364,8 @@ supresion: nunca llegan a mlx_init — argumento de defensa).
 
 ### T7 — Commit S06A + sincronia
 `feat(parsing): validate map, spawn player and render real maps`
-Marcar S06A ✅ + SYNC3 + ⭐M3 con Rodrigo (el anti-fisheye y el dibujo de
-columnas YA estan integrados: raycasting.c:87-95 — M3 es demostrable hoy).
+Marcar S06A ✅ + SYNC3 + ⭐M3 con Rodrigo (anti-fisheye, dibujo de columnas y
+suelo/techo planos YA integrados con el motor vectorial — M3 demostrable).
 
 ---
 
@@ -337,8 +373,8 @@ columnas YA estan integrados: raycasting.c:87-95 — M3 es demostrable hoy).
 
 Nuevas llamadas: `malloc`, `free`, `open`, `read`, `close`, `strerror` —
 todas en subject.md:100. Libft: `ft_strlen`, `ft_strncmp`, `get_next_line`
-(ya en uso). `cos`/`sin`/M_PI ya linkados con -lm (math permitida). NADA de
-`stat`/`fstat` para texturas (forbidden): solo el truco open/read/EISDIR.
+(ya en uso). El spawn vectorial usa una TABLA fija dir/plane (sin cos/sin).
+NADA de `stat`/`fstat` para texturas (forbidden): solo el truco open/read/EISDIR.
 Utilidades nuevas (is_a_white_space, skip_spaces, find_biggest_len, frees,
 build_row...) son codigo propio.
 
@@ -354,13 +390,13 @@ git log --oneline -3 && git show HEAD --stat   # commits limpios, sin binarios
 
 ## Riesgo residual
 
-1. **Header compartido**: 3 ints + defines es aditivo, pero Rodrigo puede
-   estar tocando cub3d.h en su rama. El gate es humano: mensaje antes del
-   primer commit que lo toque (D0) y antes del commit de integracion (T5).
-2. **Deriva del cronograma**: S07A (vector+plano, hooks) quedo parcialmente
-   obsoleto por la integracion temprana del motor por angulo. Este plan lo
-   ABSORBE (spawn+angulo en S06A) pero NO reescribe S07A — anotado para
-   revisarlo al llegar.
+1. **Header compartido**: tras el 2o merge cub3d.h ya tiene el vectorial; tu
+   cambio (3 ints + error strings + prototipos) es aditivo. Aviso a Rodrigo
+   antes del commit que lo toque (D0) y del commit de integracion (T5).
+2. **Deriva del cronograma**: con el motor ya VECTORIAL, S07A (vector+plano)
+   coincide con el modelo — el spawn dir/plane de S06A se lo adelanta. Lo que
+   queda de S07A son los hooks (ya integrados en input.c): revisar y recortar
+   al llegar (anotarlo, no hacerlo ahora).
 3. **Decision espacios=muro**: defendible y bendecida por roadmap.md:768,
    pero en defensa pueden preguntar por flood fill. Tener la equivalencia de
    D4 ensayada (preguntas.md es buen sitio para apuntarla — tuyo).

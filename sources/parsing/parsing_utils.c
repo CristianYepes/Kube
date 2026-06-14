@@ -51,7 +51,10 @@ void	free_parsing(t_data *data)
 	while (i < 4)
 	{
 		if (data->tex_paths[i])
+		{
 			free(data->tex_paths[i]);
+			data->tex_paths[i] = NULL;
+		}
 		i++;
 	}
 }
