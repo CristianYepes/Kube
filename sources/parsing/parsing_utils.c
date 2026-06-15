@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/13 19:15:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/13 19:31:41 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/15 00:39:03 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,4 +57,25 @@ void	free_parsing(t_data *data)
 		}
 		i++;
 	}
+}
+
+int	find_biggest_len(t_data *data, int start, int end)
+{
+	int	max;
+	int	len;
+	int	i;
+
+	max = 0;
+	i = start;
+	while (i <= end)
+	{
+		len = (int)ft_strlen(data->file_lines[i]);
+		while (len > 0 && (data->file_lines[i][len - 1] == '\n'
+			|| data->file_lines[i][len - 1] == '\r'))
+			len--;
+		if (len > max)
+			max = len;
+		i++;
+	}
+	return (max);
 }

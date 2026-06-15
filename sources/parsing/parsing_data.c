@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/31 16:29:02 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/13 18:49:17 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/15 00:44:23 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,7 @@ int	parse_memory(char *path, t_data *data)
 	if (count == -1)
 		return (err_msg(path, strerror(errno), FAILURE));
 	data->file_nb_lines = count;
+	data->map_start = -1;
 	if (count == 0)
 		return (err_msg(path, ERR_EMPTY_FILE, FAILURE));
 	data->file_lines = malloc(sizeof(char *) * (count + 1));

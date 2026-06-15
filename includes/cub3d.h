@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/13 19:31:51 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/15 02:04:43 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,9 @@
 # define ERR_EMPTY_PATH "Empty path"
 # define ERR_DUPLICATE_COLOR "Duplicate color"
 # define ERR_INVALID_COLOR "Invalid color format"
+# define ERR_ID_AFTER_MAP "Map must be last"
+# define ERR_MAP_MISSING "Map not found"
+# define ERR_EMPTY_LINE_IN_MAP "Empty line in map"
 
 /*Structs*/
 typedef struct s_img
@@ -112,6 +115,7 @@ typedef struct s_data
 {
 	/*Parsing*/
 	char		**file_lines;
+	int			map_start;
 	int			file_nb_lines;
 	int			id_flags;
 	/*Scene*/
@@ -139,6 +143,8 @@ int				is_a_white_space(char c);
 char			*skip_spaces(char *str);
 void			free_file_lines(t_data *data);
 void			free_parsing(t_data *data);
+int				find_biggest_len(t_data *data, int start, int end);
+int				create_map(t_data *data);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);

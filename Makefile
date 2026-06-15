@@ -23,6 +23,7 @@ SRC         =	main.c \
 				parsing/parsing_data.c \
 				parsing/fill_color_textures.c \
 				parsing/parsing_utils.c \
+				parsing/create_game_map.c \
 				init/init_game.c \
 				render/render_utils.c \
 				render/raycasting.c \

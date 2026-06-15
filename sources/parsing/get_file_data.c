@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/31 16:30:05 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/13 19:15:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/15 00:52:55 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,6 +84,11 @@ int	get_file_data(t_data *data)
 	while (i < data->file_nb_lines)
 	{
 		type = line_type(data->file_lines[i]);
+		if (type == TYPE_MAP && data->map_start == -1)
+			data->map_start = i;
+		if ((type == TYPE_TEXTURE || type == TYPE_COLOR)
+			&& data->map_start != -1)
+			return (err_msg(NULL, ERR_ID_AFTER_MAP, FAILURE));
 		if (process_line(data->file_lines[i], type, data) == FAILURE)
 			return (FAILURE);
 		i++;
