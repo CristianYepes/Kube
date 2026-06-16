@@ -20,12 +20,22 @@ int	close_window(t_data *data)
 
 void	exit_game(t_data *data)
 {
+	int	i;
+
+	i = 0;
 	if (data->img.img)
 		mlx_destroy_image(data->mlx, data->img.img);
 	if (data->win)
 		mlx_destroy_window(data->mlx, data->win);
 	free_parsing(data);
 	if (data->map)
+	{
+		while (data->map[i])
+		{
+			free(data->map[i]);
+			i++;
+		}
 		free(data->map);
+	}
 	exit(SUCCESS);
 }

@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/31 16:29:02 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/15 00:44:23 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/16 23:36:35 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,4 +77,22 @@ int	parse_memory(char *path, t_data *data)
 	if (!data->file_lines)
 		return (err_msg(path, strerror(errno), FAILURE));
 	return (fill_lines(path, data));
+}
+
+int	parsing(char *path, t_data *data)
+{
+	if (parse_memory(path, data) == FAILURE)
+		return (FAILURE);
+	if (get_file_data(data) == FAILURE)
+	{
+		free_parsing(data);
+		return (FAILURE);
+	}
+	if (create_map(data) == FAILURE)
+	{
+		free_parsing(data);
+		return (FAILURE);
+	}
+	free_file_lines(data);
+	return (SUCCESS);
 }

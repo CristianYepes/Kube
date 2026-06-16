@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/15 02:04:43 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/16 23:35:00 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,9 +115,11 @@ typedef struct s_data
 {
 	/*Parsing*/
 	char		**file_lines;
-	int			map_start;
 	int			file_nb_lines;
+	int			map_start;
 	int			id_flags;
+	int			map_height;
+	int			map_width;
 	/*Scene*/
 	char		*tex_paths[4];
 	int			floor_color;
@@ -138,13 +140,14 @@ int				check_file(char *arg);
 int				parse_memory(char *path, t_data *data);
 int				get_file_data(t_data *data);
 int				fill_color_textures(char *line, t_data *data);
+int				create_map(t_data *data);
+int				parsing(char *path, t_data *data);
 /*PARSING UTILS*/
 int				is_a_white_space(char c);
 char			*skip_spaces(char *str);
 void			free_file_lines(t_data *data);
 void			free_parsing(t_data *data);
 int				find_biggest_len(t_data *data, int start, int end);
-int				create_map(t_data *data);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);
