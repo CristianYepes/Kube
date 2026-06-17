@@ -22,9 +22,11 @@ SRC         =	main.c \
 				parsing/get_file_data.c \
 				parsing/parsing_data.c \
 				init/init_game.c \
+				init/init_textures.c \
 				render/render_utils.c \
 				render/raycasting.c \
 				render/game_loop.c \
+				render/textures.c \
 				render/floor_ceeling.c \
 				movement/player.c \
 				movement/input.c \

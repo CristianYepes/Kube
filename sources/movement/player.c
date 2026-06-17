@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/09 19:27:13 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/17 17:55:56 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,9 +46,9 @@ static void	rotate_player(t_player *p, double dir)
 void	move_player(t_player *p)
 {
 	if (p->rotate_left)
-		rotate_player(p, -1);
-	if (p->rotate_right)
 		rotate_player(p, 1);
+	if (p->rotate_right)
+		rotate_player(p, -1);
 	if (p->key_up)
 	{
 		p->pos_x += p->dir_x * MOVE_SPEED;

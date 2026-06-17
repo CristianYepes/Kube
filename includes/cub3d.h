@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/12 13:53:01 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/16 20:43:39 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,13 @@
 # define ERR_DUPLICATE_TEXTURE "Duplicate Texture"
 # define ERR_EMPTY_PATH "Empty path"
 
+/*render*/
+# define TEX_SIZE 64
+# define NO 0
+# define SO 1
+# define WE 2
+# define EA 3
+
 /*Structs*/
 typedef struct s_img
 {
@@ -119,6 +126,7 @@ typedef struct s_data
 	int			floor_color;
 	int			ceiling_color;
 	char		**map;
+	int			 *textures[4];
 	/*MLX*/
 	void		*mlx;
 	void		*win;
@@ -136,9 +144,10 @@ int				get_file_data(t_data *data);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);
+int				*xpm_to_int(t_data *data, char *path);
+int				init_textures(t_data *data);
 /*RENDER*/
 void			put_pixel(t_data *data, int x, int y, int color);
-void			clear_image(t_data *data);
 void			cast_rays(t_data *data);
 int				game_loop(t_data *data);
 void    		paint_floor_ceiling(t_data *data);
