@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/16 23:35:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/18 20:51:56 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,11 @@
 # define ERR_ID_AFTER_MAP "Map must be last"
 # define ERR_MAP_MISSING "Map not found"
 # define ERR_EMPTY_LINE_IN_MAP "Empty line in map"
+# define ERR_INVALID_CHAR "Invalid character in map"
+# define ERR_PLAYER_COUNT "Map must have exactly one player"
+# define ERR_MAP_NOT_CLOSED "Map is not closed"
+# define ERR_MISSING_ID "Missing texture path"
+# define ERR_TEX_NOT_XPM "Texture is not a .xpm file"
 
 /*Structs*/
 typedef struct s_img
@@ -142,6 +147,9 @@ int				get_file_data(t_data *data);
 int				fill_color_textures(char *line, t_data *data);
 int				create_map(t_data *data);
 int				parsing(char *path, t_data *data);
+int				check_map(t_data *data);
+int				check_map_borders(t_data *data);
+int				check_textures(t_data *data);
 /*PARSING UTILS*/
 int				is_a_white_space(char c);
 char			*skip_spaces(char *str);

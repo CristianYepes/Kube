@@ -6,7 +6,7 @@
 /*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/31 16:29:02 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/16 23:36:35 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/18 20:57:27 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,17 @@ int	parse_memory(char *path, t_data *data)
 	return (fill_lines(path, data));
 }
 
+static int	validate_map(t_data *data)
+{
+	if (check_map(data) == FAILURE)
+		return (FAILURE);
+	if (check_map_borders(data) == FAILURE)
+		return (FAILURE);
+	if (check_textures(data) == FAILURE)
+		return (FAILURE);
+	return (SUCCESS);
+}
+
 int	parsing(char *path, t_data *data)
 {
 	if (parse_memory(path, data) == FAILURE)
@@ -89,6 +100,11 @@ int	parsing(char *path, t_data *data)
 		return (FAILURE);
 	}
 	if (create_map(data) == FAILURE)
+	{
+		free_parsing(data);
+		return (FAILURE);
+	}
+	if (validate_map(data) == FAILURE)
 	{
 		free_parsing(data);
 		return (FAILURE);

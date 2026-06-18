@@ -57,6 +57,17 @@ void	free_parsing(t_data *data)
 		}
 		i++;
 	}
+	if (data->map)
+	{
+		i = 0;
+		while (data->map[i])
+		{
+			free(data->map[i]);
+			i++;
+		}
+		free(data->map);
+		data->map = NULL;
+	}
 }
 
 int	find_biggest_len(t_data *data, int start, int end)

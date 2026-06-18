@@ -63,7 +63,7 @@ static char	*build_row(char *line, int width)
 	row = malloc(width + 1);
 	if (!row)
 		return (NULL);
-	while (line[i] && (line[i] != '\n' && line[i] != '\r') && i < width)
+	while (i < width && line[i] && line[i] != '\n' && line[i] != '\r')
 	{
 		if (line[i] == ' ')
 			row[i] = '1';
