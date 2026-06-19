@@ -23,7 +23,11 @@ int	main(int argc, char *argv[])
 		return (FAILURE);
 	if (parsing(argv[1], &data) == FAILURE)
 		return (FAILURE);
-	init_game(&data);
+	if (init_game(&data) != SUCCESS)
+	{
+		free_parsing(&data);
+		return (FAILURE);
+	}
 	mlx_hook(data.win, 2, 1L << 0, key_press, &data);
 	mlx_hook(data.win, 3, 1L << 1, key_release, &data);
 	mlx_hook(data.win, 17, 0L, close_window, &data);

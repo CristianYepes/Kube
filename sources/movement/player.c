@@ -14,12 +14,6 @@
 
 void	init_player(t_player *player)
 {
-	player->pos_x = 2.5;
-	player->pos_y = 2.5;
-	player->dir_x = 0;
-	player->dir_y = 1;
-	player->plane_x = 0.66;
-	player->plane_y = 0;
 	player->key_up = 0;
 	player->key_down = 0;
 	player->key_left = 0;

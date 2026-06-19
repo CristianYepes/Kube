@@ -163,7 +163,7 @@ void			free_file_lines(t_data *data);
 void			free_parsing(t_data *data);
 int				find_biggest_len(t_data *data, int start, int end);
 /*INIT*/
-void			init_game(t_data *data);
+int				init_game(t_data *data);
 void			init_player(t_player *player);
 int				*xpm_to_int(t_data *data, char *path);
 int				init_textures(t_data *data);
