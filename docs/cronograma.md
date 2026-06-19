@@ -57,31 +57,31 @@
 |---|---|---|---|---|---|
 | **S00** | 0 | 👥 | Setup repo, libft, MLX, Makefile base, `cub3d.h` esqueleto | — | ✅ |
 | **S01A** | 1 | 👤 A | `error.c` + `enum e_output` + constantes `ERR_*` | F1 | ✅ |
-| **S01B** | 1 | 👤 B | Makefile profesional (BONUS flag, `objects/`, subdirs) | F2 | ☐ |
+| **S01B** | 1 | 👤 B | Makefile profesional (BONUS flag, `objects/`, subdirs) | F2 | ✅ |
 | **S02A** | 1 | 👤 A | `parsing/check_args.c` (extension, dir, exists) | F1 | ✅ |
-| **S02B** | 1 | 👤 B | `init/init_data.c` + `init/init_mlx.c` (ventana negra) | F2 | ☐ |
-| **🔄 SYNC1** | 1 | 👥 | Ventana se abre, ESC cierra, parser rechaza fichero malo | — | ☐ |
-| **⭐ M1** | 1 | — | **Hito: Hello world** | — | ☐ |
+| **S02B** | 1 | 👤 B | `init/init_data.c` + `init/init_mlx.c` (ventana negra) | F2 | ✅ |
+| **🔄 SYNC1** | 1 | 👥 | Ventana se abre, ESC cierra, parser rechaza fichero malo | — | ✅ |
+| **⭐ M1** | 1 | — | **Hito: Hello world** | — | ✅ |
 | **S03A** | 2 | 👤 A | `parsing/parse_data.c` + `get_file_data.c` (lee fichero, branch ID/mapa) | F1 | ✅ |
-| **S03B** | 2 | 👤 B | `init/init_textures.c` (XPM → buffer int[]) + `image_utils.c` | F2 | ☐ |
+| **S03B** | 2 | 👤 B | `init/init_textures.c` (XPM → buffer int[]) + `image_utils.c` | F2 | ✅ |
 | **S04A** | 2 | 👤 A | `parsing/fill_color_textures.c` (RGB con validación) | F1 | ✅ |
-| **S04B** | 2 | 👤 B | `render/draw_floor_ceil.c` (suelo + techo planos) | F3 | ☐ |
-| **🔄 SYNC2** | 2 | 👥 | Suelo + techo se ven, parser acepta NO/SO/WE/EA/F/C válidos | — | ☐ |
-| **⭐ M2** | 2 | — | **Hito: Parser básico + render base** | — | ☐ |
-| **S05A** | 3 | 👤 A | `parsing/create_game_map.c` + `change_space_into_wall` | F1 | ☐ |
-| **S05B** | 3 | 👤 B | `render/raycasting.c` `init_raycasting_info` + `set_dda` + `perform_dda` | F3 | ☐ |
-| **S06A** | 3 | 👤 A | `parsing/check_map.c` + `check_map_borders.c` + `check_textures.c` | F1 | ☐ |
-| **S06B** | 3 | 👤 B | `render/raycasting.c` `calculate_line_height` + dibujo color plano | F3 | ☐ |
-| **🔄 SYNC3** | 3 | 👥 | **Muros visibles** (color plano), parser COMPLETO con validación | — | ☐ |
-| **⭐ M3** | 3 | — | **Hito: Mundo 3D navegable (sin texturas)** | — | ☐ |
-| **S07A** | 4 | 👤 A | `movement/input_handler.c` + `player_dir.c` (hooks + dirección inicial) | F5 | ☐ |
-| **S07B** | 4 | 👤 B | `render/texture.c` `update_texture_pixels` + shading + `tex_pixels[][]` | F4 | ☐ |
-| **🔄 SYNC4** | 4 | 👥 | **Muros con texturas N/S/E/W correctas, sin espejo** | — | ☐ |
-| **⭐ M4** | 4 | — | **Hito: Render final con texturas** | — | ☐ |
-| **S08A** | 4-5 | 👤 A | `movement/player_move.c` + `player_pos.c` (validate_move X/Y) | F5 | ☐ |
-| **S08B** | 4-5 | 👤 B | `movement/player_rotate.c` (matriz 2D) + `render/render.c` con `has_moved` | F5+F6 | ☐ |
+| **S04B** | 2 | 👤 B | `render/draw_floor_ceil.c` (suelo + techo planos) | F3 | ✅ |
+| **🔄 SYNC2** | 2 | 👥 | Suelo + techo se ven, parser acepta NO/SO/WE/EA/F/C válidos | — | ✅ |
+| **⭐ M2** | 2 | — | **Hito: Parser básico + render base** | — | ✅ |
+| **S05A** | 3 | 👤 A | `parsing/create_game_map.c` + `change_space_into_wall` | F1 | ✅ |
+| **S05B** | 3 | 👤 B | `render/raycasting.c` `init_raycasting_info` + `set_dda` + `perform_dda` | F3 | ✅ |
+| **S06A** | 3 | 👤 A | `parsing/check_map.c` + `check_map_borders.c` + `check_textures.c` | F1 | ✅ |
+| **S06B** | 3 | 👤 B | `render/raycasting.c` `calculate_line_height` + dibujo color plano | F3 | ✅ |
+| **🔄 SYNC3** | 3 | 👥 | **Muros visibles** (color plano), parser COMPLETO con validación | — | ✅ |
+| **⭐ M3** | 3 | — | **Hito: Mundo 3D navegable (sin texturas)** | — | ✅ |
+| **S07A** | 4 | 👤 A | `movement/input_handler.c` + `player_dir.c` (hooks + dirección inicial=spawn) | F5 | ✅ |
+| **S07B** | 4 | 👤 B | `render/texture.c` `update_texture_pixels` + shading + `tex_pixels[][]` | F4 | ✅ |
+| **🔄 SYNC4** | 4 | 👥 | **Muros con texturas N/S/E/W correctas, sin espejo** | — | ✅ |
+| **⭐ M4** | 4 | — | **Hito: Render final con texturas** | — | ✅ |
+| **S08A** | 4-5 | 👤 A | `movement/player_move.c` + `player_pos.c` (validate_move X/Y) | F5 | ☐ ⬅️ AQUÍ |
+| **S08B** | 4-5 | 👤 B | `movement/player_rotate.c` (matriz 2D) + `render/render.c` con `has_moved` | F5+F6 | 🔶 |
 | **🔄 SYNC5** | 5 | 👥 | **WASD + flechas + colisiones + ESC + X cierran limpio** | — | ☐ |
-| **S09AB** | 5 | 👥 | `exit/exit.c` + `exit/free_data.c` + valgrind clean | F6 | ☐ |
+| **S09AB** | 5 | 👥 | `exit/exit.c` + `exit/free_data.c` + valgrind clean | F6 | 🔶 |
 | **⭐ M5** | 5 | — | **Hito: MANDATORY COMPLETO ✅ (defendible solo)** | — | ☐ |
 | **S10A** | 5-6 | 👤 A | `bonus/minimap/minimap_render.c` + `minimap_image.c` | F7 | ☐ |
 | **S10B** | 5-6 | 👤 B | `bonus/mouse/mouse_handler.c` + edge wrap | F7 | ☐ |
@@ -94,6 +94,48 @@
 | **⭐ M9** | 8 | — | **Hito: LISTO PARA EVALUACIÓN 🎓** | — | ☐ |
 
 > **Imprime esta tabla**, marca cada paso conforme lo terminas. Es tu mapa diario.
+> Leyenda extra: **🔶 = parcial** · **⬅️ AQUÍ = próximo paso**.
+
+---
+
+## 📌 ESTADO ACTUAL (2026-06-19) — QUÉ FALTA Y DÓNDE RETOMAR
+
+**Todo vive en la rama `dev`** (origin actualizado). La integración parser (A) + motor
+vectorial + texturas (B) está **COMPLETA y funcionando**: parsea y valida el `.cub`,
+renderiza muros con textura N/S/E/W + suelo/techo, spawn correcto, WASD + flechas,
+ESC/X cierran, y **no crashea** (atraviesa muros porque aún no hay colisiones).
+
+### ✅ Hecho (mandatory)
+Parser completo (A) · init/MLX, raycasting vectorial, suelo/techo, texturas (B, integrado).
+Lo de Rodrigo del mandatory **ya está dentro de `dev`**; de él solo faltan sus bonus.
+
+### ☐ Falta para cerrar el MANDATORY (M5)
+1. **C5 (en curso) — validar fixtures:** correr `maps/bad/*` (deben dar `Error`) y
+   `maps/good/*` (deben abrir) + `valgrind`. Fixtures ya creados en `maps/`.
+2. **S08A — COLISIONES (lado A, TÚ — próximo paso):** en `move_player`
+   (`sources/movement/player.c`), antes de aplicar el desplazamiento comprobar si la
+   celda destino es muro (`data->map[(int)y][(int)x] == '1'`); si lo es, no mover ese
+   eje (wall-sliding). Hay que pasar `data` a `move_player` (hoy recibe `t_player *`) →
+   cambiar firma + la llamada en `game_loop`. Cierra el "atravieso todo".
+3. **S09AB — cleanup/valgrind (conjunto):** `free_parsing` + `free_textures` ya hechos;
+   falta `valgrind --leak-check=full` en good (con `mlx.supp` para fugas de X11/MLX) y
+   bad → confirmar 0 "definitely lost" propios.
+
+### 🔶 Parciales
+- **S08B**: rotación vectorial (matriz) ✅; falta la optimización `has_moved` (opcional).
+- **S09AB**: frees hechos, falta el pase de valgrind + `mlx.supp`.
+
+### ⚠️ Pendientes anotados (ver `docs/plan_integracion_dev.md`)
+- Textura `.cub` ≠ 64×64 → `xpm_to_int` (textures.c, Rodrigo) leería fuera. Coordinar.
+
+### 🎁 BONUS (M6) — tras el mandatory
+- **Tú (A):** minimapa (S10A), puertas (S11A).
+- **Rodrigo (B):** ratón (S10B), sprites animados (S12B).
+
+### ▶️ CÓMO RETOMAR
+Nueva sesión → llama a la skill **`/contexto`** (reconstruye todo esto del git+docs).
+Acción concreta siguiente: **terminar C5** (validar fixtures + valgrind) → **S08A
+(colisiones)** → **S09AB (valgrind final)** = MANDATORY COMPLETO.
 
 ---
 
