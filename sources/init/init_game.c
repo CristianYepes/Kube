@@ -20,4 +20,6 @@ void	init_game(t_data *data)
 	data->img.img = mlx_new_image(data->mlx, WIN_W, WIN_H);
 	data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bpp,
 			&data->img.size_line, &data->img.endian);
+	if (init_textures(data) == ERR)
+		exit_game(data);
 }

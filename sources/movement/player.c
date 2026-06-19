@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   player.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/07 21:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/17 17:55:56 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,9 +14,12 @@
 
 void	init_player(t_player *player)
 {
-	player->x = WIN_W / 2;
-	player->y = WIN_H / 2;
-	player->angle = M_PI / 2;
+	player->pos_x = 2.5;
+	player->pos_y = 2.5;
+	player->dir_x = 0;
+	player->dir_y = 1;
+	player->plane_x = 0.66;
+	player->plane_y = 0;
 	player->key_up = 0;
 	player->key_down = 0;
 	player->key_left = 0;
@@ -25,63 +28,45 @@ void	init_player(t_player *player)
 	player->rotate_right = 0;
 }
 
-static void	rotate_player(t_player *p)
+static void	rotate_player(t_player *p, double dir)
 {
-	float	angle_speed;
+	double	angle;
+	double	old_dir_x;
+	double	old_plane_x;
 
-	angle_speed = 0.03f;
-	if (p->rotate_left)
-		p->angle -= angle_speed;
-	if (p->rotate_right)
-		p->angle += angle_speed;
-	if (p->angle > 2 * M_PI)
-		p->angle = 0;
-	if (p->angle < 0)
-		p->angle = 2 * M_PI;
-}
-
-static void	move_forward_back(t_player *p, float cos_a, float sin_a)
-{
-	int	speed;
-
-	speed = 2;
-	if (p->key_up)
-	{
-		p->x += cos_a * speed;
-		p->y += sin_a * speed;
-	}
-	if (p->key_down)
-	{
-		p->x -= cos_a * speed;
-		p->y -= sin_a * speed;
-	}
-}
-
-static void	move_strafe(t_player *p, float cos_a, float sin_a)
-{
-	int	speed;
-
-	speed = 2;
-	if (p->key_left)
-	{
-		p->x += sin_a * speed;
-		p->y -= cos_a * speed;
-	}
-	if (p->key_right)
-	{
-		p->x -= sin_a * speed;
-		p->y += cos_a * speed;
-	}
+	angle = ROT_SPEED * dir;
+	old_dir_x = p->dir_x;
+	p->dir_x = p->dir_x * cos(angle) - p->dir_y * sin(angle);
+	p->dir_y = old_dir_x * sin(angle) + p->dir_y * cos(angle);
+	old_plane_x = p->plane_x;
+	p->plane_x = p->plane_x * cos(angle) - p->plane_y * sin(angle);
+	p->plane_y = old_plane_x * sin(angle) + p->plane_y * cos(angle);
 }
 
 void	move_player(t_player *p)
 {
-	float	cos_a;
-	float	sin_a;
-
-	cos_a = cos(p->angle);
-	sin_a = sin(p->angle);
-	rotate_player(p);
-	move_forward_back(p, cos_a, sin_a);
-	move_strafe(p, cos_a, sin_a);
+	if (p->rotate_left)
+		rotate_player(p, 1);
+	if (p->rotate_right)
+		rotate_player(p, -1);
+	if (p->key_up)
+	{
+		p->pos_x += p->dir_x * MOVE_SPEED;
+		p->pos_y += p->dir_y * MOVE_SPEED;
+	}
+	if (p->key_down)
+	{
+		p->pos_x -= p->dir_x * MOVE_SPEED;
+		p->pos_y -= p->dir_y * MOVE_SPEED;
+	}
+	if (p->key_left)
+	{
+		p->pos_x -= p->plane_x * MOVE_SPEED;
+		p->pos_y -= p->plane_y * MOVE_SPEED;
+	}
+	if (p->key_right)
+	{
+		p->pos_x += p->plane_x * MOVE_SPEED;
+		p->pos_y += p->plane_y * MOVE_SPEED;
+	}
 }

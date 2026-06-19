@@ -26,9 +26,9 @@
 # define WIN_W 1280
 # define WIN_H 720
 
-/*Raycasting*/
-# define BLOCK 64
-# define FOV 1.0471975512f
+/*movement*/
+# define MOVE_SPEED 0.05
+# define ROT_SPEED 0.03
 
 /*Keycodes*/
 # define KEY_W 119
@@ -75,6 +75,9 @@
 # define ERR_MISSING_ID "Missing texture path"
 # define ERR_TEX_NOT_XPM "Texture is not a .xpm file"
 
+/*render*/
+# define TEX_SIZE 64
+
 /*Structs*/
 typedef struct s_img
 {
@@ -87,9 +90,12 @@ typedef struct s_img
 
 typedef struct s_player
 {
-	float	x;
-	float	y;
-	float	angle;
+	double	pos_x;
+	double	pos_y;
+	double	dir_x;
+	double	dir_y;
+	double	plane_x;
+	double	plane_y;
 	int		key_up;
 	int		key_down;
 	int		key_left;
@@ -100,14 +106,13 @@ typedef struct s_player
 
 typedef struct s_ray
 {
-	float	angle;
-	float	dir_x;
-	float	dir_y;
-	float	delta_x;
-	float	delta_y;
-	float	side_x;
-	float	side_y;
-	float	wall_dist;
+	double	dir_x;
+	double	dir_y;
+	double	delta_x;
+	double	delta_y;
+	double	side_x;
+	double	side_y;
+	double	wall_dist;
 	int		map_x;
 	int		map_y;
 	int		step_x;
@@ -130,6 +135,7 @@ typedef struct s_data
 	int			floor_color;
 	int			ceiling_color;
 	char		**map;
+	int			*textures[4];
 	/*MLX*/
 	void		*mlx;
 	void		*win;
@@ -159,11 +165,13 @@ int				find_biggest_len(t_data *data, int start, int end);
 /*INIT*/
 void			init_game(t_data *data);
 void			init_player(t_player *player);
+int				*xpm_to_int(t_data *data, char *path);
+int				init_textures(t_data *data);
 /*RENDER*/
 void			put_pixel(t_data *data, int x, int y, int color);
-void			clear_image(t_data *data);
 void			cast_rays(t_data *data);
 int				game_loop(t_data *data);
+void			paint_floor_ceiling(t_data *data);
 /*MOVEMENT*/
 int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
