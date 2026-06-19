@@ -40,9 +40,9 @@ static void	rotate_player(t_player *p, double dir)
 void	move_player(t_player *p)
 {
 	if (p->rotate_left)
-		rotate_player(p, 1);
-	if (p->rotate_right)
 		rotate_player(p, -1);
+	if (p->rotate_right)
+		rotate_player(p, 1);
 	if (p->key_up)
 	{
 		p->pos_x += p->dir_x * MOVE_SPEED;

@@ -49,7 +49,7 @@ static void	init_step(t_ray *ray, t_player *p)
 	}
 }
 
-static void	perform_dda(t_ray *ray, char **map)
+static void	perform_dda(t_data *data, t_ray *ray)
 {
 	ray->hit = 0;
 	while (!ray->hit)
@@ -66,7 +66,10 @@ static void	perform_dda(t_ray *ray, char **map)
 			ray->map_y += ray->step_y;
 			ray->side = 1;
 		}
-		if (map[ray->map_y] && map[ray->map_y][ray->map_x] == '1')
+		if (ray->map_x < 0 || ray->map_x >= data->map_width
+			|| ray->map_y < 0 || ray->map_y >= data->map_height)
+			return ;
+		if (data->map[ray->map_y][ray->map_x] == '1')
 			ray->hit = 1;
 	}
 }
@@ -101,7 +104,7 @@ void	cast_rays(t_data *data)
 	{
 		init_ray(&ray, &data->player, x);
 		init_step(&ray, &data->player);
-		perform_dda(&ray, data->map);
+		perform_dda(data, &ray);
 		draw_wall_column(data, &ray, x);
 		x++;
 	}
