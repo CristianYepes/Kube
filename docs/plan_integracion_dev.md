@@ -29,6 +29,22 @@
 | `fase1_error` | 6c8e297 | S05A + S06A T1-T3 (sin spawn) — +2 sobre dev |
 | `raycasting2` | (+2 sobre 94f661e) | `1e8f48d` vectorial+suelo/techo · `d49f624` xpm loader |
 
+## ⚠️ PENDIENTES ABIERTOS (retomar — no bloquean C4)
+- **Flechas invertidas**: pulsar → gira la vista al lado contrario. Mapeo input OK
+  (`KEY_LEFT→rotate_left`). Probadas varias combinaciones de signo plane×rotación, se
+  sigue percibiendo invertido. RESOLVER CON CERTEZA (no adivinar más): printf temporal
+  de `dir_x/dir_y` en `move_player` tras rotar → pulsar → una vez → leer el signo real
+  → fijar rotación/plane en consecuencia.
+- **Segfault al atravesar muro** (S/W constante contra pared): sin colisiones, el
+  jugador sale del mapa y `wall_dist` puede dar `NaN` (el clamp `<0.0001` no atrapa
+  NaN) → `(int)NaN` UB. FIX REAL = colisiones en `move_player` (**S08A**, lado A): no
+  mover si la celda destino es muro. Parche: check `isnan`/bounds antes de usar.
+- **Textura .cub de tamaño ≠ 64×64 → heap overread** (posible crash en defensa):
+  `xpm_to_int` (`textures.c`, lado B) copia siempre TEX_SIZE×TEX_SIZE ignorando el
+  w/h reales. Al cargar desde `tex_paths` (C4), un XPM de otro tamaño lee fuera. FIX:
+  validar `w==TEX_SIZE && h==TEX_SIZE` tras `mlx_xpm_file_to_image` → NULL si no.
+  Coordinar con Rodrigo (su fichero). Con los `.xpm` 64×64 actuales no se dispara.
+
 ## Inventario de hallazgos (del análisis del código REAL)
 
 - **Conflictos del merge raycasting2:** `cub3d.h` (contenido) e `init_game.c`
