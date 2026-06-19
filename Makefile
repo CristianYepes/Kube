@@ -34,6 +34,7 @@ SRC         =	main.c \
 				render/game_loop.c \
 				render/textures.c \
 				render/floor_ceeling.c \
+				render/draw_wall.c \
 				movement/player.c \
 				movement/input.c \
 				exit/exit_game.c

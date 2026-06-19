@@ -74,32 +74,6 @@ static void	perform_dda(t_data *data, t_ray *ray)
 	}
 }
 
-static void	draw_wall_column(t_data *data, t_ray *ray, int x)
-{
-	int	line_h;
-	int	start;
-	int	end;
-
-	if (ray->side == 0)
-		ray->wall_dist = ray->side_x - ray->delta_x;
-	else
-		ray->wall_dist = ray->side_y - ray->delta_y;
-	if (ray->wall_dist < 0.0001)
-		ray->wall_dist = 0.0001;
-	line_h = (int)(WIN_H / ray->wall_dist);
-	start = -line_h / 2 + WIN_H / 2;
-	end = line_h / 2 + WIN_H / 2;
-	if (start < 0)
-		start = 0;
-	if (end > WIN_H)
-		end = WIN_H;
-	while (start < end)
-	{
-		put_pixel(data, x, start, 0xFFFFFF);
-		start++;
-	}
-}
-
 void	cast_rays(t_data *data)
 {
 	t_ray	ray;

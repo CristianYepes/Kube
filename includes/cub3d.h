@@ -119,6 +119,9 @@ typedef struct s_ray
 	int		step_y;
 	int		side;
 	int		hit;
+	int		line_h;
+	int		tex_idx;
+	int		tex_x;
 }			t_ray;
 
 typedef struct s_data
@@ -170,6 +173,7 @@ int				init_textures(t_data *data);
 /*RENDER*/
 void			put_pixel(t_data *data, int x, int y, int color);
 void			cast_rays(t_data *data);
+void			draw_wall_column(t_data *data, t_ray *ray, int x);
 int				game_loop(t_data *data);
 void			paint_floor_ceiling(t_data *data);
 /*MOVEMENT*/
