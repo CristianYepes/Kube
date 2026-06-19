@@ -19,12 +19,12 @@ static void	set_ns(t_player *p, char c)
 	if (c == 'N')
 	{
 		p->dir_y = -1;
-		p->plane_x = -0.66;
+		p->plane_x = 0.66;
 	}
 	else
 	{
 		p->dir_y = 1;
-		p->plane_x = 0.66;
+		p->plane_x = -0.66;
 	}
 }
 
@@ -35,12 +35,12 @@ static void	set_ew(t_player *p, char c)
 	if (c == 'E')
 	{
 		p->dir_x = 1;
-		p->plane_y = -0.66;
+		p->plane_y = 0.66;
 	}
 	else
 	{
 		p->dir_x = -1;
-		p->plane_y = 0.66;
+		p->plane_y = -0.66;
 	}
 }
 
