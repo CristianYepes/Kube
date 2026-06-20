@@ -78,11 +78,11 @@
 | **S07B** | 4 | 👤 B | `render/texture.c` `update_texture_pixels` + shading + `tex_pixels[][]` | F4 | ✅ |
 | **🔄 SYNC4** | 4 | 👥 | **Muros con texturas N/S/E/W correctas, sin espejo** | — | ✅ |
 | **⭐ M4** | 4 | — | **Hito: Render final con texturas** | — | ✅ |
-| **S08A** | 4-5 | 👤 A | `movement/player_move.c` + `player_pos.c` (validate_move X/Y) | F5 | ☐ ⬅️ AQUÍ |
-| **S08B** | 4-5 | 👤 B | `movement/player_rotate.c` (matriz 2D) + `render/render.c` con `has_moved` | F5+F6 | 🔶 |
-| **🔄 SYNC5** | 5 | 👥 | **WASD + flechas + colisiones + ESC + X cierran limpio** | — | ☐ |
-| **S09AB** | 5 | 👥 | `exit/exit.c` + `exit/free_data.c` + valgrind clean | F6 | 🔶 |
-| **⭐ M5** | 5 | — | **Hito: MANDATORY COMPLETO ✅ (defendible solo)** | — | ☐ |
+| **S08A** | 4-5 | 👤 A | `movement/player_move.c` + `player_pos.c` (validate_move X/Y) | F5 | ✅ |
+| **S08B** | 4-5 | 👤 B | `movement/player_rotate.c` (matriz 2D) + `render/render.c` con `has_moved` | F5+F6 | ✅ |
+| **🔄 SYNC5** | 5 | 👥 | **WASD + flechas + colisiones + ESC + X cierran limpio** | — | ✅ |
+| **S09AB** | 5 | 👥 | `exit/exit.c` + `exit/free_data.c` + valgrind clean | F6 | ✅ |
+| **⭐ M5** | 5 | — | **Hito: MANDATORY COMPLETO ✅ (defendible solo)** | — | ✅ |
 | **S10A** | 5-6 | 👤 A | `bonus/minimap/minimap_render.c` + `minimap_image.c` | F7 | ☐ |
 | **S10B** | 5-6 | 👤 B | `bonus/mouse/mouse_handler.c` + edge wrap | F7 | ☐ |
 | **S11A** | 6 | 👤 A | `bonus/doors/*` (parse 'D' + toggle 'E' + render DDA) | F7 | ☐ |
@@ -109,21 +109,11 @@ ESC/X cierran, y **no crashea** (atraviesa muros porque aún no hay colisiones).
 Parser completo (A) · init/MLX, raycasting vectorial, suelo/techo, texturas (B, integrado).
 Lo de Rodrigo del mandatory **ya está dentro de `dev`**; de él solo faltan sus bonus.
 
-### ☐ Falta para cerrar el MANDATORY (M5)
-1. **C5 (en curso) — validar fixtures:** correr `maps/bad/*` (deben dar `Error`) y
-   `maps/good/*` (deben abrir) + `valgrind`. Fixtures ya creados en `maps/`.
-2. **S08A — COLISIONES (lado A, TÚ — próximo paso):** en `move_player`
-   (`sources/movement/player.c`), antes de aplicar el desplazamiento comprobar si la
-   celda destino es muro (`data->map[(int)y][(int)x] == '1'`); si lo es, no mover ese
-   eje (wall-sliding). Hay que pasar `data` a `move_player` (hoy recibe `t_player *`) →
-   cambiar firma + la llamada en `game_loop`. Cierra el "atravieso todo".
-3. **S09AB — cleanup/valgrind (conjunto):** `free_parsing` + `free_textures` ya hechos;
-   falta `valgrind --leak-check=full` en good (con `mlx.supp` para fugas de X11/MLX) y
-   bad → confirmar 0 "definitely lost" propios.
-
-### 🔶 Parciales
-- **S08B**: rotación vectorial (matriz) ✅; falta la optimización `has_moved` (opcional).
-- **S09AB**: frees hechos, falta el pase de valgrind + `mlx.supp`.
+### ✅ MANDATORY COMPLETO (M5) — 2026-06-20
+Parser + render vectorial + texturas N/S/E/W + suelo/techo + spawn + WASD/flechas +
+**colisiones (wall-sliding)** + cleanup. **valgrind:** bad → 0 leaks (`All heap blocks
+freed`); good → `definitely lost: 0` (fugas de MLX suprimidas con `mlx.supp`).
+Defendible solo. (Opcional no hecho: optimización `has_moved` del render — no requerida.)
 
 ### ⚠️ Pendientes anotados (ver `docs/plan_integracion_dev.md`)
 - Textura `.cub` ≠ 64×64 → `xpm_to_int` (textures.c, Rodrigo) leería fuera. Coordinar.
@@ -134,8 +124,9 @@ Lo de Rodrigo del mandatory **ya está dentro de `dev`**; de él solo faltan sus
 
 ### ▶️ CÓMO RETOMAR
 Nueva sesión → llama a la skill **`/contexto`** (reconstruye todo esto del git+docs).
-Acción concreta siguiente: **terminar C5** (validar fixtures + valgrind) → **S08A
-(colisiones)** → **S09AB (valgrind final)** = MANDATORY COMPLETO.
+**Mandatory cerrado.** Siguiente: **BONUS (M6)** — tú: minimapa (S10A) + puertas (S11A);
+Rodrigo: ratón (S10B) + sprites (S12B). Y antes de evaluación: testing exhaustivo
+(S15AB) + norminette 100% + README (S16AB).
 
 ---
 
