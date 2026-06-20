@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/17 17:55:56 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/20 12:00:00 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,30 +37,40 @@ static void	rotate_player(t_player *p, double dir)
 	p->plane_y = old_plane_x * sin(angle) + p->plane_y * cos(angle);
 }
 
-void	move_player(t_player *p)
+static int	is_wall(t_data *data, double x, double y)
 {
+	if (x < 0 || y < 0 || (int)y >= data->map_height
+		|| (int)x >= data->map_width)
+		return (1);
+	return (data->map[(int)y][(int)x] == '1');
+}
+
+static void	try_move(t_data *data, double dx, double dy)
+{
+	t_player	*p;
+
+	p = &data->player;
+	if (!is_wall(data, p->pos_x + dx, p->pos_y))
+		p->pos_x += dx;
+	if (!is_wall(data, p->pos_x, p->pos_y + dy))
+		p->pos_y += dy;
+}
+
+void	move_player(t_data *data)
+{
+	t_player	*p;
+
+	p = &data->player;
 	if (p->rotate_left)
 		rotate_player(p, -1);
 	if (p->rotate_right)
 		rotate_player(p, 1);
 	if (p->key_up)
-	{
-		p->pos_x += p->dir_x * MOVE_SPEED;
-		p->pos_y += p->dir_y * MOVE_SPEED;
-	}
+		try_move(data, p->dir_x * MOVE_SPEED, p->dir_y * MOVE_SPEED);
 	if (p->key_down)
-	{
-		p->pos_x -= p->dir_x * MOVE_SPEED;
-		p->pos_y -= p->dir_y * MOVE_SPEED;
-	}
+		try_move(data, -p->dir_x * MOVE_SPEED, -p->dir_y * MOVE_SPEED);
 	if (p->key_left)
-	{
-		p->pos_x -= p->plane_x * MOVE_SPEED;
-		p->pos_y -= p->plane_y * MOVE_SPEED;
-	}
+		try_move(data, -p->plane_x * MOVE_SPEED, -p->plane_y * MOVE_SPEED);
 	if (p->key_right)
-	{
-		p->pos_x += p->plane_x * MOVE_SPEED;
-		p->pos_y += p->plane_y * MOVE_SPEED;
-	}
+		try_move(data, p->plane_x * MOVE_SPEED, p->plane_y * MOVE_SPEED);
 }

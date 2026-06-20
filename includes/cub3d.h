@@ -179,7 +179,7 @@ void			paint_floor_ceiling(t_data *data);
 /*MOVEMENT*/
 int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
-void			move_player(t_player *p);
+void			move_player(t_data *data);
 /*EXIT*/
 void			exit_game(t_data *data);
 int				close_window(t_data *data);

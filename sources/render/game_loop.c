@@ -14,7 +14,7 @@
 
 int	game_loop(t_data *data)
 {
-	move_player(&data->player);
+	move_player(data);
 	paint_floor_ceiling(data);
 	cast_rays(data);
 	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
