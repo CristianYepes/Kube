@@ -27,6 +27,6 @@ int	init_game(t_data *data)
 	data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bpp,
 			&data->img.size_line, &data->img.endian);
 	if (init_textures(data) == ERR)
-		return (FAILURE);
+		return (err_msg(NULL, "Texture load failed", FAILURE));
 	return (SUCCESS);
 }

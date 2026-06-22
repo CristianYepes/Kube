@@ -41,6 +41,11 @@ int	*xpm_to_int(t_data *data, char *path)
 	tex.img = mlx_xpm_file_to_image(data->mlx, path, &w, &h);
 	if (!tex.img)
 		return (NULL);
+	if (w != TEX_SIZE || h != TEX_SIZE)
+	{
+		mlx_destroy_image(data->mlx, tex.img);
+		return (NULL);
+	}
 	tex.addr = mlx_get_data_addr(tex.img,
 			&tex.bpp, &tex.size_line, &tex.endian);
 	buffer = malloc(sizeof(int) * TEX_SIZE * TEX_SIZE);
