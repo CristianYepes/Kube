@@ -98,7 +98,7 @@
 
 ---
 
-## 📌 ESTADO ACTUAL (2026-06-19) — QUÉ FALTA Y DÓNDE RETOMAR
+## 📌 ESTADO ACTUAL (2026-06-22) — QUÉ FALTA Y DÓNDE RETOMAR
 
 **Todo vive en la rama `dev`** (origin actualizado). La integración parser (A) + motor
 vectorial + texturas (B) está **COMPLETA y funcionando**: parsea y valida el `.cub`,
@@ -115,8 +115,19 @@ Parser + render vectorial + texturas N/S/E/W + suelo/techo + spawn + WASD/flecha
 freed`); good → `definitely lost: 0` (fugas de MLX suprimidas con `mlx.supp`).
 Defendible solo. (Opcional no hecho: optimización `has_moved` del render — no requerida.)
 
-### ⚠️ Pendientes anotados (ver `docs/plan_integracion_dev.md`)
-- Textura `.cub` ≠ 64×64 → `xpm_to_int` (textures.c, Rodrigo) leería fuera. Coordinar.
+### ✅ BUGS PRE-BONUS RESUELTOS (2026-06-22)
+
+**🔴 RESUELTO — textura `.xpm` ≠ 64×64 ya no provoca lectura fuera de rango.**
+`xpm_to_int` (`textures.c`) valida ahora `w == TEX_SIZE && h == TEX_SIZE`; si no, destruye
+la imagen y devuelve `NULL`. `init_game` reporta `Error` + `Texture load failed` y libera
+imagen+ventana en esa ruta de error. **valgrind** sobre `maps/bad/tex_wrong_size.cub`: sin
+`Invalid read`, `definitely lost: 0`. Commits `9b108f2` (guard) + `eab3f04` (cleanup).
+Fixture de regresión: `maps/bad/tex_wrong_size.cub` + `small_8x8.xpm`.
+
+**🟡 RESUELTO (decisión) — tab dentro del mapa = `ERR_INVALID_CHAR`, se mantiene.**
+El subject lo avala (L120: el mapa solo admite 6 chars; L135: solo el espacio es excepción).
+Rechazar el tab no causa crash ni acepta mapas falsos → comportamiento correcto. Sin cambio
+de código.
 
 ### 🎁 BONUS (M6) — tras el mandatory
 - **Tú (A):** minimapa (S10A), puertas (S11A).
@@ -124,9 +135,9 @@ Defendible solo. (Opcional no hecho: optimización `has_moved` del render — no
 
 ### ▶️ CÓMO RETOMAR
 Nueva sesión → llama a la skill **`/contexto`** (reconstruye todo esto del git+docs).
-**Mandatory cerrado.** Siguiente: **BONUS (M6)** — tú: minimapa (S10A) + puertas (S11A);
-Rodrigo: ratón (S10B) + sprites (S12B). Y antes de evaluación: testing exhaustivo
-(S15AB) + norminette 100% + README (S16AB).
+**Mandatory cerrado y bugs pre-bonus resueltos.** Siguiente: **BONUS (M6)** — tú: minimapa
+(S10A) + puertas (S11A); Rodrigo: ratón (S10B) + sprites (S12B). Y antes de evaluación:
+testing exhaustivo (S15AB) + norminette 100% + README (S16AB).
 
 ---
 
@@ -136,24 +147,29 @@ Tu rama `raycasting2` (motor vectorial + suelo/techo + cargador XPM) está **int
 `dev`**, preservando tus commits (`1e8f48d`, `d49f624`) con tu autoría. Para que encajara
 con el parser y cerrar el mandatory, **completé/ajusté** esto de tu lado:
 
+> ⬆️ **Lo último está justo encima en `dev`** (commits `9b108f2` + `eab3f04` + `ce32a1e`):
+> blindaje del XPM ≠ 64×64, limpieza de la ruta de error y fixture de regresión. Haz
+> `git pull` en `dev` y lo tienes.
+
 | Fichero | Qué se hizo |
 |---|---|
 | `includes/cub3d.h` | Resuelto el merge: tus structs vectoriales + mis campos de `t_data`; añadidos `line_h/tex_idx/tex_x` a `t_ray`; quitados `NO/SO/WE/EA` duplicados. |
-| `init/init_game.c` | Fuera `get_temp_map` y colores hardcodeados (vienen del parser). NULL-checks de MLX; ahora devuelve `int`. |
+| `init/init_game.c` | Fuera `get_temp_map` y colores hardcodeados (vienen del parser). NULL-checks de MLX; devuelve `int`. **Nuevo**: si falla la carga de texturas, reporta `Error` y libera imagen+ventana (sin fuga). |
 | `init/init_textures.c` | Carga desde `data->tex_paths[...]` (rutas del `.cub`), no fijas; NULL tras free. |
-| `render/textures.c` | Solo norminette (newline). ⚠️ **PENDIENTE TUYO**: validar `w==64 && h==64` en `xpm_to_int` (XPM de otro tamaño → lee fuera → crash). |
+| `render/textures.c` | **HECHO**: guard `w==TEX_SIZE && h==TEX_SIZE` en `xpm_to_int` (XPM ≠ 64×64 → destruye imagen + `NULL`, sin OOB ni crash). |
 | `render/raycasting.c` | Guard de bounds en `perform_dda` (anti-segfault); recibe `t_data`. `draw_wall_column` movido a `draw_wall.c`. |
 | `render/draw_wall.c` (**NUEVO**) | **Render texturizado completo (S07B)**: cara N/S/E/W, `wall_x`, `tex_x` con inversión, shading N/E. Antes los muros eran blancos. |
 | `render/game_loop.c` | `move_player(data)`. |
 | `movement/player.c` | `init_player` adelgazado (spawn lo da el parser); signo de rotación corregido; **añadidas colisiones** (`is_wall`, `try_move`, wall-sliding); recibe `t_data`. |
 | `exit/exit_game.c` | Añadido `free_textures`. |
 | raíz | `mlx.supp` para valgrind. |
+| `maps/bad/` (**NUEVO**) | `tex_wrong_size.cub` + `small_8x8.xpm`: fixture de regresión del XPM ≠ 64×64. |
 
 **Convención de cámara (Lodev)** que usa el spawn (`check_map.c`): N dir(0,-1) plane(0.66,0)
 · S dir(0,1) plane(-0.66,0) · E dir(1,0) plane(0,0.66) · W dir(-1,0) plane(0,-0.66).
 
-**Tu siguiente trabajo parte de `dev` (NO de `raycasting2`):** ratón (S10B) + sprites (S12B)
-+ el pendiente del XPM 64×64.
+**Tu siguiente trabajo parte de `dev` (NO de `raycasting2`):** ratón (S10B) + sprites (S12B).
+(El XPM 64×64 ya está resuelto por nosotros — ver tabla.)
 
 ---
 
