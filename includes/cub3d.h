@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3d.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/18 20:51:56 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/22 20:26:27 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,10 +27,11 @@
 # define WIN_H 720
 
 /*movement*/
-# define MOVE_SPEED 0.05
+# define MOVE_SPEED 0.02
 # define ROT_SPEED 0.03
 
 /*Keycodes*/
+# define KEY_M 109
 # define KEY_W 119
 # define KEY_A 97
 # define KEY_S 115
@@ -100,6 +101,8 @@ typedef struct s_player
 	int		key_down;
 	int		key_left;
 	int		key_right;
+	/*minimap*/
+	int		minimap;
 	int		rotate_left;
 	int		rotate_right;
 }			t_player;
@@ -183,4 +186,9 @@ void			move_player(t_data *data);
 /*EXIT*/
 void			exit_game(t_data *data);
 int				close_window(t_data *data);
+/*minimap*/
+void    display_minimap(t_data *data);
+void    draw_map2(t_data *data);
+void	draw_square(int x, int y, int size, t_data *data);
+void	draw_player(int x, int y, int size, t_data *data);
 #endif

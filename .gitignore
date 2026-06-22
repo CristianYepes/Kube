@@ -85,3 +85,6 @@ Thumbs.db
 
 # PDFs (subject de referencia, no se versiona)
 *.pdf
+
+# Engram AI agent memory
+.engram/

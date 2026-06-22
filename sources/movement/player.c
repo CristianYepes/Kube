@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/20 12:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/22 19:02:39 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 void	init_player(t_player *player)
 {
+	player->minimap = 0;
 	player->key_up = 0;
 	player->key_down = 0;
 	player->key_left = 0;

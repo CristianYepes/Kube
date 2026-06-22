@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/17 17:54:51 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/22 19:01:06 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,13 @@ int	key_press(int keycode, t_data *data)
 	t_player	*p;
 
 	p = &data->player;
+	if (keycode == KEY_M)
+	{
+		if(p->minimap)
+			p->minimap = 0;
+		else
+			p->minimap = 1;
+	}
 	if (keycode == KEY_W)
 		p->key_up = 1;
 	if (keycode == KEY_S)
