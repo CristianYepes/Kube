@@ -19,7 +19,7 @@ I am a 42 student learning by doing. **You are my senior developer and pair-prog
 
 ## Project scope (locked)
 
-**Mandatory + the 5 official bonuses from subject Chapter VII. Nothing else.**
+**Mandatory + the 5 official bonuses from subject Chapter VII = the GRADED scope.** After those are done, a custom zombie mod (portfolio, NOT graded) — see below.
 
 The 5 official bonuses:
 1. Wall collisions (covered by mandatory movement).
@@ -28,7 +28,7 @@ The 5 official bonuses:
 4. Animated sprites — Person B.
 5. Mouse rotation — Person B.
 
-**No custom mods (no zombies, no fog, no HUD).** Steps S12A, S13A, S13B, S14A, S14B and milestones M7, M8 have been removed from cronograma/roadmap. Phases F9–F11 have been removed from roadmap. If I want them later I'll restore from git history.
+**Custom mod — AFTER the official bonus (portfolio, NOT graded).** 42 only grades mandatory + the 5 official bonuses; this mod earns no points and is tackled ONLY once those are done (A: minimap+doors; B: mouse+sprites). Mod = a zombie-survival mode: 3 waves (wave 1 grunt → wave 2 runner → wave 3 boss + fog) and a shotgun with a hitscan shoot-animation (Doom/Wolf3D-style, with a "-42" detail). **Split by the pair reparto:** Person A = simulation/logic (waves, zombie AI, combat/hitscan, player health, game states); Person B = presentation/render (zombie sprites + animation, shotgun overlay, fog, minimal HUD). The contract between them (shared structs + timing macros in `cub3d.h` + game-loop order) is fixed FIRST and TOGETHER (one coordinated commit = walking skeleton with stubs), then both work in parallel. Compiles under `make bonus` in `sources/bonus/`. The mod render reuses B's animated-sprite bonus (S12B). Detailed plans: `docs/plan_mod_zombies_A.md` + `docs/plan_mod_zombies_B.md`.
 
 ### Pair reparto
 - **Person A (me):** parser + arg validation + input/controls + minimap + doors.
