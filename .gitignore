@@ -72,6 +72,9 @@ minilibx-linux/
 *.swo
 *~
 
+# Claude Code (tooling local, no entregable)
+.claude/
+
 # macOS / Linux basura
 .DS_Store
 Thumbs.db
