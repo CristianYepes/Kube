@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/22 20:26:27 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/23 12:34:30 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 # include <stdlib.h>
 # include <string.h>
 # include <unistd.h>
+# include <sys/time.h>
 
 /*Window*/
 # define WIN_W 1280
@@ -39,6 +40,7 @@
 # define KEY_LEFT 65361
 # define KEY_RIGHT 65363
 # define KEY_ESC 65307
+# define KEY_SHOOT 65362
 
 /*Return codes*/
 # define SUCCESS 0
@@ -78,6 +80,8 @@
 
 /*render*/
 # define TEX_SIZE 64
+# define GUN_SIZE 900
+# define GUN_FRAMES 4
 
 /*Structs*/
 typedef struct s_img
@@ -106,6 +110,20 @@ typedef struct s_player
 	int		rotate_left;
 	int		rotate_right;
 }			t_player;
+
+typedef struct s_sprite
+{
+	double	pos_x;
+	double	pos_y;
+	double	distance;
+	double	transform_x;
+	double	transform_y;
+	int		screen_x;
+	int		size;
+	double	anim_timer;
+	int		frame_idx;
+	int		type;
+}			t_sprite;
 
 typedef struct s_ray
 {
@@ -146,6 +164,18 @@ typedef struct s_data
 	void		*mlx;
 	void		*win;
 	t_img		img;
+	/*sprites*/
+	double		*z_buffer;
+	int			sprite_count;
+	int			*sprite_tex[2];
+	int			*sprite_tex2[2];
+	struct timeval	last_time;
+	t_sprite	*sprites;
+	/*Shotgun*/
+	int			*gun_tex[GUN_FRAMES];
+	int			gun_frame;
+	int			gun_firing;
+	double		gun_timer;
 	/*Game*/
 	t_player	player;
 }				t_data;
@@ -172,6 +202,7 @@ int				find_biggest_len(t_data *data, int start, int end);
 int				init_game(t_data *data);
 void			init_player(t_player *player);
 int				*xpm_to_int(t_data *data, char *path);
+int				*xpm_to_int_size(t_data *data, char *path, int size);
 int				init_textures(t_data *data);
 /*RENDER*/
 void			put_pixel(t_data *data, int x, int y, int color);
@@ -179,16 +210,35 @@ void			cast_rays(t_data *data);
 void			draw_wall_column(t_data *data, t_ray *ray, int x);
 int				game_loop(t_data *data);
 void			paint_floor_ceiling(t_data *data);
+/*SPRITES*/
+int				sprites_counter(char type, t_data *data);
+void			init_sprites(char type, t_data *data);
+int				init_sprites_data(t_data *data);
+void			compute_sprite_distances(t_data *data);
+void			sort_sprites(t_data *data);
+void			render_sprites(t_data *data);
 /*MOVEMENT*/
 int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
 void			move_player(t_data *data);
+void			rotate_player(t_player *p, double dir);
+int				mouse_tracker(int x, int y, t_data *data);
+int				mouse_click(int button, int x, int y, t_data *data);
 /*EXIT*/
 void			exit_game(t_data *data);
 int				close_window(t_data *data);
 /*minimap*/
-void    display_minimap(t_data *data);
-void    draw_map2(t_data *data);
-void	draw_square(int x, int y, int size, t_data *data);
-void	draw_player(int x, int y, int size, t_data *data);
+void			display_minimap(t_data *data);
+void			draw_map2(t_data *data);
+void			draw_square(int x, int y, int size, t_data *data);
+void			draw_player(int x, int y, int size, t_data *data);
+void			draw_sprite(int x, int y, int size, t_data *data);
+/*mlx loop*/
+void			loop(t_data *data);
+int				mouse_tracker(int x, int y, t_data *data);
+/*Shotgun*/
+int				init_shotgun(t_data *data);
+void			draw_shotgun(t_data *data);
+void			tick_shotgun(t_data *data, double dt);
+void			fire_shotgun(t_data *data);
 #endif

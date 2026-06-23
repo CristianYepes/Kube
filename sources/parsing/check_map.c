@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   check_map.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/17 20:42:30 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/19 12:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/22 22:59:12 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ int	check_map(t_data *data)
 		j = 0;
 		while (data->map[i][j])
 		{
-			if (ft_strchr("01NSEW", data->map[i][j]) == NULL)
+			if (ft_strchr("0123NSEW", data->map[i][j]) == NULL)
 				return (err_msg(NULL, ERR_INVALID_CHAR, FAILURE));
 			if (ft_strchr("NSEW", data->map[i][j]) != NULL)
 				count++;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exit_game.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/19 13:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/22 22:36:28 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ void	exit_game(t_data *data)
 		mlx_destroy_image(data->mlx, data->img.img);
 	if (data->win)
 		mlx_destroy_window(data->mlx, data->win);
+	if (data->z_buffer)
+		free(data->z_buffer);
 	free_parsing(data);
 	exit(SUCCESS);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   draw_wall.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/19 13:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/19 13:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/22 22:34:25 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,7 @@ void	draw_wall_column(t_data *data, t_ray *ray, int x)
 		ray->wall_dist = ray->side_y - ray->delta_y;
 	if (ray->wall_dist < 0.0001)
 		ray->wall_dist = 0.0001;
+	data->z_buffer[x] = ray->wall_dist;
 	ray->line_h = (int)(WIN_H / ray->wall_dist);
 	ray->tex_idx = get_tex_index(ray);
 	ray->tex_x = get_tex_x(data, ray);

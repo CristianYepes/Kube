@@ -83,8 +83,8 @@
 | **🔄 SYNC5** | 5 | 👥 | **WASD + flechas + colisiones + ESC + X cierran limpio** | — | ✅ |
 | **S09AB** | 5 | 👥 | `exit/exit.c` + `exit/free_data.c` + valgrind clean | F6 | ✅ |
 | **⭐ M5** | 5 | — | **Hito: MANDATORY COMPLETO ✅ (defendible solo)** | — | ✅ |
-| **S10A** | 5-6 | 👤 A | `bonus/minimap/minimap_render.c` + `minimap_image.c` | F7 | ☐ |
-| **S10B** | 5-6 | 👤 B | `bonus/mouse/mouse_handler.c` + edge wrap | F7 | ☐ |
+| **S10A** | 5-6 | 👤 A | `bonus/minimap/minimap_render.c` + `minimap_image.c` | F7 | ✅ |
+| **S10B** | 5-6 | 👤 B | `bonus/mouse/mouse_handler.c` + edge wrap | F7 | ✅ |
 | **S11A** | 6 | 👤 A | `bonus/doors/*` (parse 'D' + toggle 'E' + render DDA) | F7 | ☐ |
 | **S12B** | 6-7 | 👤 B | `bonus/sprites/*` — sprites animados (init/sort/project/render + z-buffer + frame cycling) | F8 | ☐ |
 | **🔄 SYNC6** | 7 | 👥 | **Bonus oficial completo: minimapa + ratón + puertas + sprites animados** | — | ☐ |
@@ -130,8 +130,24 @@ Rechazar el tab no causa crash ni acepta mapas falsos → comportamiento correct
 de código.
 
 ### 🎁 BONUS (M6) — tras el mandatory
-- **Tú (A):** minimapa (S10A), puertas (S11A).
+- **Tú (A):** ~~minimapa (S10A)~~ ✅, puertas (S11A).
 - **Rodrigo (B):** ratón (S10B), sprites animados (S12B).
+
+### ✅ MINIMAP COMPLETO (S10A) — 2026-06-22
+Minimap funcional: muros azules, jugador rojo centrado, fondo gris/negro. Dos modos:
+mapa pequeño (<15 tiles) muestra todo; mapa grande muestra 9×9 centrado en jugador.
+Toggle con tecla M. Bounds checking, norminette 100%, valgrind `definitely lost: 0`.
+
+### ✅ MOUSE ROTATION (S10B) — 2026-06-22
+Rotación de cámara con ratón: delta_x desde centro, `rotate_player` proporcional,
+recentrado con `mlx_mouse_move`. Guard `delta_x == 0` para evitar bucle infinito.
+Sensibilidad `0.01`. Norminette 100%, valgrind limpio.
+
+### 🔶 SPRITES (S12B) — EN PROGRESO — 2026-06-23
+Sprites estáticos funcionando: z-buffer por columna, proyección Lode (matriz inversa
+cámara), render con transparencia (color 0 = skip), ordenado por distancia (painter's).
+Char `'2'` en mapa = sprite. Textura 64×64 cargada con `xpm_to_int`. Aparece en minimap
+(verde). **Falta:** animación (ciclo de frames con múltiples texturas + temporizador).
 
 ### ▶️ CÓMO RETOMAR
 Nueva sesión → llama a la skill **`/contexto`** (reconstruye todo esto del git+docs).

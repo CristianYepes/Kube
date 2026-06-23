@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/22 19:02:14 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/22 23:36:51 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,18 @@ int	init_game(t_data *data)
 		return (err_msg(NULL, "MLX image failed", FAILURE));
 	data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bpp,
 			&data->img.size_line, &data->img.endian);
+	data->z_buffer = malloc(sizeof(double) * WIN_W);
+	if (!data->z_buffer)
+		return (err_msg(NULL, "Z-buffer alloc failed", FAILURE));
 	if (init_textures(data) == ERR)
 	{
 		mlx_destroy_image(data->mlx, data->img.img);
 		mlx_destroy_window(data->mlx, data->win);
 		return (err_msg(NULL, "Texture load failed", FAILURE));
 	}
+	if (init_sprites_data(data) == FAILURE)
+		return (err_msg(NULL, "Sprite init failed", FAILURE));
+	if (init_shotgun(data) == FAILURE)
+		return (err_msg(NULL, "Shotgun init failed", FAILURE));
 	return (SUCCESS);
 }

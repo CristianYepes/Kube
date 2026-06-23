@@ -37,9 +37,14 @@ SRC         =	main.c \
 				render/draw_wall.c \
 				render/minimap.c \
 				render/minimap_2.c \
+				render/sprites.c \
+				render/render_sprites.c \
+				render/shotgun.c \
+				init/init_sprites.c \
 				movement/player.c \
 				movement/input.c \
-				exit/exit_game.c 
+				exit/exit_game.c \
+				mlx_loop_and_hook/mlx.c
 
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
 
