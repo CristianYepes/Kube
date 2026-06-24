@@ -86,7 +86,7 @@
 
 /*Bonus charset guard*/
 # ifdef BONUS
-#  define MAP_CHARS "0123DNSEW"
+#  define MAP_CHARS "01DNSEW"
 # else
 #  define MAP_CHARS "01NSEW"
 # endif
@@ -310,8 +310,15 @@ void			draw_player(int x, int y, int size, t_data *data);
 void			draw_sprite(int x, int y, int size, t_data *data);
 /*mlx loop*/
 void			loop(t_data *data);
-/*Mod*/
+/*Mod — simulation*/
 void			update_sim(t_data *data);
+void			spawn_wave(t_data *data);
+void			update_enemies(t_data *data);
+void			try_fire(t_data *data);
+void			update_player_hp(t_data *data);
+void			check_game_state(t_data *data);
+unsigned int	lcg_next(unsigned int *seed);
+/*Mod — render*/
 void			render_enemies(t_data *data);
 void			render_weapon(t_data *data);
 void			render_hud(t_data *data);

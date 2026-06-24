@@ -52,6 +52,10 @@ BONUS_SRC   =	render/minimap.c \
 				movement/input_bonus.c \
 				movement/doors.c \
 				bonus/mod/sim.c \
+				bonus/mod/waves.c \
+				bonus/mod/enemy_ai.c \
+				bonus/mod/combat.c \
+				bonus/mod/player_state.c \
 				bonus/render/enemy_render.c \
 				bonus/render/weapon.c \
 				bonus/render/hud.c

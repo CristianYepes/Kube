@@ -32,6 +32,8 @@ static int	init_mlx(t_data *data)
 
 static void	init_mod_state(t_data *data)
 {
+	struct timeval	tv;
+
 	data->wave = 1;
 	data->player_hp = 100;
 	data->game_state = G_PLAY;
@@ -40,6 +42,9 @@ static void	init_mod_state(t_data *data)
 	data->weapon.timer = 0;
 	data->enemies = NULL;
 	data->enemy_count = 0;
+	data->fire = 0;
+	gettimeofday(&tv, NULL);
+	data->seed = (unsigned int)(tv.tv_usec ^ tv.tv_sec);
 }
 
 static int	init_bonus_assets(t_data *data)

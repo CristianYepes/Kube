@@ -35,7 +35,10 @@ int	key_press_bonus(int keycode, t_data *data)
 	if (keycode == KEY_E)
 		toggle_door(data);
 	if (keycode == KEY_SHOOT)
+	{
+		data->fire = 1;
 		fire_shotgun(data);
+	}
 	if (keycode == KEY_ESC)
 		exit_game(data);
 	handle_movement(keycode, &data->player, 1);
@@ -47,7 +50,10 @@ int	mouse_click(int button, int x, int y, t_data *data)
 	(void)x;
 	(void)y;
 	if (button == 1)
+	{
+		data->fire = 1;
 		fire_shotgun(data);
+	}
 	return (0);
 }
 

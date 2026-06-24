@@ -14,25 +14,6 @@
 
 #ifdef BONUS
 
-static void	tick_sprite_anim(t_data *data, double dt)
-{
-	int	i;
-
-	i = 0;
-	while (i < data->sprite_count)
-	{
-		data->sprites[i].anim_timer += dt;
-		if (data->sprites[i].anim_timer >= 0.20)
-		{
-			data->sprites[i].anim_timer = 0;
-			data->sprites[i].frame_idx++;
-			if (data->sprites[i].frame_idx >= 2)
-				data->sprites[i].frame_idx = 0;
-		}
-		i++;
-	}
-}
-
 int	game_loop(t_data *data)
 {
 	struct timeval	now;
@@ -45,10 +26,6 @@ int	game_loop(t_data *data)
 	update_sim(data);
 	paint_floor_ceiling(data);
 	cast_rays(data);
-	compute_sprite_distances(data);
-	sort_sprites(data);
-	tick_sprite_anim(data, data->dt);
-	render_sprites(data);
 	render_enemies(data);
 	render_weapon(data);
 	render_hud(data);
