@@ -40,10 +40,12 @@ SRC         =	main.c \
 				render/sprites.c \
 				render/render_sprites.c \
 				render/shotgun.c \
+				render/shotgun_draw.c \
 				init/init_sprites.c \
 				movement/player.c \
 				movement/input.c \
 				exit/exit_game.c \
+				exit/free_bonus.c \
 				mlx_loop_and_hook/mlx.c
 
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))

@@ -81,6 +81,8 @@ int	parse_memory(char *path, t_data *data)
 
 static int	validate_map(t_data *data)
 {
+	if (!(data->id_flags & (1 << 4)) || !(data->id_flags & (1 << 5)))
+		return (err_msg(NULL, ERR_MISSING_COLOR, FAILURE));
 	if (check_map(data) == FAILURE)
 		return (FAILURE);
 	if (check_map_borders(data) == FAILURE)

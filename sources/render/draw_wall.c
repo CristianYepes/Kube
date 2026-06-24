@@ -80,6 +80,11 @@ static void	paint_column(t_data *data, t_ray *ray, int x)
 
 void	draw_wall_column(t_data *data, t_ray *ray, int x)
 {
+	if (!ray->hit)
+	{
+		data->z_buffer[x] = 1e30;
+		return ;
+	}
 	if (ray->side == 0)
 		ray->wall_dist = ray->side_x - ray->delta_x;
 	else

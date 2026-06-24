@@ -77,6 +77,7 @@
 # define ERR_MAP_NOT_CLOSED "Map is not closed"
 # define ERR_MISSING_ID "Missing texture path"
 # define ERR_TEX_NOT_XPM "Texture is not a .xpm file"
+# define ERR_MISSING_COLOR "Missing floor/ceiling color"
 
 /*render*/
 # define TEX_SIZE 64
@@ -147,37 +148,33 @@ typedef struct s_ray
 
 typedef struct s_data
 {
-	/*Parsing*/
-	char		**file_lines;
-	int			file_nb_lines;
-	int			map_start;
-	int			id_flags;
-	int			map_height;
-	int			map_width;
-	/*Scene*/
-	char		*tex_paths[4];
-	int			floor_color;
-	int			ceiling_color;
-	char		**map;
-	int			*textures[4];
-	/*MLX*/
-	void		*mlx;
-	void		*win;
-	t_img		img;
-	/*sprites*/
-	double		*z_buffer;
-	int			sprite_count;
-	int			*sprite_tex[2];
-	int			*sprite_tex2[2];
+	char			**file_lines;
+	int				file_nb_lines;
+	int				map_start;
+	int				id_flags;
+	int				map_height;
+	int				map_width;
+	char			*tex_paths[4];
+	int				floor_color;
+	int				ceiling_color;
+	char			**map;
+	int				*textures[4];
+	void			*mlx;
+	void			*win;
+	t_img			img;
+	double			*z_buffer;
+	int				sprite_count;
+	int				*sprite_tex[2];
+	int				*sprite_tex2[2];
 	struct timeval	last_time;
-	t_sprite	*sprites;
-	/*Shotgun*/
-	int			*gun_tex[GUN_FRAMES];
-	int			gun_frame;
-	int			gun_firing;
-	double		gun_timer;
-	/*Game*/
-	t_player	player;
+	t_sprite		*sprites;
+	int				*gun_tex[GUN_FRAMES];
+	int				gun_frame;
+	int				gun_firing;
+	double			gun_timer;
+	int				mini_x;
+	int				mini_y;
+	t_player		player;
 }				t_data;
 
 /*ERROR*/
@@ -226,6 +223,9 @@ int				mouse_tracker(int x, int y, t_data *data);
 int				mouse_click(int button, int x, int y, t_data *data);
 /*EXIT*/
 void			exit_game(t_data *data);
+void			destroy_game(t_data *data);
+void			free_sprites(t_data *data);
+void			free_shotgun(t_data *data);
 int				close_window(t_data *data);
 /*minimap*/
 void			display_minimap(t_data *data);
@@ -235,7 +235,6 @@ void			draw_player(int x, int y, int size, t_data *data);
 void			draw_sprite(int x, int y, int size, t_data *data);
 /*mlx loop*/
 void			loop(t_data *data);
-int				mouse_tracker(int x, int y, t_data *data);
 /*Shotgun*/
 int				init_shotgun(t_data *data);
 void			draw_shotgun(t_data *data);

@@ -27,6 +27,8 @@ void	draw_sprite(int x, int y, int size, t_data *data)
 {
 	int	i;
 
+	x += data->mini_x;
+	y += data->mini_y;
 	i = 0;
 	while (i++ < size)
 		put_pixel(data, x + i, y, 0x00FF00);

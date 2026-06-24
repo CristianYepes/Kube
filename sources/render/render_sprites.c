@@ -30,10 +30,10 @@ static void	draw_sprite_col(t_data *data, t_sprite *s, int x)
 			tex_y = (y - start_y) * TEX_SIZE / s->size;
 			if (s->type == 0)
 				color = data->sprite_tex[s->frame_idx]
-					[tex_y * TEX_SIZE + tex_x];
+				[tex_y * TEX_SIZE + tex_x];
 			else
 				color = data->sprite_tex2[s->frame_idx]
-					[tex_y * TEX_SIZE + tex_x];
+				[tex_y * TEX_SIZE + tex_x];
 			if (color != 0)
 				put_pixel(data, x, y, color);
 		}
@@ -78,8 +78,8 @@ void	project_sprite(t_data *data, int i)
 	data->sprites[i].screen_x = (int)((WIN_W / 2)
 			* (1 + data->sprites[i].transform_x
 				/ data->sprites[i].transform_y));
-	data->sprites[i].size = abs((int)(WIN_H
-				/ data->sprites[i].transform_y));
+	data->sprites[i].size = (int)fabs(WIN_H
+			/ data->sprites[i].transform_y);
 }
 
 void	render_sprites(t_data *data)

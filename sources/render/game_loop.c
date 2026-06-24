@@ -30,6 +30,7 @@ void	tick_sprite_anim(t_data *data, double dt)
 		i++;
 	}
 }
+
 int	game_loop(t_data *data)
 {
 	struct timeval	now;

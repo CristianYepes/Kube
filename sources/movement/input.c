@@ -3,63 +3,46 @@
 /*                                                        :::      ::::::::   */
 /*   input.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
+/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/22 22:18:43 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/24 12:00:00 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
+static void	handle_movement(int keycode, t_player *p, int state)
+{
+	if (keycode == KEY_W)
+		p->key_up = state;
+	if (keycode == KEY_S)
+		p->key_down = state;
+	if (keycode == KEY_A)
+		p->key_left = state;
+	if (keycode == KEY_D)
+		p->key_right = state;
+	if (keycode == KEY_LEFT)
+		p->rotate_left = state;
+	if (keycode == KEY_RIGHT)
+		p->rotate_right = state;
+}
+
 int	key_press(int keycode, t_data *data)
 {
-	t_player	*p;
-
-	p = &data->player;
 	if (keycode == KEY_M)
-	{
-		if (p->minimap)
-			p->minimap = 0;
-		else
-			p->minimap = 1;
-	}
-	if (keycode == KEY_W)
-		p->key_up = 1;
-	if (keycode == KEY_S)
-		p->key_down = 1;
-	if (keycode == KEY_A)
-		p->key_left = 1;
-	if (keycode == KEY_D)
-		p->key_right = 1;
-	if (keycode == KEY_LEFT)
-		p->rotate_left = 1;
-	if (keycode == KEY_RIGHT)
-		p->rotate_right = 1;
+		data->player.minimap = !data->player.minimap;
 	if (keycode == KEY_SHOOT)
 		fire_shotgun(data);
 	if (keycode == KEY_ESC)
 		exit_game(data);
+	handle_movement(keycode, &data->player, 1);
 	return (0);
 }
 
 int	key_release(int keycode, t_data *data)
 {
-	t_player	*p;
-
-	p = &data->player;
-	if (keycode == KEY_W)
-		p->key_up = 0;
-	if (keycode == KEY_S)
-		p->key_down = 0;
-	if (keycode == KEY_A)
-		p->key_left = 0;
-	if (keycode == KEY_D)
-		p->key_right = 0;
-	if (keycode == KEY_LEFT)
-		p->rotate_left = 0;
-	if (keycode == KEY_RIGHT)
-		p->rotate_right = 0;
+	handle_movement(keycode, &data->player, 0);
 	return (0);
 }
 
