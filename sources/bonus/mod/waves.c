@@ -12,47 +12,27 @@
 
 #include "cub3d.h"
 
-unsigned int	lcg_next(unsigned int *seed)
+static int	place_enemy(t_data *data, int idx, int type)
 {
-	*seed = *seed * 1103515245 + 12345;
-	return ((*seed / 65536) % 32768);
-}
-
-static int	is_valid_spawn(t_data *data, int x, int y)
-{
-	double	dx;
-	double	dy;
-
-	if (data->map[y][x] != '0')
-		return (0);
-	dx = x + 0.5 - data->player.pos_x;
-	dy = y + 0.5 - data->player.pos_y;
-	if (dx * dx + dy * dy < 9.0)
-		return (0);
-	return (1);
-}
-
-static void	place_enemy(t_data *data, int idx, int type)
-{
+	int	n;
+	int	pick;
 	int	x;
 	int	y;
-	int	attempts;
 
-	attempts = 0;
-	x = lcg_next(&data->seed) % data->map_width;
-	y = lcg_next(&data->seed) % data->map_height;
-	while (!is_valid_spawn(data, x, y) && attempts < 200)
-	{
-		x = lcg_next(&data->seed) % data->map_width;
-		y = lcg_next(&data->seed) % data->map_height;
-		attempts++;
-	}
+	n = count_spawn_cells(data);
+	if (n <= 0)
+		return (0);
+	pick = lcg_next(&data->seed) % n;
+	if (!pick_spawn_cell(data, pick, &x, &y))
+		return (0);
 	data->enemies[idx].pos_x = x + 0.5;
 	data->enemies[idx].pos_y = y + 0.5;
 	data->enemies[idx].type = type;
 	data->enemies[idx].state = E_IDLE;
 	data->enemies[idx].timer = 0;
 	data->enemies[idx].atk_timer = 0;
+	data->map[y][x] = 'Z';
+	return (1);
 }
 
 static void	get_wave_params(int wave, int *count, int *type, int *hp)
@@ -77,12 +57,31 @@ static void	get_wave_params(int wave, int *count, int *type, int *hp)
 	}
 }
 
+static void	clear_spawn_marks(t_data *data)
+{
+	int	x;
+	int	y;
+
+	y = 0;
+	while (y < data->map_height)
+	{
+		x = 0;
+		while (x < data->map_width)
+		{
+			if (data->map[y][x] == 'Z')
+				data->map[y][x] = '0';
+			x++;
+		}
+		y++;
+	}
+}
+
 void	spawn_wave(t_data *data)
 {
 	int	count;
 	int	type;
 	int	hp;
-	int	i;
+	int	placed;
 
 	get_wave_params(data->wave, &count, &type, &hp);
 	if (data->enemies)
@@ -90,13 +89,16 @@ void	spawn_wave(t_data *data)
 	data->enemies = malloc(sizeof(t_enemy) * count);
 	if (!data->enemies)
 		return ;
-	data->enemy_count = count;
-	i = -1;
-	while (++i < count)
+	placed = 0;
+	while (placed < count)
 	{
-		place_enemy(data, i, type);
-		data->enemies[i].hp = hp;
+		if (!place_enemy(data, placed, type))
+			break ;
+		data->enemies[placed].hp = hp;
+		placed++;
 	}
+	clear_spawn_marks(data);
+	data->enemy_count = placed;
 	if (data->wave == 3)
 		data->fog = 1;
 }

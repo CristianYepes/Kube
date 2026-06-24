@@ -63,7 +63,7 @@ static void	enemy_fsm(t_data *data, t_enemy *e)
 	if (e->state == E_DEAD)
 		return ;
 	d = dist_sq(e, data);
-	if (e->state == E_IDLE && d < 64.0)
+	if (e->state == E_IDLE)
 		e->state = E_CHASE;
 	if (e->state == E_CHASE)
 	{

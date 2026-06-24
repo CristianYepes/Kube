@@ -318,6 +318,8 @@ void			try_fire(t_data *data);
 void			update_player_hp(t_data *data);
 void			check_game_state(t_data *data);
 unsigned int	lcg_next(unsigned int *seed);
+int				count_spawn_cells(t_data *data);
+int				pick_spawn_cell(t_data *data, int n, int *ox, int *oy);
 /*Mod — render*/
 void			render_enemies(t_data *data);
 void			render_weapon(t_data *data);
