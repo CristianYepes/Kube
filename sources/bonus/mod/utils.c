@@ -18,6 +18,28 @@ unsigned int	lcg_next(unsigned int *seed)
 	return ((*seed / 65536) % 32768);
 }
 
+static int	has_los(t_data *data, double cx, double cy)
+{
+	double	dx;
+	double	dy;
+	double	d;
+
+	dx = data->player.pos_x - cx;
+	dy = data->player.pos_y - cy;
+	d = sqrt(dx * dx + dy * dy);
+	dx = dx / d * 0.1;
+	dy = dy / d * 0.1;
+	while (d > 0.1)
+	{
+		cx += dx;
+		cy += dy;
+		if (is_wall(data, cx, cy))
+			return (0);
+		d -= 0.1;
+	}
+	return (1);
+}
+
 static int	is_valid_spawn(t_data *data, int x, int y)
 {
 	double	dx;
@@ -32,6 +54,8 @@ static int	is_valid_spawn(t_data *data, int x, int y)
 	dx = x + 0.5 - data->player.pos_x;
 	dy = y + 0.5 - data->player.pos_y;
 	if (dx * dx + dy * dy < 4.0)
+		return (0);
+	if (!data->spawn_relax && !has_los(data, x + 0.5, y + 0.5))
 		return (0);
 	return (1);
 }

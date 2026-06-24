@@ -76,6 +76,13 @@ static void	clear_spawn_marks(t_data *data)
 	}
 }
 
+static void	set_spawn_mode(t_data *data)
+{
+	data->spawn_relax = 0;
+	if (count_spawn_cells(data) == 0)
+		data->spawn_relax = 1;
+}
+
 void	spawn_wave(t_data *data)
 {
 	int	count;
@@ -89,6 +96,7 @@ void	spawn_wave(t_data *data)
 	data->enemies = malloc(sizeof(t_enemy) * count);
 	if (!data->enemies)
 		return ;
+	set_spawn_mode(data);
 	placed = 0;
 	while (placed < count)
 	{

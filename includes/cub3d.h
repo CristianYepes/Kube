@@ -241,6 +241,7 @@ typedef struct s_data
 	int				fog;
 	t_weapon		weapon;
 	unsigned int	seed;
+	int				spawn_relax;
 	t_player		player;
 }				t_data;
 
