@@ -91,6 +91,11 @@
 #  define MAP_CHARS "01NSEW"
 # endif
 
+/*Doors*/
+# define KEY_E 101
+# define DOOR_CLOSED 'D'
+# define DOOR_OPEN 'O'
+
 /*Structs*/
 typedef struct s_img
 {
@@ -151,6 +156,7 @@ typedef struct s_ray
 	int		line_h;
 	int		tex_idx;
 	int		tex_x;
+	int		is_door;
 }			t_ray;
 
 typedef struct s_data
@@ -181,6 +187,7 @@ typedef struct s_data
 	double			gun_timer;
 	int				mini_x;
 	int				mini_y;
+	int				*door_tex;
 	t_player		player;
 }				t_data;
 
@@ -226,6 +233,8 @@ int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
 void			move_player(t_data *data);
 void			rotate_player(t_player *p, double dir);
+int				is_wall(t_data *data, double x, double y);
+void			toggle_door(t_data *data);
 # ifdef BONUS
 
 int				key_press_bonus(int keycode, t_data *data);

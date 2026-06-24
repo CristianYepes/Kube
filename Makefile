@@ -49,7 +49,8 @@ BONUS_SRC   =	render/minimap.c \
 				render/shotgun.c \
 				render/shotgun_draw.c \
 				init/init_sprites.c \
-				movement/input_bonus.c
+				movement/input_bonus.c \
+				movement/doors.c
 
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
 BONUS_SRCS  = $(addprefix $(SRC_PATH), $(BONUS_SRC))

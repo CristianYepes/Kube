@@ -38,12 +38,15 @@ void	rotate_player(t_player *p, double dir)
 	p->plane_y = old_plane_x * sin(angle) + p->plane_y * cos(angle);
 }
 
-static int	is_wall(t_data *data, double x, double y)
+int	is_wall(t_data *data, double x, double y)
 {
+	char	c;
+
 	if (x < 0 || y < 0 || (int)y >= data->map_height
 		|| (int)x >= data->map_width)
 		return (1);
-	return (data->map[(int)y][(int)x] == '1');
+	c = data->map[(int)y][(int)x];
+	return (c == '1' || c == DOOR_CLOSED);
 }
 
 static void	try_move(t_data *data, double dx, double dy)

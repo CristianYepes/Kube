@@ -30,6 +30,18 @@ static int	init_mlx(t_data *data)
 
 #ifdef BONUS
 
+static int	init_bonus_assets(t_data *data)
+{
+	data->door_tex = xpm_to_int(data, "textures/door.xpm");
+	if (!data->door_tex)
+		data->door_tex = xpm_to_int(data, data->tex_paths[WEST]);
+	if (init_sprites_data(data) == FAILURE)
+		return (err_msg(NULL, "Sprite init failed", FAILURE));
+	if (init_shotgun(data) == FAILURE)
+		return (err_msg(NULL, "Shotgun init failed", FAILURE));
+	return (SUCCESS);
+}
+
 int	init_game(t_data *data)
 {
 	init_player(&data->player);
@@ -46,15 +58,10 @@ int	init_game(t_data *data)
 		destroy_game(data);
 		return (err_msg(NULL, "Texture load failed", FAILURE));
 	}
-	if (init_sprites_data(data) == FAILURE)
+	if (init_bonus_assets(data) != SUCCESS)
 	{
 		destroy_game(data);
-		return (err_msg(NULL, "Sprite init failed", FAILURE));
-	}
-	if (init_shotgun(data) == FAILURE)
-	{
-		destroy_game(data);
-		return (err_msg(NULL, "Shotgun init failed", FAILURE));
+		return (FAILURE);
 	}
 	return (SUCCESS);
 }

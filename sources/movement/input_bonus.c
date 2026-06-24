@@ -32,6 +32,8 @@ int	key_press_bonus(int keycode, t_data *data)
 {
 	if (keycode == KEY_M)
 		data->player.minimap = !data->player.minimap;
+	if (keycode == KEY_E)
+		toggle_door(data);
 	if (keycode == KEY_SHOOT)
 		fire_shotgun(data);
 	if (keycode == KEY_ESC)

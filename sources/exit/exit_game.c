@@ -30,6 +30,8 @@ void	destroy_game(t_data *data)
 	free_textures(data);
 	free_sprites(data);
 	free_shotgun(data);
+	if (data->door_tex)
+		free(data->door_tex);
 	if (data->z_buffer)
 		free(data->z_buffer);
 	if (data->img.img)

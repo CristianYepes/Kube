@@ -69,7 +69,8 @@ static void	perform_dda(t_data *data, t_ray *ray)
 		if (ray->map_x < 0 || ray->map_x >= data->map_width
 			|| ray->map_y < 0 || ray->map_y >= data->map_height)
 			return ;
-		if (data->map[ray->map_y][ray->map_x] == '1')
+		if (data->map[ray->map_y][ray->map_x] == '1'
+			|| data->map[ray->map_y][ray->map_x] == DOOR_CLOSED)
 			ray->hit = 1;
 	}
 }

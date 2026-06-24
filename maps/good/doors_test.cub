@@ -1,0 +1,15 @@
+NO ./files/wall_cross.xpm
+SO ./files/wall_cross.xpm
+WE ./files/wall_pipes.xpm
+EA ./files/wall_pipes.xpm
+F 220,100,0
+C 225,30,0
+
+11111111111
+10000D00001
+10000000001
+10000000001
+100N0D00001
+10000000001
+10000000001
+11111111111

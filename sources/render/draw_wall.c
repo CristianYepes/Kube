@@ -49,8 +49,11 @@ static int	get_tex_color(t_data *data, t_ray *ray, double tex_pos)
 	int	color;
 
 	tex_y = (int)tex_pos & (TEX_SIZE - 1);
-	color = data->textures[ray->tex_idx][TEX_SIZE * tex_y + ray->tex_x];
-	if (ray->tex_idx == NORTH || ray->tex_idx == EAST)
+	if (ray->is_door && data->door_tex)
+		color = data->door_tex[TEX_SIZE * tex_y + ray->tex_x];
+	else
+		color = data->textures[ray->tex_idx][TEX_SIZE * tex_y + ray->tex_x];
+	if (!ray->is_door && (ray->tex_idx == NORTH || ray->tex_idx == EAST))
 		color = (color >> 1) & 0x7F7F7F;
 	return (color);
 }
@@ -93,6 +96,7 @@ void	draw_wall_column(t_data *data, t_ray *ray, int x)
 		ray->wall_dist = 0.0001;
 	data->z_buffer[x] = ray->wall_dist;
 	ray->line_h = (int)(WIN_H / ray->wall_dist);
+	ray->is_door = (data->map[ray->map_y][ray->map_x] == DOOR_CLOSED);
 	ray->tex_idx = get_tex_index(ray);
 	ray->tex_x = get_tex_x(data, ray);
 	paint_column(data, ray, x);
