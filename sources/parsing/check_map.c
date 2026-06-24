@@ -93,7 +93,7 @@ int	check_map(t_data *data)
 		j = 0;
 		while (data->map[i][j])
 		{
-			if (ft_strchr("0123NSEW", data->map[i][j]) == NULL)
+			if (ft_strchr(MAP_CHARS, data->map[i][j]) == NULL)
 				return (err_msg(NULL, ERR_INVALID_CHAR, FAILURE));
 			if (ft_strchr("NSEW", data->map[i][j]) != NULL)
 				count++;

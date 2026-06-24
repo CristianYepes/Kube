@@ -28,6 +28,8 @@ static int	init_mlx(t_data *data)
 	return (SUCCESS);
 }
 
+#ifdef BONUS
+
 int	init_game(t_data *data)
 {
 	init_player(&data->player);
@@ -56,3 +58,24 @@ int	init_game(t_data *data)
 	}
 	return (SUCCESS);
 }
+#else
+
+int	init_game(t_data *data)
+{
+	init_player(&data->player);
+	if (init_mlx(data) == FAILURE)
+		return (FAILURE);
+	data->z_buffer = malloc(sizeof(double) * WIN_W);
+	if (!data->z_buffer)
+	{
+		destroy_game(data);
+		return (err_msg(NULL, "Z-buffer alloc failed", FAILURE));
+	}
+	if (init_textures(data) != SUCCESS)
+	{
+		destroy_game(data);
+		return (err_msg(NULL, "Texture load failed", FAILURE));
+	}
+	return (SUCCESS);
+}
+#endif

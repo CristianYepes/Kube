@@ -84,6 +84,13 @@
 # define GUN_SIZE 900
 # define GUN_FRAMES 4
 
+/*Bonus charset guard*/
+# ifdef BONUS
+#  define MAP_CHARS "0123DNSEW"
+# else
+#  define MAP_CHARS "01NSEW"
+# endif
+
 /*Structs*/
 typedef struct s_img
 {
@@ -219,8 +226,14 @@ int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
 void			move_player(t_data *data);
 void			rotate_player(t_player *p, double dir);
+# ifdef BONUS
+
+int				key_press_bonus(int keycode, t_data *data);
 int				mouse_tracker(int x, int y, t_data *data);
 int				mouse_click(int button, int x, int y, t_data *data);
+
+# endif
+
 /*EXIT*/
 void			exit_game(t_data *data);
 void			destroy_game(t_data *data);

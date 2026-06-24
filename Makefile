@@ -1,4 +1,5 @@
 NAME        = cub3D
+NAME_BONUS  = cub3D_bonus
 CC          = gcc
 CFLAGS      = -Wall -Wextra -Werror
 
@@ -35,23 +36,29 @@ SRC         =	main.c \
 				render/textures.c \
 				render/floor_ceeling.c \
 				render/draw_wall.c \
-				render/minimap.c \
-				render/minimap_2.c \
-				render/sprites.c \
-				render/render_sprites.c \
-				render/shotgun.c \
-				render/shotgun_draw.c \
-				init/init_sprites.c \
 				movement/player.c \
 				movement/input.c \
 				exit/exit_game.c \
 				exit/free_bonus.c \
 				mlx_loop_and_hook/mlx.c
 
+BONUS_SRC   =	render/minimap.c \
+				render/minimap_2.c \
+				render/sprites.c \
+				render/render_sprites.c \
+				render/shotgun.c \
+				render/shotgun_draw.c \
+				init/init_sprites.c \
+				movement/input_bonus.c
+
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
+BONUS_SRCS  = $(addprefix $(SRC_PATH), $(BONUS_SRC))
 
 OBJ_PATH    = obj/
+OBJ_B_PATH  = obj_bonus/
 OBJS        = $(SRCS:$(SRC_PATH)%.c=$(OBJ_PATH)%.o)
+OBJS_BONUS  = $(SRCS:$(SRC_PATH)%.c=$(OBJ_B_PATH)%.o) \
+              $(BONUS_SRCS:$(SRC_PATH)%.c=$(OBJ_B_PATH)%.o)
 
 all: $(MLX) $(LIBFT) $(NAME)
 
@@ -59,6 +66,11 @@ $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 	@mkdir -p $(dir $@)
 	@echo "\033[0;33mCompiling $<...\033[0m"
 	@$(CC) $(CFLAGS) -c $< -o $@ $(INC)
+
+$(OBJ_B_PATH)%.o: $(SRC_PATH)%.c
+	@mkdir -p $(dir $@)
+	@echo "\033[0;33mCompiling (bonus) $<...\033[0m"
+	@$(CC) $(CFLAGS) -D BONUS -c $< -o $@ $(INC)
 
 $(MLX_PATH):
 	@echo "\033[1;34mCloning MiniLibX...\033[0m"
@@ -75,19 +87,24 @@ $(LIBFT):
 $(NAME): $(OBJS)
 	@echo "\033[1;34mLinking $(NAME)...\033[0m"
 	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(MLX) -lXext -lX11 -lm
-	@echo "\033[1;32mcub3D compiled successfully!\033[0m"
+	@echo "\033[1;32m$(NAME) compiled successfully!\033[0m"
 
-bonus: all
+$(NAME_BONUS): $(OBJS_BONUS)
+	@echo "\033[1;34mLinking $(NAME_BONUS)...\033[0m"
+	@$(CC) $(CFLAGS) -o $(NAME_BONUS) $(OBJS_BONUS) $(LIBFT) $(MLX) -lXext -lX11 -lm
+	@echo "\033[1;32m$(NAME_BONUS) compiled successfully!\033[0m"
+
+bonus: $(MLX) $(LIBFT) $(NAME_BONUS)
 
 clean:
 	@echo "\033[1;31mRemoving object files...\033[0m"
-	@rm -rf $(OBJ_PATH)
+	@rm -rf $(OBJ_PATH) $(OBJ_B_PATH)
 	@[ -d $(LIBFT_PATH) ] && make -sC $(LIBFT_PATH) clean || true
 	@[ -d $(MLX_PATH) ] && make -sC $(MLX_PATH) clean || true
 
 fclean: clean
-	@echo "\033[1;31mRemoving $(NAME)...\033[0m"
-	@rm -f $(NAME)
+	@echo "\033[1;31mRemoving executables...\033[0m"
+	@rm -f $(NAME) $(NAME_BONUS)
 	@[ -d $(LIBFT_PATH) ] && make -sC $(LIBFT_PATH) fclean || true
 
 re: fclean all

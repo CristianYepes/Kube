@@ -3,16 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   game_loop.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
+/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/07 21:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/23 16:42:45 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/24 12:00:00 by cristian         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-void	tick_sprite_anim(t_data *data, double dt)
+#ifdef BONUS
+
+static void	tick_sprite_anim(t_data *data, double dt)
 {
 	int	i;
 
@@ -54,3 +56,14 @@ int	game_loop(t_data *data)
 	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
 	return (0);
 }
+#else
+
+int	game_loop(t_data *data)
+{
+	move_player(data);
+	paint_floor_ceiling(data);
+	cast_rays(data);
+	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
+	return (0);
+}
+#endif

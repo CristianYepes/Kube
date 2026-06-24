@@ -30,10 +30,6 @@ static void	handle_movement(int keycode, t_player *p, int state)
 
 int	key_press(int keycode, t_data *data)
 {
-	if (keycode == KEY_M)
-		data->player.minimap = !data->player.minimap;
-	if (keycode == KEY_SHOOT)
-		fire_shotgun(data);
 	if (keycode == KEY_ESC)
 		exit_game(data);
 	handle_movement(keycode, &data->player, 1);
@@ -43,27 +39,5 @@ int	key_press(int keycode, t_data *data)
 int	key_release(int keycode, t_data *data)
 {
 	handle_movement(keycode, &data->player, 0);
-	return (0);
-}
-
-int	mouse_click(int button, int x, int y, t_data *data)
-{
-	(void)x;
-	(void)y;
-	if (button == 1)
-		fire_shotgun(data);
-	return (0);
-}
-
-int	mouse_tracker(int x, int y, t_data *data)
-{
-	int	delta_x;
-
-	(void)y;
-	delta_x = x - WIN_W / 2;
-	if (delta_x == 0)
-		return (0);
-	rotate_player(&data->player, (double)delta_x * 0.01);
-	mlx_mouse_move(data->mlx, data->win, WIN_W / 2, WIN_H / 2);
 	return (0);
 }
