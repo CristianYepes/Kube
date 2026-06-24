@@ -32,6 +32,8 @@ void	destroy_game(t_data *data)
 	free_shotgun(data);
 	if (data->door_tex)
 		free(data->door_tex);
+	if (data->enemies)
+		free(data->enemies);
 	if (data->z_buffer)
 		free(data->z_buffer);
 	if (data->img.img)

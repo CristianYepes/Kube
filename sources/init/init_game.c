@@ -30,6 +30,18 @@ static int	init_mlx(t_data *data)
 
 #ifdef BONUS
 
+static void	init_mod_state(t_data *data)
+{
+	data->wave = 1;
+	data->player_hp = 100;
+	data->game_state = G_PLAY;
+	data->fog = 0;
+	data->weapon.state = W_IDLE;
+	data->weapon.timer = 0;
+	data->enemies = NULL;
+	data->enemy_count = 0;
+}
+
 static int	init_bonus_assets(t_data *data)
 {
 	data->door_tex = xpm_to_int(data, "textures/door.xpm");
@@ -39,6 +51,7 @@ static int	init_bonus_assets(t_data *data)
 		return (err_msg(NULL, "Sprite init failed", FAILURE));
 	if (init_shotgun(data) == FAILURE)
 		return (err_msg(NULL, "Shotgun init failed", FAILURE));
+	init_mod_state(data);
 	return (SUCCESS);
 }
 

@@ -36,20 +36,23 @@ static void	tick_sprite_anim(t_data *data, double dt)
 int	game_loop(t_data *data)
 {
 	struct timeval	now;
-	double			dt;
 
 	gettimeofday(&now, NULL);
-	dt = (now.tv_sec - data->last_time.tv_sec)
+	data->dt = (now.tv_sec - data->last_time.tv_sec)
 		+ (now.tv_usec - data->last_time.tv_usec) / 1000000.0;
 	data->last_time = now;
 	move_player(data);
+	update_sim(data);
 	paint_floor_ceiling(data);
 	cast_rays(data);
 	compute_sprite_distances(data);
 	sort_sprites(data);
-	tick_sprite_anim(data, dt);
+	tick_sprite_anim(data, data->dt);
 	render_sprites(data);
-	tick_shotgun(data, dt);
+	render_enemies(data);
+	render_weapon(data);
+	render_hud(data);
+	tick_shotgun(data, data->dt);
 	draw_shotgun(data);
 	if (data->player.minimap)
 		display_minimap(data);

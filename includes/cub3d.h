@@ -96,6 +96,31 @@
 # define DOOR_CLOSED 'D'
 # define DOOR_OPEN 'O'
 
+/*Mod — enemy types*/
+# define ENEMY_GRUNT 0
+# define ENEMY_RUNNER 1
+# define ENEMY_BOSS 2
+
+/*Mod — enemy states*/
+# define E_IDLE 0
+# define E_CHASE 1
+# define E_ATTACK 2
+# define E_DEAD 3
+
+/*Mod — weapon states*/
+# define W_IDLE 0
+# define W_FIRING 1
+
+/*Mod — game states*/
+# define G_PLAY 0
+# define G_OVER 1
+# define G_WIN 2
+
+/*Mod — timers*/
+# define FIRE_COOLDOWN 0.6
+# define ATTACK_RATE 1.0
+# define DEATH_TIME 0.4
+
 /*Structs*/
 typedef struct s_img
 {
@@ -123,6 +148,24 @@ typedef struct s_player
 	int		rotate_left;
 	int		rotate_right;
 }			t_player;
+
+typedef struct s_enemy
+{
+	double	pos_x;
+	double	pos_y;
+	double	distance;
+	int		type;
+	int		state;
+	int		hp;
+	double	timer;
+	double	atk_timer;
+}			t_enemy;
+
+typedef struct s_weapon
+{
+	int		state;
+	double	timer;
+}			t_weapon;
 
 typedef struct s_sprite
 {
@@ -188,6 +231,16 @@ typedef struct s_data
 	int				mini_x;
 	int				mini_y;
 	int				*door_tex;
+	double			dt;
+	int				fire;
+	t_enemy			*enemies;
+	int				enemy_count;
+	int				wave;
+	int				player_hp;
+	int				game_state;
+	int				fog;
+	t_weapon		weapon;
+	unsigned int	seed;
 	t_player		player;
 }				t_data;
 
@@ -257,6 +310,11 @@ void			draw_player(int x, int y, int size, t_data *data);
 void			draw_sprite(int x, int y, int size, t_data *data);
 /*mlx loop*/
 void			loop(t_data *data);
+/*Mod*/
+void			update_sim(t_data *data);
+void			render_enemies(t_data *data);
+void			render_weapon(t_data *data);
+void			render_hud(t_data *data);
 /*Shotgun*/
 int				init_shotgun(t_data *data);
 void			draw_shotgun(t_data *data);
