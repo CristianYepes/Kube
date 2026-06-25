@@ -91,8 +91,8 @@ void	spawn_wave(t_data *data)
 	int	placed;
 
 	get_wave_params(data->wave, &count, &type, &hp);
-	if (data->enemies)
-		free(data->enemies);
+	free(data->enemies);
+	data->enemy_count = 0;
 	data->enemies = malloc(sizeof(t_enemy) * count);
 	if (!data->enemies)
 		return ;

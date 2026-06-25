@@ -87,7 +87,7 @@
 
 /*Bonus charset guard*/
 # ifdef BONUS
-#  define MAP_CHARS "01DNSEW"
+#  define MAP_CHARS "0123DNSEW"
 # else
 #  define MAP_CHARS "01NSEW"
 # endif
