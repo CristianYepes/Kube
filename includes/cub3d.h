@@ -82,6 +82,7 @@
 /*render*/
 # define TEX_SIZE 64
 # define GUN_SIZE 900
+# define GUN_X_OFFSET 200
 # define GUN_FRAMES 4
 # define FOG_MAX 6.0
 # define FONT_SCALE 5

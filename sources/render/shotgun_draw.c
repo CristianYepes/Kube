@@ -64,7 +64,7 @@ void	draw_shotgun(t_data *data)
 	int	start_x;
 	int	start_y;
 
-	start_x = WIN_W / 2 - GUN_SIZE / 2;
+	start_x = WIN_W / 2 - GUN_SIZE / 2 + GUN_X_OFFSET;
 	start_y = WIN_H - GUN_SIZE;
 	draw_gun_layer(data, data->gun_tex[data->gun_frame], start_x, start_y);
 	draw_crosshair(data);
