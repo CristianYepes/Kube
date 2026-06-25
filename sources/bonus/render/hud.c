@@ -69,11 +69,11 @@ static void	draw_game_over(t_data *data, int color)
 	int	x;
 	int	y;
 
-	y = WIN_H / 2 - 20;
-	while (y < WIN_H / 2 + 20)
+	y = WIN_H / 2 - 75;
+	while (y < WIN_H / 2 + 75)
 	{
-		x = WIN_W / 2 - 100;
-		while (x < WIN_W / 2 + 100)
+		x = WIN_W / 2 - 300;
+		while (x < WIN_W / 2 + 300)
 		{
 			put_pixel(data, x, y, color);
 			x++;
@@ -86,12 +86,16 @@ void	render_hud(t_data *data)
 {
 	if (data->game_state == G_OVER)
 	{
-		draw_game_over(data, 0xFF0000);
+		draw_game_over(data, 0x440000);
+		draw_text(data, "YOU LOSE", WIN_H / 2 - 55, 0xFF4444);
+		draw_text(data, "PRESS R TO RESTART", WIN_H / 2 + 20, 0xFFFFFF);
 		return ;
 	}
 	if (data->game_state == G_WIN)
 	{
-		draw_game_over(data, 0x00FF00);
+		draw_game_over(data, 0x004400);
+		draw_text(data, "YOU WIN", WIN_H / 2 - 55, 0x44FF44);
+		draw_text(data, "PRESS R TO RESTART", WIN_H / 2 + 20, 0xFFFFFF);
 		return ;
 	}
 	draw_hp_bar(data);

@@ -60,7 +60,8 @@ BONUS_SRC   =	render/minimap.c \
 				bonus/mod/player_state.c \
 				bonus/render/enemy_render.c \
 				bonus/render/weapon.c \
-				bonus/render/hud.c
+				bonus/render/hud.c \
+				bonus/render/font.c
 
 SRCS        = $(addprefix $(SRC_PATH), $(SRC))
 BONUS_SRCS  = $(addprefix $(SRC_PATH), $(BONUS_SRC))

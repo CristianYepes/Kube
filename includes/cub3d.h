@@ -84,6 +84,7 @@
 # define GUN_SIZE 900
 # define GUN_FRAMES 4
 # define FOG_MAX 6.0
+# define FONT_SCALE 5
 
 /*Bonus charset guard*/
 # ifdef BONUS
@@ -329,6 +330,7 @@ int				has_los(t_data *data, double cx, double cy);
 void			render_enemies(t_data *data);
 void			render_weapon(t_data *data);
 void			render_hud(t_data *data);
+void			draw_text(t_data *data, char *s, int y, int color);
 int				apply_fog(int color, double dist, int fog);
 /*Shotgun*/
 int				init_shotgun(t_data *data);
