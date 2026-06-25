@@ -412,10 +412,11 @@ valgrind --leak-check=full --suppressions=mlx.supp ./cub3D maps/good/subject_map
 - [x] Fase 2 — contrato mod + esqueleto andante → `86dd190`
 - [x] Fase 3 — lógica mod (A): spawn, IA, combate, vida → `3256a28` (+ fix spawn con línea de visión + fallback → `beb1a0c`)
 - [x] Fase 4 — render mod (B): enemigos (billboard+z-buffer+**animación de frames**), HUD, **niebla `fog.c`**, arma con detalle **"-42"** (`render_weapon`)
-- [ ] Fase 5 — integración + DoD final (cargar/free `enemy_tex`/`weapon_tex`, quitar stubs, valgrind/norma partida completa)
+- [x] Fase 5 — integración + DoD final: MAP_CHARS fix, guard malloc, freeze en game over, sort enemigos, norminette 0, valgrind 0 → `695521c`
 
-### Pendiente concreto (lo que queda)
-- **Decisión abierta (polish, mod no puntúa):** ¿pathfinding (BFS flow-field) para que los zombies rodeen muros? El chase sigue siendo recto+slide. Con el spawn-LOS rara vez se nota.
-- **Fase 5 — cierre:** verificar valgrind 0 fugas en partida completa (3 oleadas, disparo, puertas, G_WIN/G_OVER) + norminette global.
-- **(Opcional) niebla en suelo/techo:** ahora solo afecta muros y enemigos; suelo/techo
-  quedan brillantes. Mejora si quieres una niebla más envolvente.
+### Resultado final
+- `make` + `make bonus`: 0 warnings
+- `norminette sources/ includes/`: 0 errores
+- `valgrind --suppressions=mlx.supp`: 0 definitely lost (todas las rutas)
+- Stress-test adversarial: 63 PASS / 0 FAIL
+- Solo queda: verificación interactiva del gameplay + polish visual (texturas propias)
