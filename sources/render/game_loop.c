@@ -14,7 +14,7 @@
 
 #ifdef BONUS
 
-int	game_loop(t_data *data)
+static void	tick_clock(t_data *data)
 {
 	struct timeval	now;
 
@@ -23,6 +23,11 @@ int	game_loop(t_data *data)
 		+ (now.tv_usec - data->last_time.tv_usec) / 1000000.0;
 	data->last_time = now;
 	data->anim_clock += data->dt;
+}
+
+int	game_loop(t_data *data)
+{
+	tick_clock(data);
 	if (data->game_state == G_PLAY)
 	{
 		move_player(data);
@@ -30,10 +35,14 @@ int	game_loop(t_data *data)
 	}
 	paint_floor_ceiling(data);
 	cast_rays(data);
+	render_sprites(data);
 	render_enemies(data);
-	tick_shotgun(data, data->dt);
-	draw_shotgun(data);
-	render_weapon(data);
+	if (data->game_state == G_PLAY)
+	{
+		tick_shotgun(data, data->dt);
+		draw_shotgun(data);
+		render_weapon(data);
+	}
 	render_hud(data);
 	if (data->player.minimap)
 		display_minimap(data);
