@@ -83,6 +83,7 @@
 # define TEX_SIZE 64
 # define GUN_SIZE 900
 # define GUN_FRAMES 4
+# define FOG_MAX 9.0
 
 /*Bonus charset guard*/
 # ifdef BONUS
@@ -232,6 +233,7 @@ typedef struct s_data
 	int				mini_y;
 	int				*door_tex;
 	double			dt;
+	double			anim_clock;
 	int				fire;
 	t_enemy			*enemies;
 	int				enemy_count;
@@ -325,6 +327,7 @@ int				pick_spawn_cell(t_data *data, int n, int *ox, int *oy);
 void			render_enemies(t_data *data);
 void			render_weapon(t_data *data);
 void			render_hud(t_data *data);
+int				apply_fog(int color, double dist, int fog);
 /*Shotgun*/
 int				init_shotgun(t_data *data);
 void			draw_shotgun(t_data *data);

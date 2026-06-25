@@ -48,7 +48,8 @@ static void	draw_enemy_col(t_data *data, t_sprite *s, int x, int *tex)
 			color = tex[((y - start_y) * TEX_SIZE / s->size)
 				* TEX_SIZE + tex_x];
 			if (color != 0)
-				put_pixel(data, x, y, color);
+				put_pixel(data, x, y,
+					apply_fog(color, s->transform_y, data->fog));
 		}
 		y++;
 	}
@@ -77,7 +78,9 @@ void	render_enemies(t_data *data)
 	int			i;
 	t_sprite	proj;
 	int			*tex;
+	int			frame;
 
+	frame = (int)(data->anim_clock * 4) % 2;
 	i = 0;
 	while (i < data->enemy_count)
 	{
@@ -86,9 +89,9 @@ void	render_enemies(t_data *data)
 		{
 			if (data->enemies[i].type == ENEMY_GRUNT
 				|| data->enemies[i].type == ENEMY_BOSS)
-				tex = data->sprite_tex[0];
+				tex = data->sprite_tex[frame];
 			else
-				tex = data->sprite_tex2[0];
+				tex = data->sprite_tex2[frame];
 			if (tex)
 				draw_enemy(data, &proj, tex);
 		}

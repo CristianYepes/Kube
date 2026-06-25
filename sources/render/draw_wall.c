@@ -55,6 +55,7 @@ static int	get_tex_color(t_data *data, t_ray *ray, double tex_pos)
 		color = data->textures[ray->tex_idx][TEX_SIZE * tex_y + ray->tex_x];
 	if (!ray->is_door && (ray->tex_idx == NORTH || ray->tex_idx == EAST))
 		color = (color >> 1) & 0x7F7F7F;
+	color = apply_fog(color, ray->wall_dist, data->fog);
 	return (color);
 }
 

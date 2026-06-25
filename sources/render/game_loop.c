@@ -22,15 +22,16 @@ int	game_loop(t_data *data)
 	data->dt = (now.tv_sec - data->last_time.tv_sec)
 		+ (now.tv_usec - data->last_time.tv_usec) / 1000000.0;
 	data->last_time = now;
+	data->anim_clock += data->dt;
 	move_player(data);
 	update_sim(data);
 	paint_floor_ceiling(data);
 	cast_rays(data);
 	render_enemies(data);
-	render_weapon(data);
-	render_hud(data);
 	tick_shotgun(data, data->dt);
 	draw_shotgun(data);
+	render_weapon(data);
+	render_hud(data);
 	if (data->player.minimap)
 		display_minimap(data);
 	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
