@@ -18,7 +18,7 @@ unsigned int	lcg_next(unsigned int *seed)
 	return ((*seed / 65536) % 32768);
 }
 
-static int	has_los(t_data *data, double cx, double cy)
+int	has_los(t_data *data, double cx, double cy)
 {
 	double	dx;
 	double	dy;

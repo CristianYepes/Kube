@@ -83,7 +83,7 @@
 # define TEX_SIZE 64
 # define GUN_SIZE 900
 # define GUN_FRAMES 4
-# define FOG_MAX 9.0
+# define FOG_MAX 6.0
 
 /*Bonus charset guard*/
 # ifdef BONUS
@@ -244,6 +244,7 @@ typedef struct s_data
 	t_weapon		weapon;
 	unsigned int	seed;
 	int				spawn_relax;
+	int				last_spawn;
 	t_player		player;
 }				t_data;
 
@@ -323,6 +324,7 @@ void			check_game_state(t_data *data);
 unsigned int	lcg_next(unsigned int *seed);
 int				count_spawn_cells(t_data *data);
 int				pick_spawn_cell(t_data *data, int n, int *ox, int *oy);
+int				has_los(t_data *data, double cx, double cy);
 /*Mod — render*/
 void			render_enemies(t_data *data);
 void			render_weapon(t_data *data);

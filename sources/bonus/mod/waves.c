@@ -107,6 +107,7 @@ void	spawn_wave(t_data *data)
 	}
 	clear_spawn_marks(data);
 	data->enemy_count = placed;
+	data->last_spawn = placed;
 	if (data->wave == 3)
 		data->fog = 1;
 }

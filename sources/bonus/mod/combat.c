@@ -25,7 +25,7 @@ static int	hitscan_hit(t_data *data, t_enemy *e)
 	if (dot < 0)
 		return (0);
 	perp = fabs(dx * data->player.dir_y - dy * data->player.dir_x);
-	if (perp < 0.5 && dot < 10.0)
+	if (perp < 0.5 && dot < 10.0 && has_los(data, e->pos_x, e->pos_y))
 		return (1);
 	return (0);
 }

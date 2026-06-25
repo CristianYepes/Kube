@@ -27,7 +27,7 @@ static void	tick_weapon(t_data *data)
 
 static void	check_wave_advance(t_data *data)
 {
-	if (data->enemy_count == 0 && data->wave < 3)
+	if (data->enemy_count == 0 && data->last_spawn > 0 && data->wave < 3)
 	{
 		data->wave++;
 		spawn_wave(data);
