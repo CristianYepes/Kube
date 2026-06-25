@@ -73,6 +73,33 @@ static void	draw_enemy(t_data *data, t_sprite *s, int *tex)
 	}
 }
 
+static void	sort_enemies_by_dist(t_data *data)
+{
+	int		i;
+	int		j;
+	t_enemy	tmp;
+
+	i = -1;
+	while (++i < data->enemy_count)
+		data->enemies[i].distance = (data->enemies[i].pos_x
+				- data->player.pos_x) * (data->enemies[i].pos_x
+				- data->player.pos_x) + (data->enemies[i].pos_y
+				- data->player.pos_y) * (data->enemies[i].pos_y
+				- data->player.pos_y);
+	i = 0;
+	while (++i < data->enemy_count)
+	{
+		tmp = data->enemies[i];
+		j = i - 1;
+		while (j >= 0 && data->enemies[j].distance < tmp.distance)
+		{
+			data->enemies[j + 1] = data->enemies[j];
+			j--;
+		}
+		data->enemies[j + 1] = tmp;
+	}
+}
+
 void	render_enemies(t_data *data)
 {
 	int			i;
@@ -80,6 +107,7 @@ void	render_enemies(t_data *data)
 	int			*tex;
 	int			frame;
 
+	sort_enemies_by_dist(data);
 	frame = (int)(data->anim_clock * 4) % 2;
 	i = 0;
 	while (i < data->enemy_count)

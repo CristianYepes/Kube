@@ -23,8 +23,11 @@ int	game_loop(t_data *data)
 		+ (now.tv_usec - data->last_time.tv_usec) / 1000000.0;
 	data->last_time = now;
 	data->anim_clock += data->dt;
-	move_player(data);
-	update_sim(data);
+	if (data->game_state == G_PLAY)
+	{
+		move_player(data);
+		update_sim(data);
+	}
 	paint_floor_ceiling(data);
 	cast_rays(data);
 	render_enemies(data);
