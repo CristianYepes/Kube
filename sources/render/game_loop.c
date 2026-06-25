@@ -14,6 +14,23 @@
 
 #ifdef BONUS
 
+static void	draw_endscreen(t_data *data)
+{
+	int	cx;
+	int	cy;
+
+	cx = WIN_W / 2;
+	cy = WIN_H / 2;
+	if (data->game_state == G_OVER)
+		mlx_string_put(data->mlx, data->win,
+			cx - 36, cy - 5, 0xFF4444, "YOU LOSE");
+	else
+		mlx_string_put(data->mlx, data->win,
+			cx - 30, cy - 5, 0x44FF44, "YOU WIN");
+	mlx_string_put(data->mlx, data->win,
+		cx - 52, cy + 20, 0xFFFFFF, "Press R to restart");
+}
+
 int	game_loop(t_data *data)
 {
 	struct timeval	now;
@@ -38,6 +55,8 @@ int	game_loop(t_data *data)
 	if (data->player.minimap)
 		display_minimap(data);
 	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
+	if (data->game_state != G_PLAY)
+		draw_endscreen(data);
 	return (0);
 }
 #else
