@@ -105,10 +105,11 @@ void	render_enemies(t_data *data)
 	int			i;
 	t_sprite	proj;
 	int			*tex;
-	int			frame;
+	int			f[2];
 
 	sort_enemies_by_dist(data);
-	frame = (int)(data->anim_clock * 4) % 2;
+	f[0] = (int)(data->anim_clock * 4) % 2;
+	f[1] = (int)(data->anim_clock * 2.5) % 2;
 	i = 0;
 	while (i < data->enemy_count)
 	{
@@ -116,11 +117,11 @@ void	render_enemies(t_data *data)
 		if (proj.transform_y > 0.1)
 		{
 			if (data->enemies[i].type == ENEMY_BOSS)
-				tex = data->boss_tex[frame];
+				tex = data->boss_tex[f[0]];
 			else if (data->enemies[i].type == ENEMY_GRUNT)
-				tex = data->sprite_tex[frame];
+				tex = data->sprite_tex[f[0]];
 			else
-				tex = data->sprite_tex2[frame];
+				tex = data->sprite_tex2[f[1]];
 			if (tex)
 				draw_enemy(data, &proj, tex);
 		}

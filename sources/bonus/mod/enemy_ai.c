@@ -28,7 +28,7 @@ static double	get_speed(t_enemy *e, t_data *data)
 
 	base = 0.015;
 	if (e->type == ENEMY_RUNNER)
-		base = 0.025;
+		base = 0.015;
 	else if (e->type == ENEMY_BOSS)
 		base = 0.01;
 	return (base * data->dt * 60.0);

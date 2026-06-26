@@ -1,9 +1,9 @@
-NO ./files/wall_cross.xpm
-SO ./files/wall_cross.xpm
-WE ./files/wall_pipes.xpm
-EA ./files/wall_pipes.xpm
-F 220,100,0
-C 225,30,0
+NO ./files/wall_bunker_ns.xpm
+SO ./files/wall_bunker_ns.xpm
+WE ./files/wall_bunker_ew.xpm
+EA ./files/wall_bunker_ew.xpm
+F 120,120,115
+C 40,40,45
 
 111
 1N1
