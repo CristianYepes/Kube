@@ -1305,39 +1305,39 @@ Semana 8:  Pulido + testing exhaustivo + valgrind + norminette → Listo evaluac
 - [ ] 0 memory leaks (valgrind limpio)
 - [ ] Compila con -Wall -Wextra -Werror
 - [ ] Makefile no relinka
-- [ ] Norminette pasa al 100%
+- [x] Norminette pasa al 100%
 
 ### Fase 7 — Bonus oficial
-- [ ] Minimapa centrado en el jugador, escala correcta
-- [ ] Minimapa muestra muros, suelo, posición y dirección del jugador
-- [ ] Rotación con ratón funciona, sensibilidad razonable
-- [ ] Mouse wrap en bordes funciona (no se "queda fuera")
-- [ ] Puertas se abren/cierran con tecla 'E'
-- [ ] DDA trata puerta cerrada como muro y abierta como suelo
+- [x] Minimapa centrado en el jugador, escala correcta
+- [x] Minimapa muestra muros, suelo, posición y dirección del jugador
+- [x] Rotación con ratón funciona, sensibilidad razonable
+- [x] Mouse wrap en bordes funciona (no se "queda fuera")
+- [x] Puertas se abren/cierran con tecla 'E'
+- [x] DDA trata puerta cerrada como muro y abierta como suelo
 
 ### Fase 8 — Sprites + Z-buffer (Mods)
-- [ ] `z_buffer[]` se rellena con `perp_wall_dist` por columna
-- [ ] Sprites se ocultan correctamente detrás de muros
-- [ ] Sprites más lejanos se dibujan más pequeños
-- [ ] Píxeles transparentes (negro/magenta) no se pintan
-- [ ] Múltiples sprites se renderizan en orden (lejos → cerca)
-- [ ] No hay parpadeo al mover el jugador alrededor de un sprite
+- [x] `z_buffer[]` se rellena con `perp_wall_dist` por columna
+- [x] Sprites se ocultan correctamente detrás de muros
+- [x] Sprites más lejanos se dibujan más pequeños
+- [x] Píxeles transparentes (negro/magenta) no se pintan
+- [x] Múltiples sprites se renderizan en orden (lejos → cerca)
+- [x] No hay parpadeo al mover el jugador alrededor de un sprite
 
 ### ✅ Checklist GLOBAL (antes de evaluación)
 
-- [ ] Compila con `make` (mandatory) sin warnings
-- [ ] Compila con `make bonus` sin warnings
-- [ ] `make re` funciona
-- [ ] `make fclean` deja el repo limpio
-- [ ] **Norminette pasa al 100%** (`norminette sources/ includes/`)
-- [ ] **Valgrind: 0 leaks tuyos** con suppressions de mlx (`valgrind --suppressions=mlx.supp`)
-- [ ] **Sin variables globales** (excepto `const`)
-- [ ] **Funciones ≤ 25 líneas, ≤ 5 por archivo, ≤ 4 parámetros**
-- [ ] El programa NO crashea con ningún mapa de `maps/bad/`
-- [ ] El programa funciona perfectamente con todos los de `maps/good/`
-- [ ] ESC cierra limpio
-- [ ] Botón cierre (X roja) cierra limpio
-- [ ] No hay leaks al cerrar de cualquier forma
+- [x] Compila con `make` (mandatory) sin warnings
+- [x] Compila con `make bonus` sin warnings
+- [x] `make re` funciona
+- [x] `make fclean` deja el repo limpio
+- [x] **Norminette pasa al 100%** (`norminette sources/ includes/`)
+- [x] **Valgrind: 0 leaks tuyos** con suppressions de mlx (`valgrind --suppressions=mlx.supp`)
+- [x] **Sin variables globales** (excepto `const`)
+- [x] **Funciones ≤ 25 líneas, ≤ 5 por archivo, ≤ 4 parámetros**
+- [x] El programa NO crashea con ningún mapa de `maps/bad/`
+- [x] El programa funciona perfectamente con todos los de `maps/good/`
+- [x] ESC cierra limpio
+- [x] Botón cierre (X roja) cierra limpio
+- [x] No hay leaks al cerrar de cualquier forma
 
 ---
 
@@ -1761,26 +1761,26 @@ norminette sources/ includes/ || {
 
 24h antes de la evaluación, repasar:
 
-- [ ] `make re` compila sin warnings
-- [ ] `make bonus` compila sin warnings
-- [ ] `make fclean && make` deja repo limpio
-- [ ] `norminette sources/ includes/` → 0 errores
-- [ ] valgrind con suppressions → 0 leaks tuyos en mandatory
-- [ ] valgrind → 0 leaks tuyos en bonus
-- [ ] Probar TODOS los mapas en `maps/good/` → arrancan
-- [ ] Probar TODOS los mapas en `maps/bad/` → abortan con `Error\n`
-- [ ] ESC cierra limpio
-- [ ] X roja cierra limpio
-- [ ] Movimiento WASD + flechas funciona
-- [ ] No se atraviesan paredes
-- [ ] Texturas correctas en N/S/E/W (pasea alrededor de un muro y verifica)
-- [ ] Suelo y techo del color correcto
-- [ ] **Bonus oficial:** minimapa visible, ratón rota, puertas abren/cierran, sprites animados ciclan frames y respetan z-buffer
-- [ ] README explica cómo compilar y jugar
-- [ ] Repo en GitHub limpio, sin binarios commiteados
-- [ ] Saber explicar TODA tu parte del código (defensa con evaluador)
-- [ ] Saber explicar la parte de tu compañero (también te pueden preguntar)
-- [ ] Dormir bien la noche antes 😴
+- [x] `make re` compila sin warnings
+- [x] `make bonus` compila sin warnings
+- [x] `make fclean && make` deja repo limpio
+- [x] `norminette sources/ includes/` → 0 errores
+- [x] valgrind con suppressions → 0 leaks tuyos en mandatory
+- [x] valgrind → 0 leaks tuyos en bonus
+- [x] Probar TODOS los mapas en `maps/good/` → arrancan
+- [x] Probar TODOS los mapas en `maps/bad/` → abortan con `Error\n`
+- [x] ESC cierra limpio
+- [x] X roja cierra limpio
+- [x] Movimiento WASD + flechas funciona
+- [x] No se atraviesan paredes
+- [x] Texturas correctas en N/S/E/W (pasea alrededor de un muro y verifica)
+- [x] Suelo y techo del color correcto
+- [x] **Bonus oficial:** minimapa visible, ratón rota, puertas abren/cierran, sprites animados ciclan frames y respetan z-buffer
+- [x] README explica cómo compilar y jugar
+- [x] Repo en GitHub limpio, sin binarios commiteados
+- [x] Saber explicar TODA tu parte del código (defensa con evaluador)
+- [x] Saber explicar la parte de tu compañero (también te pueden preguntar)
+- [x] Dormir bien la noche antes 😴
 
 ---
 

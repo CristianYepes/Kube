@@ -85,75 +85,42 @@
 | **⭐ M5** | 5 | — | **Hito: MANDATORY COMPLETO ✅ (defendible solo)** | — | ✅ |
 | **S10A** | 5-6 | 👤 A | `bonus/minimap/minimap_render.c` + `minimap_image.c` | F7 | ✅ |
 | **S10B** | 5-6 | 👤 B | `bonus/mouse/mouse_handler.c` + edge wrap | F7 | ✅ |
-| **S11A** | 6 | 👤 A | `bonus/doors/*` (parse 'D' + toggle 'E' + render DDA) | F7 | ☐ |
-| **S12B** | 6-7 | 👤 B | `bonus/sprites/*` — sprites animados (init/sort/project/render + z-buffer + frame cycling) | F8 | ☐ |
-| **🔄 SYNC6** | 7 | 👥 | **Bonus oficial completo: minimapa + ratón + puertas + sprites animados** | — | ☐ |
-| **⭐ M6** | 7 | — | **Hito: BONUS OFICIAL COMPLETO ✅** | — | ☐ |
-| **S15AB** | 7-8 | 👥 | Testing exhaustivo: 30 mapas malos + 10 buenos + valgrind + asan | — | ☐ |
-| **S16AB** | 8 | 👥 | Norminette 100% + README final + ensayo de defensa | — | ☐ |
-| **⭐ M9** | 8 | — | **Hito: LISTO PARA EVALUACIÓN 🎓** | — | ☐ |
+| **S11A** | 6 | 👤 A | `bonus/doors/*` (parse 'D' + toggle 'E' + render DDA) | F7 | ✅ |
+| **S12B** | 6-7 | 👤 B | `bonus/sprites/*` — sprites animados (init/sort/project/render + z-buffer + frame cycling) | F8 | ✅ |
+| **🔄 SYNC6** | 7 | 👥 | **Bonus oficial completo: minimapa + ratón + puertas + sprites animados** | — | ✅ |
+| **⭐ M6** | 7 | — | **Hito: BONUS OFICIAL COMPLETO ✅** | — | ✅ |
+| **S15AB** | 7-8 | 👥 | Testing exhaustivo: 30 mapas malos + 10 buenos + valgrind + asan | — | ✅ |
+| **S16AB** | 8 | 👥 | Norminette 100% + README final + ensayo de defensa | — | ✅ |
+| **⭐ M9** | 8 | — | **Hito: LISTO PARA EVALUACIÓN 🎓** | — | ✅ |
 
 > **Imprime esta tabla**, marca cada paso conforme lo terminas. Es tu mapa diario.
 > Leyenda extra: **🔶 = parcial** · **⬅️ AQUÍ = próximo paso**.
 
 ---
 
-## 📌 ESTADO ACTUAL (2026-06-22) — QUÉ FALTA Y DÓNDE RETOMAR
+## 📌 ESTADO ACTUAL (2026-06-26) — PROYECTO COMPLETADO
 
-**Todo vive en la rama `dev`** (origin actualizado). La integración parser (A) + motor
-vectorial + texturas (B) está **COMPLETA y funcionando**: parsea y valida el `.cub`,
-renderiza muros con textura N/S/E/W + suelo/techo, spawn correcto, WASD + flechas,
-ESC/X cierran, y **no crashea** (atraviesa muros porque aún no hay colisiones).
-
-### ✅ Hecho (mandatory)
-Parser completo (A) · init/MLX, raycasting vectorial, suelo/techo, texturas (B, integrado).
-Lo de Rodrigo del mandatory **ya está dentro de `dev`**; de él solo faltan sus bonus.
+**Todo vive en la rama `dev`** (origin actualizado). El proyecto está **COMPLETO**:
+mandatory + los 5 bonus oficiales + mod custom de zombies (portfolio).
 
 ### ✅ MANDATORY COMPLETO (M5) — 2026-06-20
 Parser + render vectorial + texturas N/S/E/W + suelo/techo + spawn + WASD/flechas +
-**colisiones (wall-sliding)** + cleanup. **valgrind:** bad → 0 leaks (`All heap blocks
-freed`); good → `definitely lost: 0` (fugas de MLX suprimidas con `mlx.supp`).
-Defendible solo. (Opcional no hecho: optimización `has_moved` del render — no requerida.)
+colisiones (wall-sliding) + cleanup. Valgrind limpio, norminette 100%.
 
-### ✅ BUGS PRE-BONUS RESUELTOS (2026-06-22)
+### ✅ BONUS OFICIAL COMPLETO (M6) — 2026-06-26
+- **Minimap (S10A):** muros azules, jugador rojo, dos modos (full/viewport), toggle M.
+- **Mouse rotation (S10B):** delta_x desde centro, recentrado, sensibilidad 0.01.
+- **Puertas (S11A):** char 'D', toggle E, DDA respeta estado open/closed.
+- **Sprites animados (S12B):** z-buffer, Lode projection, frame cycling, painter's sort.
 
-**🔴 RESUELTO — textura `.xpm` ≠ 64×64 ya no provoca lectura fuera de rango.**
-`xpm_to_int` (`textures.c`) valida ahora `w == TEX_SIZE && h == TEX_SIZE`; si no, destruye
-la imagen y devuelve `NULL`. `init_game` reporta `Error` + `Texture load failed` y libera
-imagen+ventana en esa ruta de error. **valgrind** sobre `maps/bad/tex_wrong_size.cub`: sin
-`Invalid read`, `definitely lost: 0`. Commits `9b108f2` (guard) + `eab3f04` (cleanup).
-Fixture de regresión: `maps/bad/tex_wrong_size.cub` + `small_8x8.xpm`.
+### ✅ MOD CUSTOM (portfolio, no evaluado) — 2026-06-26
+Zombie survival: 3 oleadas (grunt → runner → boss + fog), escopeta hitscan con animación,
+HUD (HP + wave), game over/win states, BFS flow field pathfinding para enemigos,
+restart con R. Compila bajo `make bonus`.
 
-**🟡 RESUELTO (decisión) — tab dentro del mapa = `ERR_INVALID_CHAR`, se mantiene.**
-El subject lo avala (L120: el mapa solo admite 6 chars; L135: solo el espacio es excepción).
-Rechazar el tab no causa crash ni acepta mapas falsos → comportamiento correcto. Sin cambio
-de código.
-
-### 🎁 BONUS (M6) — tras el mandatory
-- **Tú (A):** ~~minimapa (S10A)~~ ✅, puertas (S11A).
-- **Rodrigo (B):** ratón (S10B), sprites animados (S12B).
-
-### ✅ MINIMAP COMPLETO (S10A) — 2026-06-22
-Minimap funcional: muros azules, jugador rojo centrado, fondo gris/negro. Dos modos:
-mapa pequeño (<15 tiles) muestra todo; mapa grande muestra 9×9 centrado en jugador.
-Toggle con tecla M. Bounds checking, norminette 100%, valgrind `definitely lost: 0`.
-
-### ✅ MOUSE ROTATION (S10B) — 2026-06-22
-Rotación de cámara con ratón: delta_x desde centro, `rotate_player` proporcional,
-recentrado con `mlx_mouse_move`. Guard `delta_x == 0` para evitar bucle infinito.
-Sensibilidad `0.01`. Norminette 100%, valgrind limpio.
-
-### 🔶 SPRITES (S12B) — EN PROGRESO — 2026-06-23
-Sprites estáticos funcionando: z-buffer por columna, proyección Lode (matriz inversa
-cámara), render con transparencia (color 0 = skip), ordenado por distancia (painter's).
-Char `'2'` en mapa = sprite. Textura 64×64 cargada con `xpm_to_int`. Aparece en minimap
-(verde). **Falta:** animación (ciclo de frames con múltiples texturas + temporizador).
-
-### ▶️ CÓMO RETOMAR
-Nueva sesión → llama a la skill **`/contexto`** (reconstruye todo esto del git+docs).
-**Mandatory cerrado y bugs pre-bonus resueltos.** Siguiente: **BONUS (M6)** — tú: minimapa
-(S10A) + puertas (S11A); Rodrigo: ratón (S10B) + sprites (S12B). Y antes de evaluación:
-testing exhaustivo (S15AB) + norminette 100% + README (S16AB).
+### ✅ PROYECTO LISTO PARA EVALUACIÓN (M9) — 2026-06-26
+Todas las fases completadas. Repo limpio (solo ramas `dev` y `main`). Norminette y
+valgrind pasan. Testing exhaustivo realizado.
 
 ---
 
