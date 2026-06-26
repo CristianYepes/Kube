@@ -9,7 +9,7 @@ limpio. Lo de abajo es pre-existente del mod/parser. Marca `[x]` según arregles
 
 ## 🔴 Arreglar ANTES de mergear
 
-### [ ] 1. Enemigo hace daño a través de muros/puertas (E_ATTACK sin distancia/LOS)
+### [x] 1. Enemigo hace daño a través de muros/puertas (E_ATTACK sin distancia/LOS)
 - **Fichero:** `sources/bonus/mod/player_state.c:22-29` (`update_player_hp`).
 - **Qué pasa:** el daño (-10 HP cada `ATTACK_RATE`) se aplica con solo `state == E_ATTACK`,
   sin mirar distancia ni línea de visión. Repro: atraes a un grunt por una puerta, la
@@ -33,7 +33,7 @@ limpio. Lo de abajo es pre-existente del mod/parser. Marca `[x]` según arregles
   `if (data->enemies[i].state == E_ATTACK && enemy_can_hit(data, &data->enemies[i]))`.
   - Norma: `player_state.c` pasa de 2 a 3 funcs (≤5 ✓), `enemy_can_hit` 2 vars ✓.
 
-### [ ] 2. FSM: fall-through 1 tick + enemigo congelado en ATTACK a 1.0–1.4
+### [x] 2. FSM: fall-through 1 tick + enemigo congelado en ATTACK a 1.0–1.4
 - **Fichero:** `sources/bonus/mod/enemy_ai.c:66-78` (`enemy_fsm`).
 - **Qué pasa:** los `if` sin `else` dejan saltar IDLE→CHASE→ATTACK en un mismo frame; y en
   `E_ATTACK` no se llama a `chase_player`, así que entre d=1.0 y d=1.4 el enemigo se queda
@@ -54,7 +54,7 @@ limpio. Lo de abajo es pre-existente del mod/parser. Marca `[x]` según arregles
 
 ## 🟡 Tu dominio B (render) — pulido opcional
 
-### [ ] 3. `render_sprites` no ordena por profundidad + código muerto
+### [x] 3. `render_sprites` no ordena por profundidad + código muerto
 - **Ficheros:** `sources/render/render_sprites.c:85-99`; `sources/render/sprites.c:72,88`
   (`sort_sprites` / `compute_sprite_distances` definidas pero **nunca llamadas**;
   prototipos en `cub3d.h:286-287`).
@@ -67,7 +67,7 @@ limpio. Lo de abajo es pre-existente del mod/parser. Marca `[x]` según arregles
   - (b) Si no quieres ordenar, **borra** las 2 funciones + sus prototipos (cub3d.h:286-287).
   - Recomendado: (a).
 
-### [ ] 4. `project_sprite` usa `transform_y > 0` (inconsistente con enemigos)
+### [x] 4. `project_sprite` usa `transform_y > 0` (inconsistente con enemigos)
 - **Fichero:** `sources/render/render_sprites.c:95`.
 - **Qué pasa:** `enemy_render.c:116` usa `> 0.1`; aquí `> 0`. Si un sprite queda pegadísimo
   al plano de cámara, `size = (int)fabs(WIN_H/transform_y)` desborda al castear (UB; el OOB
@@ -78,7 +78,7 @@ limpio. Lo de abajo es pre-existente del mod/parser. Marca `[x]` según arregles
 
 ## 🟢 Dominio A / pendiente (decidir en el merge)
 
-### [ ] 5. Restart con `KEY_R` — LO IMPLEMENTO YO EN ESTA RAMA B
+### [x] 5. Restart con `KEY_R` — HECHO (commit 38f7051)
 El HUD ya muestra `PRESS R TO RESTART` (B), falta la lógica. Como el visual ya es mío, lo
 cierro aquí en vez de esperar a A. Plan (de `plan_mejoras_A.md` A2, adaptado, **sin BFS**):
 
