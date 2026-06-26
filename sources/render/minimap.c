@@ -83,7 +83,7 @@ void	draw_map(t_data *data)
 		x = 0;
 		while (map[y][x])
 		{
-			if (map[y][x] == '2' || map[y][x] == '3')
+			if (map[y][x] == '2')
 				draw_sprite(x * 20 + 5, y * 20 + 5, 10, data);
 			if (map[y][x] == '1')
 				draw_square(x * 20, y * 20, 20, data);

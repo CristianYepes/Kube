@@ -18,12 +18,18 @@ int	init_sprites_data(t_data *data)
 	data->sprite_tex[1] = xpm_to_int(data, "textures/sprites/sprite_1.xpm");
 	data->sprite_tex2[0] = xpm_to_int(data, "textures/sprites/sprite2_0.xpm");
 	data->sprite_tex2[1] = xpm_to_int(data, "textures/sprites/sprite2_1.xpm");
+	data->boss_tex[0] = xpm_to_int(data, "textures/sprites/boss_0.xpm");
+	data->boss_tex[1] = xpm_to_int(data, "textures/sprites/boss_1.xpm");
+	data->map_sprite_tex = xpm_to_int(data, "textures/sprites/pizarra.xpm");
 	if (!data->sprite_tex[0] || !data->sprite_tex[1])
 		return (FAILURE);
 	if (!data->sprite_tex2[0] || !data->sprite_tex2[1])
 		return (FAILURE);
-	data->sprite_count = sprites_counter('2', data)
-		+ sprites_counter('3', data);
+	if (!data->boss_tex[0] || !data->boss_tex[1])
+		return (FAILURE);
+	if (!data->map_sprite_tex)
+		return (FAILURE);
+	data->sprite_count = sprites_counter('2', data);
 	if (data->sprite_count == 0)
 		return (SUCCESS);
 	data->sprites = malloc(sizeof(t_sprite) * data->sprite_count);

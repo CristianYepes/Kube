@@ -23,8 +23,12 @@ void	free_sprites(t_data *data)
 			free(data->sprite_tex[i]);
 		if (data->sprite_tex2[i])
 			free(data->sprite_tex2[i]);
+		if (data->boss_tex[i])
+			free(data->boss_tex[i]);
 		i++;
 	}
+	if (data->map_sprite_tex)
+		free(data->map_sprite_tex);
 	if (data->sprites)
 		free(data->sprites);
 }

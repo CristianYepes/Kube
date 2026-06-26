@@ -92,7 +92,7 @@
 
 /*Bonus charset guard*/
 # ifdef BONUS
-#  define MAP_CHARS "0123DNSEW"
+#  define MAP_CHARS "012DNSEW"
 # else
 #  define MAP_CHARS "01NSEW"
 # endif
@@ -231,6 +231,8 @@ typedef struct s_data
 	int				sprite_count;
 	int				*sprite_tex[2];
 	int				*sprite_tex2[2];
+	int				*boss_tex[2];
+	int				*map_sprite_tex;
 	t_sprite		*sprites;
 	/*gunn sprites*/
 	int				*gun_tex[GUN_FRAMES];

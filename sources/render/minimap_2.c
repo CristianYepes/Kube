@@ -70,8 +70,7 @@ void	draw_map2(t_data *data)
 			if (in_bounds(data, y, x) && data->map[y][x] == '1')
 				draw_square((x - start_x) * 20,
 					(y - start_y) * 20, 20, data);
-			if (in_bounds(data, y, x)
-				&& (data->map[y][x] == '2' || data->map[y][x] == '3'))
+			if (in_bounds(data, y, x) && data->map[y][x] == '2')
 				draw_sprite((x - start_x) * 20 + 5,
 					(y - start_y) * 20 + 5, 10, data);
 			x++;
