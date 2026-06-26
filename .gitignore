@@ -56,11 +56,13 @@ dkms.conf
 
 # --- cub3D específico ---
 
-# Binario final
+# Binarios finales
 cub3D
+cub3D_bonus
 
 # Carpeta de objetos
 obj/
+obj_bonus/
 
 # MiniLibX (se clona con make, no se versiona)
 minilibx-linux/
