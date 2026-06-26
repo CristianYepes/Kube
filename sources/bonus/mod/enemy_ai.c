@@ -65,13 +65,13 @@ static void	enemy_fsm(t_data *data, t_enemy *e)
 	d = dist_sq(e, data);
 	if (e->state == E_IDLE)
 		e->state = E_CHASE;
-	if (e->state == E_CHASE)
+	else if (e->state == E_CHASE)
 	{
 		chase_player(data, e);
 		if (d < 1.0)
 			e->state = E_ATTACK;
 	}
-	if (e->state == E_ATTACK)
+	else if (e->state == E_ATTACK)
 	{
 		if (d > 2.0)
 			e->state = E_CHASE;

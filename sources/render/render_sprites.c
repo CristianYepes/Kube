@@ -88,11 +88,13 @@ void	render_sprites(t_data *data)
 
 	if (!data->sprites || data->sprite_count == 0)
 		return ;
+	compute_sprite_distances(data);
+	sort_sprites(data);
 	i = 0;
 	while (i < data->sprite_count)
 	{
 		project_sprite(data, i);
-		if (data->sprites[i].transform_y > 0)
+		if (data->sprites[i].transform_y > 0.1)
 			draw_sprite_3d(data, i);
 		i++;
 	}

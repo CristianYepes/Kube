@@ -41,6 +41,7 @@
 # define KEY_RIGHT 65363
 # define KEY_ESC 65307
 # define KEY_SHOOT 65362
+# define KEY_R 114
 
 /*Return codes*/
 # define SUCCESS 0
@@ -246,6 +247,9 @@ typedef struct s_data
 	unsigned int	seed;
 	int				spawn_relax;
 	int				last_spawn;
+	double			spawn_x;
+	double			spawn_y;
+	char			spawn_dir;
 	t_player		player;
 }				t_data;
 
@@ -261,6 +265,8 @@ int				parsing(char *path, t_data *data);
 int				check_map(t_data *data);
 int				check_map_borders(t_data *data);
 int				check_textures(t_data *data);
+void			set_ns(t_player *p, char c);
+void			set_ew(t_player *p, char c);
 /*PARSING UTILS*/
 int				is_a_white_space(char c);
 char			*skip_spaces(char *str);
@@ -326,6 +332,7 @@ unsigned int	lcg_next(unsigned int *seed);
 int				count_spawn_cells(t_data *data);
 int				pick_spawn_cell(t_data *data, int n, int *ox, int *oy);
 int				has_los(t_data *data, double cx, double cy);
+void			restart_game(t_data *data);
 /*Mod — render*/
 void			render_enemies(t_data *data);
 void			render_weapon(t_data *data);

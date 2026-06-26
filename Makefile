@@ -58,6 +58,7 @@ BONUS_SRC   =	render/minimap.c \
 				bonus/mod/enemy_ai.c \
 				bonus/mod/combat.c \
 				bonus/mod/player_state.c \
+				bonus/mod/restart.c \
 				bonus/render/enemy_render.c \
 				bonus/render/weapon.c \
 				bonus/render/hud.c \

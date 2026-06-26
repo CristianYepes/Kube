@@ -12,7 +12,7 @@
 
 #include "cub3d.h"
 
-static void	set_ns(t_player *p, char c)
+void	set_ns(t_player *p, char c)
 {
 	p->dir_x = 0;
 	p->plane_y = 0;
@@ -28,7 +28,7 @@ static void	set_ns(t_player *p, char c)
 	}
 }
 
-static void	set_ew(t_player *p, char c)
+void	set_ew(t_player *p, char c)
 {
 	p->dir_y = 0;
 	p->plane_x = 0;
@@ -55,6 +55,9 @@ static void	set_player_at(t_data *data, int i, int j)
 		set_ns(&data->player, c);
 	else
 		set_ew(&data->player, c);
+	data->spawn_x = j + 0.5;
+	data->spawn_y = i + 0.5;
+	data->spawn_dir = c;
 	data->map[i][j] = '0';
 }
 

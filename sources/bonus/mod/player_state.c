@@ -12,6 +12,18 @@
 
 #include "cub3d.h"
 
+static int	enemy_can_hit(t_data *data, t_enemy *e)
+{
+	double	dx;
+	double	dy;
+
+	dx = e->pos_x - data->player.pos_x;
+	dy = e->pos_y - data->player.pos_y;
+	if (dx * dx + dy * dy > 1.0)
+		return (0);
+	return (has_los(data, e->pos_x, e->pos_y));
+}
+
 void	update_player_hp(t_data *data)
 {
 	int	i;
@@ -19,7 +31,8 @@ void	update_player_hp(t_data *data)
 	i = 0;
 	while (i < data->enemy_count)
 	{
-		if (data->enemies[i].state == E_ATTACK)
+		if (data->enemies[i].state == E_ATTACK
+			&& enemy_can_hit(data, &data->enemies[i]))
 		{
 			data->enemies[i].atk_timer += data->dt;
 			if (data->enemies[i].atk_timer >= ATTACK_RATE)

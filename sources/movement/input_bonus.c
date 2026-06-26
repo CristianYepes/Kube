@@ -39,6 +39,8 @@ int	key_press_bonus(int keycode, t_data *data)
 		data->fire = 1;
 		fire_shotgun(data);
 	}
+	if (keycode == KEY_R && data->game_state != G_PLAY)
+		restart_game(data);
 	if (keycode == KEY_ESC)
 		exit_game(data);
 	handle_movement(keycode, &data->player, 1);
