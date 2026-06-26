@@ -119,7 +119,7 @@ void	display_minimap(t_data *data)
 	{
 		h = data->map_height * 20;
 		data->mini_x = 0;
-		data->mini_y = WIN_H - h;
+		data->mini_y = 0;
 		draw_frame(data, data->map_width * 20, h, 0x000000);
 		draw_map(data);
 		draw_player(data->player.pos_x * 20 - 2,
@@ -128,7 +128,7 @@ void	display_minimap(t_data *data)
 	else
 	{
 		data->mini_x = 0;
-		data->mini_y = WIN_H - 190;
+		data->mini_y = 0;
 		draw_frame(data, 190, 190, 0x000000);
 		draw_frame(data, 180, 180, 0x1A1A1A);
 		draw_map2(data);
