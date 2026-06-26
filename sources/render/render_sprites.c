@@ -28,12 +28,7 @@ static void	draw_sprite_col(t_data *data, t_sprite *s, int x)
 		if (y >= 0 && y < WIN_H)
 		{
 			tex_y = (y - start_y) * TEX_SIZE / s->size;
-			if (s->type == 0)
-				color = data->sprite_tex[s->frame_idx]
-				[tex_y * TEX_SIZE + tex_x];
-			else
-				color = data->sprite_tex2[s->frame_idx]
-				[tex_y * TEX_SIZE + tex_x];
+			color = data->map_sprite_tex[tex_y * TEX_SIZE + tex_x];
 			if (color != 0)
 				put_pixel(data, x, y, color);
 		}
@@ -56,7 +51,10 @@ static void	draw_sprite_3d(t_data *data, int i)
 	{
 		if (x >= 0 && x < WIN_W
 			&& s->transform_y < data->z_buffer[x])
+		{
 			draw_sprite_col(data, s, x);
+			data->z_buffer[x] = s->transform_y;
+		}
 		x++;
 	}
 }

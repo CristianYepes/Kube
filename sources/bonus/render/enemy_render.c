@@ -115,8 +115,9 @@ void	render_enemies(t_data *data)
 		project_enemy(data, &data->enemies[i], &proj);
 		if (proj.transform_y > 0.1)
 		{
-			if (data->enemies[i].type == ENEMY_GRUNT
-				|| data->enemies[i].type == ENEMY_BOSS)
+			if (data->enemies[i].type == ENEMY_BOSS)
+				tex = data->boss_tex[frame];
+			else if (data->enemies[i].type == ENEMY_GRUNT)
 				tex = data->sprite_tex[frame];
 			else
 				tex = data->sprite_tex2[frame];
