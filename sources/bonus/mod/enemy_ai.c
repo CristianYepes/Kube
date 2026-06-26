@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   enemy_ai.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: cristian <cristian@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/24 14:00:00 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/24 14:00:00 by cristian         ###   ########.fr       */
+/*   Updated: 2026/06/25 16:21:08 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,18 +38,23 @@ static void	chase_player(t_data *data, t_enemy *e)
 {
 	double	dx;
 	double	dy;
-	double	len;
 	double	spd;
 
-	dx = data->player.pos_x - e->pos_x;
-	dy = data->player.pos_y - e->pos_y;
-	len = dx * dx + dy * dy;
-	if (len < 0.001)
-		return ;
-	len = sqrt(len);
+	flow_dir(data, e, &dx, &dy);
+	if (dx == 0 && dy == 0)
+	{
+		dx = data->player.pos_x - e->pos_x;
+		dy = data->player.pos_y - e->pos_y;
+		spd = dx * dx + dy * dy;
+		if (spd < 0.001)
+			return ;
+		spd = sqrt(spd);
+		dx /= spd;
+		dy /= spd;
+	}
 	spd = get_speed(e, data);
-	dx = dx / len * spd;
-	dy = dy / len * spd;
+	dx *= spd;
+	dy *= spd;
 	if (!is_wall(data, e->pos_x + dx, e->pos_y))
 		e->pos_x += dx;
 	if (!is_wall(data, e->pos_x, e->pos_y + dy))

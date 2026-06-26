@@ -209,6 +209,30 @@ wave 1, sin enemigos, puertas cerradas. El juego continúa normal. Sin crash/lea
 
 ---
 
+## Checklist de desarrollo
+
+### Fase A1 — BFS Flow Field
+- [x] **A1.1** Añadir a `cub3d.h`: `#define MAX_MAP 64` + campos `flow[MAX_MAP][MAX_MAP]`, `flow_px`, `flow_py` en `t_data` + prototipos `update_flow_field`, `flow_dir`
+- [x] **A1.2** Crear `sources/bonus/mod/flow_field.c`: `update_flow_field` + `bfs_init` + `bfs_loop` + `cell_walkable`
+- [x] **A1.3** Crear `sources/bonus/mod/flow_query.c`: `flow_dir` (lee vecinos, devuelve vector normalizado)
+- [x] **A1.4** En `enemy_ai.c`: reemplazar `chase_player` por `chase_flow` que usa `flow_dir`
+- [x] **A1.5** En `sim.c`: añadir `update_flow_field(data)` antes de `update_enemies(data)`
+- [x] **A1.6** En `doors.c`: añadir `data->flow_px = -1;` en `toggle_door()` para invalidar
+- [x] **A1.7** Añadir `bonus/mod/flow_field.c` y `bonus/mod/flow_query.c` al `Makefile` (`BONUS_SRC`)
+- [ ] **A1.8** Compilar + probar que enemigos rodean muros
+- [ ] **A1.9** `norminette` + `valgrind`
+
+### Fase A2 — Restart
+- [ ] **A2.1** Añadir a `cub3d.h`: `spawn_x`, `spawn_y`, `spawn_dir` en `t_data` + `KEY_R 114` + proto `restart_game`
+- [ ] **A2.2** En `check_map.c` (`set_player_at`): guardar spawn antes de sobreescribir con '0'
+- [ ] **A2.3** Crear `sources/bonus/mod/restart.c`: `restart_game` + `reset_player` + `reset_mod_state` + `reset_map_doors`
+- [ ] **A2.4** En `input_bonus.c`: añadir handler KEY_R (solo si `game_state != G_PLAY`)
+- [ ] **A2.5** Añadir `bonus/mod/restart.c` al `Makefile`
+- [ ] **A2.6** Compilar + probar restart en G_OVER y G_WIN
+- [ ] **A2.7** `norminette` + `valgrind`
+
+---
+
 ## Estado de avance
 - [ ] Fase A1 — BFS flow field
 - [ ] Fase A2 — Restart

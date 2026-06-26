@@ -43,6 +43,7 @@ static void	init_mod_state(t_data *data)
 	data->enemies = NULL;
 	data->enemy_count = 0;
 	data->fire = 0;
+	data->flow_px = -1;
 	gettimeofday(&tv, NULL);
 	data->seed = (unsigned int)(tv.tv_usec ^ tv.tv_sec);
 }

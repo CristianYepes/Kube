@@ -41,6 +41,7 @@ void	update_sim(t_data *data)
 	if (!data->enemies)
 		spawn_wave(data);
 	tick_weapon(data);
+	update_flow_field(data);
 	update_enemies(data);
 	try_fire(data);
 	update_player_hp(data);
