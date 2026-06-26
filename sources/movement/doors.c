@@ -25,12 +25,16 @@ void	toggle_door(t_data *data)
 		return ;
 	cell = data->map[cy][cx];
 	if (cell == DOOR_CLOSED)
+	{
 		data->map[cy][cx] = DOOR_OPEN;
+		data->flow_px = -1;
+	}
 	else if (cell == DOOR_OPEN)
 	{
 		if ((int)data->player.pos_x == cx
 			&& (int)data->player.pos_y == cy)
 			return ;
 		data->map[cy][cx] = DOOR_CLOSED;
+		data->flow_px = -1;
 	}
 }

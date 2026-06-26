@@ -6,7 +6,7 @@
 /*   By: rodrigo <rodrigo@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/05/24 22:48:50 by cristian          #+#    #+#             */
-/*   Updated: 2026/06/23 12:34:30 by rodrigo          ###   ########.fr       */
+/*   Updated: 2026/06/25 18:21:04 by rodrigo          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,6 +61,9 @@
 # define SOUTH 1
 # define WEST 2
 # define EAST 3
+
+/*parsing*/
+# define MAX_MAP 64
 
 /*Error strings*/
 # define ERR_USAGE "Usage: ./cub3D <map.cub>"
@@ -222,28 +225,31 @@ typedef struct s_data
 	void			*win;
 	t_img			img;
 	double			*z_buffer;
+	/*time*/
+	struct timeval	last_time;
+	/*sprites*/
 	int				sprite_count;
 	int				*sprite_tex[2];
 	int				*sprite_tex2[2];
-	struct timeval	last_time;
 	t_sprite		*sprites;
+	/*gunn sprites*/
 	int				*gun_tex[GUN_FRAMES];
 	int				gun_frame;
 	int				gun_firing;
 	double			gun_timer;
+	double			anim_clock;
+	int				fire;
+	t_weapon		weapon;
 	int				mini_x;
 	int				mini_y;
 	int				*door_tex;
 	double			dt;
-	double			anim_clock;
-	int				fire;
 	t_enemy			*enemies;
 	int				enemy_count;
 	int				wave;
 	int				player_hp;
 	int				game_state;
 	int				fog;
-	t_weapon		weapon;
 	unsigned int	seed;
 	int				spawn_relax;
 	int				last_spawn;
@@ -251,6 +257,12 @@ typedef struct s_data
 	double			spawn_y;
 	char			spawn_dir;
 	t_player		player;
+	/*following ia*/
+	int				flow[MAX_MAP][MAX_MAP];
+	int				flow_px;
+	int				flow_py;
+	int				qx[MAX_MAP * MAX_MAP];
+	int				qy[MAX_MAP * MAX_MAP];
 }				t_data;
 
 /*ERROR*/
@@ -325,6 +337,8 @@ void			loop(t_data *data);
 void			update_sim(t_data *data);
 void			spawn_wave(t_data *data);
 void			update_enemies(t_data *data);
+void			update_flow_field(t_data *data);
+void			flow_dir(t_data *data, t_enemy *e, double *dx, double *dy);
 void			try_fire(t_data *data);
 void			update_player_hp(t_data *data);
 void			check_game_state(t_data *data);
