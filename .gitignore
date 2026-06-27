@@ -74,9 +74,6 @@ minilibx-linux/
 *.swo
 *~
 
-# Claude Code (tooling local, no entregable)
-.claude/
-
 # macOS / Linux basura
 .DS_Store
 Thumbs.db
@@ -88,5 +85,3 @@ Thumbs.db
 # PDFs (subject de referencia, no se versiona)
 *.pdf
 
-# Engram AI agent memory
-.engram/
