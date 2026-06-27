@@ -52,6 +52,6 @@ void	check_game_state(t_data *data)
 		data->game_state = G_OVER;
 		return ;
 	}
-	if (data->wave == 3 && data->enemy_count == 0 && data->last_spawn > 0)
+	if (data->wave == 3 && data->enemy_count == 0)
 		data->game_state = G_WIN;
 }

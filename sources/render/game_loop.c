@@ -21,6 +21,10 @@ static void	tick_clock(t_data *data)
 	gettimeofday(&now, NULL);
 	data->dt = (now.tv_sec - data->last_time.tv_sec)
 		+ (now.tv_usec - data->last_time.tv_usec) / 1000000.0;
+	if (data->dt < 0)
+		data->dt = 0;
+	if (data->dt > 0.05)
+		data->dt = 0.05;
 	data->last_time = now;
 	data->anim_clock += data->dt;
 }

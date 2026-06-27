@@ -47,6 +47,8 @@ static void	reset_mod_state(t_data *data)
 	data->enemy_count = 0;
 	data->last_spawn = 0;
 	data->spawn_relax = 0;
+	data->flow_px = -1;
+	data->flow_py = -1;
 	gettimeofday(&now, NULL);
 	data->seed = now.tv_usec;
 }

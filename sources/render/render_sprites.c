@@ -30,7 +30,8 @@ static void	draw_sprite_col(t_data *data, t_sprite *s, int x)
 			tex_y = (y - start_y) * TEX_SIZE / s->size;
 			color = data->map_sprite_tex[tex_y * TEX_SIZE + tex_x];
 			if (color != 0)
-				put_pixel(data, x, y, color);
+				put_pixel(data, x, y,
+					apply_fog(color, s->transform_y, data->fog));
 		}
 		y++;
 	}
@@ -59,7 +60,7 @@ static void	draw_sprite_3d(t_data *data, int i)
 	}
 }
 
-void	project_sprite(t_data *data, int i)
+static void	project_sprite(t_data *data, int i)
 {
 	double	sx;
 	double	sy;

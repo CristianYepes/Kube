@@ -25,8 +25,10 @@ static int	place_enemy(t_data *data, int idx, int type)
 	pick = lcg_next(&data->seed) % n;
 	if (!pick_spawn_cell(data, pick, &x, &y))
 		return (0);
-	data->enemies[idx].pos_x = x + 0.5;
-	data->enemies[idx].pos_y = y + 0.5;
+	data->enemies[idx].pos_x = x + 0.3
+		+ (lcg_next(&data->seed) % 40) / 100.0;
+	data->enemies[idx].pos_y = y + 0.3
+		+ (lcg_next(&data->seed) % 40) / 100.0;
 	data->enemies[idx].type = type;
 	data->enemies[idx].state = E_IDLE;
 	data->enemies[idx].timer = 0;

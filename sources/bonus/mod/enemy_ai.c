@@ -22,19 +22,17 @@ static double	dist_sq(t_enemy *e, t_data *data)
 	return (dx * dx + dy * dy);
 }
 
-static double	get_speed(t_enemy *e, t_data *data)
+static double	get_speed(t_enemy *e, t_data *data, int idx)
 {
 	double	base;
 
-	base = 0.015;
-	if (e->type == ENEMY_RUNNER)
-		base = 0.015;
-	else if (e->type == ENEMY_BOSS)
+	base = 0.012 + (idx % 4) * 0.003;
+	if (e->type == ENEMY_BOSS)
 		base = 0.01;
 	return (base * data->dt * 60.0);
 }
 
-static void	chase_player(t_data *data, t_enemy *e)
+static void	chase_player(t_data *data, t_enemy *e, int idx)
 {
 	double	dx;
 	double	dy;
@@ -52,7 +50,7 @@ static void	chase_player(t_data *data, t_enemy *e)
 		dx /= spd;
 		dy /= spd;
 	}
-	spd = get_speed(e, data);
+	spd = get_speed(e, data, idx);
 	dx *= spd;
 	dy *= spd;
 	if (!is_wall(data, e->pos_x + dx, e->pos_y))
@@ -61,7 +59,7 @@ static void	chase_player(t_data *data, t_enemy *e)
 		e->pos_y += dy;
 }
 
-static void	enemy_fsm(t_data *data, t_enemy *e)
+static void	enemy_fsm(t_data *data, t_enemy *e, int idx)
 {
 	double	d;
 
@@ -72,13 +70,13 @@ static void	enemy_fsm(t_data *data, t_enemy *e)
 		e->state = E_CHASE;
 	else if (e->state == E_CHASE)
 	{
-		chase_player(data, e);
+		chase_player(data, e, idx);
 		if (d < 1.0)
 			e->state = E_ATTACK;
 	}
 	else if (e->state == E_ATTACK)
 	{
-		if (d > 2.0)
+		if (d > 1.0)
 			e->state = E_CHASE;
 	}
 }
@@ -90,7 +88,7 @@ void	update_enemies(t_data *data)
 	i = 0;
 	while (i < data->enemy_count)
 	{
-		enemy_fsm(data, &data->enemies[i]);
+		enemy_fsm(data, &data->enemies[i], i);
 		i++;
 	}
 }

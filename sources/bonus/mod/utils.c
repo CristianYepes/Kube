@@ -27,6 +27,8 @@ int	has_los(t_data *data, double cx, double cy)
 	dx = data->player.pos_x - cx;
 	dy = data->player.pos_y - cy;
 	d = sqrt(dx * dx + dy * dy);
+	if (d < 0.01)
+		return (1);
 	dx = dx / d * 0.1;
 	dy = dy / d * 0.1;
 	while (d > 0.1)

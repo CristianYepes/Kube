@@ -26,6 +26,8 @@ static void	project_enemy(t_data *data, t_enemy *e, t_sprite *s)
 			- data->player.dir_x * sy);
 	s->transform_y = inv * (-data->player.plane_y * sx
 			+ data->player.plane_x * sy);
+	if (s->transform_y < 0.001)
+		return ;
 	s->screen_x = (int)((WIN_W / 2)
 			* (1 + s->transform_x / s->transform_y));
 	s->size = (int)fabs(WIN_H / s->transform_y);
