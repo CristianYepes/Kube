@@ -1,6 +1,6 @@
 NAME        = cub3D
 NAME_BONUS  = cub3D_bonus
-CC          = gcc
+CC          = cc
 CFLAGS      = -Wall -Wextra -Werror
 
 LIBFT_PATH  = libft/

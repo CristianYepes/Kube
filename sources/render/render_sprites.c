@@ -74,6 +74,8 @@ static void	project_sprite(t_data *data, int i)
 			- data->player.dir_x * sy);
 	data->sprites[i].transform_y = inv * (-data->player.plane_y * sx
 			+ data->player.plane_x * sy);
+	if (fabs(data->sprites[i].transform_y) < 0.001)
+		data->sprites[i].transform_y = 0.001;
 	data->sprites[i].screen_x = (int)((WIN_W / 2)
 			* (1 + data->sprites[i].transform_x
 				/ data->sprites[i].transform_y));

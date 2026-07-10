@@ -25,11 +25,15 @@ static double	dist_sq(t_enemy *e, t_data *data)
 static double	get_speed(t_enemy *e, t_data *data, int idx)
 {
 	double	base;
+	double	spd;
 
 	base = 0.012 + (idx % 4) * 0.003;
 	if (e->type == ENEMY_BOSS)
 		base = 0.01;
-	return (base * data->dt * 60.0);
+	spd = base * data->dt * 60.0;
+	if (spd > 0.4)
+		spd = 0.4;
+	return (spd);
 }
 
 static void	chase_player(t_data *data, t_enemy *e, int idx)
@@ -71,12 +75,12 @@ static void	enemy_fsm(t_data *data, t_enemy *e, int idx)
 	else if (e->state == E_CHASE)
 	{
 		chase_player(data, e, idx);
-		if (d < 1.0)
+		if (d < 0.8)
 			e->state = E_ATTACK;
 	}
 	else if (e->state == E_ATTACK)
 	{
-		if (d > 1.0)
+		if (d > 2.25)
 			e->state = E_CHASE;
 	}
 }

@@ -22,7 +22,7 @@
 *.la
 *.lo
 
-# Shared objects (inc. Windows DLLs)
+# Shared objects
 *.dll
 *.so
 *.so.*
@@ -54,7 +54,7 @@ dkms.conf
 # debug information files
 *.dwo
 
-# --- cub3D específico ---
+# --- cub3D ---
 
 # Binarios finales
 cub3D
@@ -64,7 +64,7 @@ cub3D_bonus
 obj/
 obj_bonus/
 
-# MiniLibX (se clona con make, no se versiona)
+# MiniLibX
 minilibx-linux/
 
 # Editor / IDE
@@ -82,6 +82,6 @@ Thumbs.db
 *.log
 *.tmp
 
-# PDFs (subject de referencia, no se versiona)
+# PDFs
 *.pdf
 
