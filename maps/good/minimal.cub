@@ -1,0 +1,10 @@
+NO ./files/wall_bunker_ns.xpm
+SO ./files/wall_bunker_ns.xpm
+WE ./files/wall_bunker_ew.xpm
+EA ./files/wall_bunker_ew.xpm
+F 120,120,115
+C 40,40,45
+
+111
+1N1
+111

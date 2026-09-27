@@ -1,0 +1,14 @@
+/* XPM */
+static char *small_8x8[] = {
+"8 8 2 1",
+"a c #C86400",
+"b c #3296DC",
+"aaaaaaaa",
+"abababab",
+"aaaaaaaa",
+"abababab",
+"aaaaaaaa",
+"abababab",
+"aaaaaaaa",
+"abababab"
+};
