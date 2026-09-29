@@ -53,3 +53,8 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Build outputs of this project
+/cub3D
+/cub3D_bonus
+/minilibx-linux/

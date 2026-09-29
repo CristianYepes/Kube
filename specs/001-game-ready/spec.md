@@ -66,6 +66,7 @@ container and passes, covering:
   - MiniLibX SHALL be built from a pinned commit.
   - A second `make` or `make bonus` SHALL do nothing.
   - A changed library SHALL relink the binary that uses it.
+  - Build outputs (`cub3D`, `cub3D_bonus`, `minilibx-linux/`) SHALL be ignored by git.
 - **FR8 — No regressions.**
   - The parser's accept/reject decisions and error messages stay the same, except the fixed
     map.
@@ -110,6 +111,7 @@ container and passes, covering:
   - `git -C minilibx-linux rev-parse --short HEAD` equals the pinned commit.
   - Touching a libft source and running `make` relinks `cub3D`.
   - `make fclean && make bonus` builds from scratch.
+  - `.gitignore` lists `/cub3D`, `/cub3D_bonus` and `/minilibx-linux/`.
 - **AC7 (FR8)**
   - The rejection message for every bad map equals the message recorded on `main@34f4aff`
     (baseline file in `tests/`).

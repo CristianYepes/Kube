@@ -50,10 +50,18 @@
   `sprite_small.cub`) and `bad/` 26 (with the new `invalid_char.cub`). Both `'3'`s became
   `'2'`. The map matrix and the messages against the baseline pass. A bad map copied into
   `good/` makes the section fail for both binaries.
-- [ ] **T4** — Makefile: pinned MiniLibX, an order-only prerequisite, libraries as
+- [x] **T4** — Makefile: pinned MiniLibX, an order-only prerequisite, libraries as
   prerequisites.
   **Done when:** the AC6 section passes (a second make is silent, the pinned commit is
   checked out, touching libft relinks, and `make fclean && make bonus` works).
+  **Done 2026-09-29.**
+  - `MLX_COMMIT` holds the full SHA of `f07d00f`, checked out after a full clone.
+  - `$(MLX): | $(MLX_PATH)`, so the directory no longer triggers MiniLibX.
+  - `$(LIBFT): FORCE` calls libft's own make, which prints nothing when up to date.
+  - `$(NAME)` and `$(NAME_BONUS)` depend on both libraries.
+  - A fresh clone lands on `f07d00f`, a second `make` and `make bonus` print nothing, and the
+    build section passes.
+  - Also, `.gitignore` gained the build outputs (research defect 9).
 - [ ] **T5** — Clean shutdown: `mlx_destroy_display` plus `free(mlx)` in `destroy_game`, and
   the `init_mlx` failure path.
   **Done when:** the AC2 section passes without `mlx.supp` for both binaries, with ESC and
