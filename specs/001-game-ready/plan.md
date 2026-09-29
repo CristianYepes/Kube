@@ -71,8 +71,8 @@ The files are moved with `git mv`, so their history follows them.
   - `sync` pipes `git ls-files -co --exclude-standard` through `tar` into the container,
     because Colima does not share `/private/tmp` (R1);
   - `check` runs `tests/check.sh` inside it.
-- `tests/check.sh` has one section per AC. It exits non-zero on the first failed section and
-  prints a summary.
+- `tests/check.sh` has one section per AC. It runs every section, prints PASS or FAIL for each
+  with notes, and exits 1 if any failed.
 - The movement and FPS probes apply a **temporary** print to the **container's copy** of
   `game_loop.c`, rebuild there, measure, and restore. This is the same method used for the
   FPS numbers in R1, and it never touches the tree.
@@ -93,8 +93,8 @@ The files are moved with `git mv`, so their history follows them.
   the state can never be observed.
 - Delete `anim_timer`, `frame_idx` and `type` from `t_sprite`, and their writes in
   `set_sprite`.
-- Delete the orphan assets (Decisions 1 and 4): `sprite_2.xpm`, `wall_cross.xpm`, `wall_pipes.xpm` and
-  `shotgun_fire3.xpm`.
+- Delete the orphan assets (Decisions 1 and 4): `sprite_2.xpm` and `shotgun_fire3.xpm`.
+  Not `wall_cross.xpm` or `wall_pipes.xpm`: the bad maps use them (research, correction).
 - Before closing the task, re-run a full sweep: every `#define`, every struct field and every
   non-static function has at least one reader. Report any new finding instead of silently
   deleting it.

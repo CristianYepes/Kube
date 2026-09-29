@@ -81,8 +81,13 @@ container and passes, covering:
   - Holding the left arrow for 1 s turns 1.8 rad ± 10%.
   - A 100-pixel mouse move still turns 0.03 rad ± 10% (bonus).
 - **AC2 (FR2)** — `valgrind --leak-check=full --show-leak-kinds=all` with **no** suppressions
-  file, for both binaries, with an ESC exit and a close-button exit, reports definitely 0,
-  indirectly 0 and still reachable 0 bytes, and 0 errors.
+  file reports definitely 0, indirectly 0 and still reachable 0 bytes, and 0 errors. It covers:
+  - both binaries with an ESC exit;
+  - an error before the display opens (`wall_hole.cub`);
+  - an error after it opens (`tex_wrong_size.cub`).
+
+  Xvfb has no window manager, so there is no close button to click. That exit calls the same
+  `exit_game` as ESC (`mlx.c` hooks event 17 to `close_window`, which calls `exit_game`).
   - If libX11 keeps internal blocks that the program cannot free, the exact remainder and its
     stack are documented. The owner then accepts it, or not, in T5.
   - Error paths still report 0 bytes in use at exit.
@@ -126,5 +131,8 @@ container and passes, covering:
 2. **Speed reference:** the 60-fps reference the zombies already use (1.2 cells/s, 1.8 rad/s).
 3. **Deliverable status:** the project has already been delivered. The owner decides to polish
    it on `feature/game-ready` and merge that into `main`. Pushing is confirmed separately.
-4. **Unused textures:** delete `files/wall_cross.xpm`, `files/wall_pipes.xpm` and
-   `textures/shotgun/shotgun_fire3.xpm`.
+4. **Unused textures:** delete them.
+   - **Correction 2026-09-29:** `files/wall_cross.xpm` and `files/wall_pipes.xpm` turned out
+     to be used by 12 bad maps and `forbidden.cub`. The research had wrongly listed them as
+     unused. They are kept; the owner was told.
+   - Deleted: `textures/shotgun/shotgun_fire3.xpm`, plus `sprite_2.xpm` (Decision 1).

@@ -16,7 +16,7 @@
     `minilibx-linux/` is kept.
   - `down` leaves no container.
   - macOS xattrs are dropped (`--no-xattrs --no-mac-metadata`), so the copy is silent.
-- [ ] **T2** — `tests/check.sh` with every AC section, run against the **unchanged** code.
+- [x] **T2** — `tests/check.sh` with every AC section, run against the **unchanged** code.
   Record `tests/baseline-main-34f4aff.txt` (the error message of every bad map).
   **Done when:** it runs end to end and **fails where the research says it should**:
   - the `'3'` map is rejected;
@@ -24,6 +24,25 @@
   - the FPS-dependent movement differs across maps;
   - dead-code greps find hits.
   This proves each check can fail.
+  **Done 2026-09-29.** The full run took 2 min 24 s on unchanged code. 6 sections failed,
+  exactly the expected ones:
+  - build: no pinned MiniLibX; a changed libft does not relink; configure re-runs;
+  - map matrix: the `'3'` map; bonus maps in `good/`; `forbidden.cub`; no `bonus/`;
+  - valgrind: 87,941 bytes still reachable, and 136 bytes definitely lost on `tex_wrong_size`;
+  - movement: W for 2 s gives 3.0-4.7 cells against 2.4; Left for 1 s gives 2.4-2.8 rad
+    against 1.8;
+  - dead code: 7 symbols and 2 orphan assets;
+  - README: `example.cub`, and no "click".
+
+  4 passed, as they should: norminette; messages against the baseline; FPS (92 against 90);
+  the 60 s smoke run. The mouse probe already reads 0.0300 rad, which must stay that way.
+
+  Instrument fixes made during the task:
+  - The probe's `sed` inserted a literal `&` instead of the matched call. That gave 0 fps, an
+    impossible result, so it was fixed.
+  - The configure check was timing-dependent (missed 1 time in 3). It now bumps the
+    directory's mtime and catches it 3 times in 3.
+  - Baseline FPS on `subject_map`: 90, 91, 90, so 90 was recorded.
 - [ ] **T3** — Maps: new `good/`, `bonus/` and `bad/` layout with `git mv`, the `'3'` fix
   (per T0), and `bad/invalid_char.cub`.
   **Done when:** the AC3 section passes, and adding a wrong map to `good/` makes it fail.
