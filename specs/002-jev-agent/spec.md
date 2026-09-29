@@ -1,4 +1,4 @@
-# Spec 002 — Jev plays cub3D_bonus (v0.2)
+# Spec 002 — Jev plays cub3D_bonus (v0.3)
 
 > WHAT and WHY only. HOW lives in plan.md; facts in ../research-2026-09-28.md (wins on conflict).
 >
@@ -113,14 +113,19 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 - Live viewing or video recording (optional task only).
 - Publishing, or commits and pushes to the shared repo, without the user's explicit OK.
 
-## [NEEDS CLARIFICATION]
+## Decisions (answered by the owner on 2026-09-29)
 
-1. ~~Where the code lives~~ **Answered 2026-09-29:** in the `Kube` repo, on
-   `feature/jev-agentv1`, branched from `feature/jev-agent` (the base, which carries spec 001).
-   The owner will give implementation directions before coding starts.
-2. **Evaluation map(s):** `subject_map` by default (bonus-valid, 75-105 fps, under the 64-cell
-   flow-field guard). Add `doors_test`?
-3. **Episode budget:** default 20 development seeds for tuning, 20 test seeds per policy, a
-   180 s cap per episode, and a $1 spend cap for the whole evaluation. OK?
-4. **Key:** reuse the `libros` OpenRouter key, or create a dedicated key with its own credit
-   limit (recommended)?
+1. **Where the code lives:** in the `Kube` repo, on `feature/jev-agentv1`, branched from
+   `feature/jev-agent` (the base, which carries spec 001).
+2. **Evaluation map:** `maps/bonus/subject_map.cub` only. It is bonus-valid, under the 64-cell
+   flow-field guard, and the zombies spawn at random positions set by the seed.
+3. **Episode budget:**
+   - development seeds 1-20, used for tuning only;
+   - test seeds 101-120, one episode per policy each;
+   - a 180 s cap per episode;
+   - **$1 total** for every Jev call of this spec: tuning, test and latency probes.
+4. **Key:** the same OpenRouter key as `~/jev/libros`, read from `~/jev/libros/.env`
+   (`OPENROUTER_API_KEY=...`, chmod 600) into the environment of the agent process only.
+   It is never printed, logged, committed, or passed to Docker.
+
+No open questions remain. Implementation starts from `START_HERE.md` in this folder.

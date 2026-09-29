@@ -10,7 +10,7 @@
   MiniLibX and libft. Norm-compliant, because it lives in the same tree.
 - **Agent side (Python 3.12, uv):** `agent/` package with `typesafe-sdk==0.7.2` (MIT, R2) and
   pytest. It runs **on the Mac host**, so the key never enters the container (FR13). It talks
-  to the game over a pipe: `docker exec -i kube-dev-run ./cub3D_agent ...` on the Mac, or
+  to the game over a pipe: `docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent <map> <seed>` on the Mac, or
   `./cub3D_agent ...` on native Linux (FR14). The pipe costs 0.2 ms (R1).
 - **Runtime for the game on the Mac:** Colima + Docker, Ubuntu 22.04 aarch64, Xvfb `:99`
   (R1). The image and helper script come from spec 001 (`dev/`).
@@ -88,7 +88,7 @@ Python side turns them into words):
 ```json
 {"type":"obs","frame":812,"t":10.84,"dt":0.013,"state":0,"wave":1,"hp":90,
  "weapon_ready":1,"player":{"x":26.5,"y":11.5,"dx":0.0,"dy":-1.0},
- "enemies":[{"x":24.3,"y":9.8,"type":0,"hp":2,"ai":1,"los":1}]}
+ "drops":0,"enemies":[{"x":24.3,"y":9.8,"type":0,"hp":2,"ai":1,"los":1}]}
 ```
 `state` is `G_PLAY`/`G_OVER`/`G_WIN` (0/1/2). `type` and `ai` use the header's enemy
 constants. `los` is the game's own `has_los()`, so line of sight is not reimplemented in
