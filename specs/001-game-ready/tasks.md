@@ -113,9 +113,21 @@
     75.
   - Screenshots of the bonus, idle and firing, look as before (zombies, gun, minimap,
     health bar, muzzle flash).
-- [ ] 🔑 **T10** — x86_64 check on a campus machine: `make`, `make bonus`, the map matrix and
+- [x] **T10** — x86_64 check (done emulated; a campus machine remains the final word): `make`, `make bonus`, the map matrix and
   valgrind.
   **Done when:** it passes there.
+  **Done 2026-09-29 on emulated x86_64** (QEMU through Colima's binfmt).
+  - The binaries' ELF machine is x86-64. The map matrix, the messages against the baseline,
+    and valgrind (all four cases) pass. norminette passes. The build passed without relinking,
+    with the pinned commit, and relinked when libft changed.
+  - Limit: under emulation `cc1` segfaults now and then, in a different file each time
+    (`ft_memcmp.c`, `utils.c`). 2 of 3 full rebuilds succeed. That is QEMU, not the code, but
+    one clean `make re` on a real campus machine is still worth doing.
+  - Timing checks (movement, fps, smoke) are not meaningful under emulation; they were run
+    natively.
+  - Cleanup: the x86_64 container was removed and `ubuntu:22.04` restored to arm64. The pull
+    used a temporary empty `DOCKER_CONFIG`, because `~/.docker/config.json` points to a
+    `docker-credential-desktop` helper that is not installed. That file was not touched.
 - [ ] **T11** — Merge `feature/game-ready` into `main` locally (decided on 2026-09-29).
   **Done when:** `main` contains every commit of the branch, and `dev/dev.sh check` passes on
   `main`.
