@@ -128,10 +128,14 @@
   - Cleanup: the x86_64 container was removed and `ubuntu:22.04` restored to arm64. The pull
     used a temporary empty `DOCKER_CONFIG`, because `~/.docker/config.json` points to a
     `docker-credential-desktop` helper that is not installed. That file was not touched.
-- [ ] **T11** — Merge `feature/game-ready` into `main` locally (decided on 2026-09-29).
+- [x] **T11** — Merge `feature/game-ready` into `main` locally (decided on 2026-09-29).
   **Done when:** `main` contains every commit of the branch, and `dev/dev.sh check` passes on
   `main`.
+  **Done 2026-09-29:** merge commit `49520e5`, with 14 branch commits and a tree identical to
+  the branch. `dev/dev.sh check` on `main` passes all 10 sections (2 min 32 s). `origin/main`
+  was still `34f4aff` when checked just before the merge.
 - [ ] 🔑 **T12** — Push `main` to GitHub.
   **Done when:** the owner gives the explicit OK at that moment.
-- [ ] **T13** — Create `feature/jev-agent` from the updated `main` for spec 002.
+- [x] **T13** — Create `feature/jev-agent` from the updated `main` for spec 002.
   **Done when:** the branch exists and `specs/002-jev-agent/tasks.md` T0 is the next step.
+  **Done 2026-09-29:** created locally from `main` after T11. Not pushed.
