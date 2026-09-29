@@ -169,7 +169,7 @@ Bands are defined in code: distance `touching` (< 1.0), `close` (< 2.5), `medium
 Every fact below was checked in the code or with a command on 2026-09-29. Where a detail is
 left open, the tasks say how to verify it before relying on it.
 
-### Layout (only these paths may change: `agent/`, `sources/agent/`, `specs/`; AC1)
+### Layout (only these paths may change: `agent/`, `sources/agent/`, `specs/` and the root `CLAUDE.md`; AC1)
 
 ```
 agent/

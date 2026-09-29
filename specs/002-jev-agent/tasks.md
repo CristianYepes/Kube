@@ -6,8 +6,8 @@
 >   (numbers, not adjectives).
 > - Make **one commit per task**, with the given message. **Never push** unless the owner asks.
 > - 🛑 means stop, report to the owner, and wait. Stop also whenever a check fails for a reason
->   you do not understand, or a task seems to need a path outside `agent/`, `sources/agent/`
->   or `specs/`.
+>   you do not understand, or a task seems to need a path outside `agent/`, `sources/agent/`,
+>   `specs/` or `CLAUDE.md`.
 >
 > Paths are relative to the repo root. "The container" is `kube-dev` (see `START_HERE.md`,
 > "Environment"). "The base" is `origin/feature/jev-agent` (`0ac5649`).
@@ -27,7 +27,7 @@
     the container).
   - **Do:** a bash script, run on the Mac, that:
     1. checks that `git diff --stat origin/feature/jev-agent -- . ':(exclude)agent'
-       ':(exclude)sources/agent' ':(exclude)specs'` is empty;
+       ':(exclude)sources/agent' ':(exclude)specs' ':(exclude)CLAUDE.md'` is empty;
     2. in the container, builds the base and the working tree with `make -s && make -s bonus`
        and compares the `sha256sum` of every `obj/**/*.o` and `obj_bonus/**/*.o`:
        - the base: `git archive origin/feature/jev-agent` piped into `/tmp/base`, with

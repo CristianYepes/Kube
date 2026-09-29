@@ -5,7 +5,9 @@
 > rules, and how to run things today.
 >
 > **Implementing spec 002?** Go to `002-jev-agent/START_HERE.md`: reading order, rules,
-> environment, workflow, and the checklist in `002-jev-agent/tasks.md`.
+> environment, new-machine setup, workflow, and the checklist in `002-jev-agent/tasks.md`.
+> On `feature/jev-agentv1`, the root `CLAUDE.md` imports it, so Claude Code loads it by
+> itself.
 >
 > ```
 > specs/

@@ -28,6 +28,47 @@
   - the specs.
 - **Not started:** everything in `specs/002-jev-agent/tasks.md` after T0.
 
+## 2b. On a new machine (do this once)
+
+The repo carries everything **except the API key**, which must never be in it.
+
+1. **Tools.** On the original Mac they came from Homebrew:
+
+   ```bash
+   brew install colima docker uv
+   ```
+
+   That gave colima 0.9.1, docker 28.5.0 and uv 0.8.24; Lima comes in as a Colima dependency.
+   On Linux, install Docker and `uv` instead: `dev/dev.sh` only needs `docker`.
+2. **The branch:**
+
+   ```bash
+   git clone -b feature/jev-agentv1 git@github.com:CristianYepes/Kube.git
+   ```
+
+   Or run `git fetch && git checkout feature/jev-agentv1` in an existing clone. `main` does
+   not have any of this.
+3. **The key**, at the same path the docs use, so nothing else changes. Copy the OpenRouter
+   key in the browser first, then, on macOS:
+
+   ```bash
+   mkdir -p ~/jev/libros && printf 'OPENROUTER_API_KEY=%s\n' "$(pbpaste | tr -d '[:space:]')" > ~/jev/libros/.env && chmod 600 ~/jev/libros/.env && pbcopy < /dev/null
+   grep -q '^OPENROUTER_API_KEY=sk-or-' ~/jev/libros/.env && echo "key file OK"
+   ```
+
+   On Linux:
+
+   ```bash
+   read -s -p "OpenRouter key: " k && mkdir -p ~/jev/libros && printf 'OPENROUTER_API_KEY=%s\n' "$k" > ~/jev/libros/.env && chmod 600 ~/jev/libros/.env && unset k
+   ```
+
+   **The key never goes into the chat,** and it is never pasted as a command argument.
+4. **Start:** `colima start` (macOS only), then `dev/dev.sh up`, then `dev/dev.sh check`. That is
+   task T1.
+
+These steps were written from the original Mac and have not been run on a fresh machine: if
+one fails, fix it and correct this section in the same commit.
+
 ## 3. Reading order (about 20 minutes; do not skip)
 
 1. `specs/CONTEXT.md`: the goal, "Jev in two minutes", the game's rules, the hard rules.
@@ -42,7 +83,8 @@
 
 ## 4. Hard rules
 
-1. **Only these paths may change:** `agent/`, `sources/agent/`, `specs/`. Never edit the
+1. **Only these paths may change:** `agent/`, `sources/agent/`, `specs/` and the root
+   `CLAUDE.md`. Never edit the
    top-level `Makefile`, `.gitignore`, `dev/`, `tests/`, `includes/`, `libft/`, `maps/`,
    `textures/`, `files/`, or any other `sources/` file. `agent/check_isolation.sh` (T2)
    enforces it.

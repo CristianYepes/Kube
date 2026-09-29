@@ -70,8 +70,9 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 
 - **AC1 (FR1)** — Building `make` and `make bonus` on this spec's working tree and on the
   base gives identical `obj/*.o` and `obj_bonus/*.o` (sha256).
-  `git diff --stat <base> -- . ':(exclude)agent' ':(exclude)sources/agent' ':(exclude)specs'`
-  is empty: every change is a new path under those three directories.
+  `git diff --stat <base> -- . ':(exclude)agent' ':(exclude)sources/agent' ':(exclude)specs' ':(exclude)CLAUDE.md'`
+  is empty: every change is under those three directories or is the root `CLAUDE.md` (the
+  handoff for Claude sessions, which no build reads).
   `norminette sources includes libft` exits 0.
 - **AC2 (FR2)** — A 10 s headless run prints one observation per frame (>= 40/s on
   `subject_map`). Every line parses as JSON with the documented fields.
