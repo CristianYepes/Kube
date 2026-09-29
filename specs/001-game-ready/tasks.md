@@ -5,10 +5,17 @@
 
 - [x] 🔑 **T0** — Answer the four open questions in `spec.md`. **Done 2026-09-29:**
   `spec.md` v0.2, section "Decisions". The work branch is renamed `feature/game-ready`.
-- [ ] **T1** — Dev container in the repo: `dev/Dockerfile` (R1 recipe, plus `python3-pip` and
+- [x] **T1** — Dev container in the repo: `dev/Dockerfile` (R1 recipe, plus `python3-pip` and
   `norminette==3.3.60`) and `dev/dev.sh up|sync|build|check|down`.
   **Done when:** `dev/dev.sh up && dev/dev.sh build` builds both binaries, and `dev/dev.sh
   down` removes the container. The Colima VM is left to the owner.
+  **Done 2026-09-29:**
+  - `up` takes 43 s the first time and 0.2 s from the cache.
+  - `build` builds `cub3D` and `cub3D_bonus`.
+  - `sync` mirrors deletions: a probe file appears, and disappears after it is deleted.
+    `minilibx-linux/` is kept.
+  - `down` leaves no container.
+  - macOS xattrs are dropped (`--no-xattrs --no-mac-metadata`), so the copy is silent.
 - [ ] **T2** — `tests/check.sh` with every AC section, run against the **unchanged** code.
   Record `tests/baseline-main-34f4aff.txt` (the error message of every bad map).
   **Done when:** it runs end to end and **fails where the research says it should**:
