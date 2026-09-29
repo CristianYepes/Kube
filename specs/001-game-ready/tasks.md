@@ -62,11 +62,14 @@
   - A fresh clone lands on `f07d00f`, a second `make` and `make bonus` print nothing, and the
     build section passes.
   - Also, `.gitignore` gained the build outputs (research defect 9).
-- [ ] **T5** — Clean shutdown: `mlx_destroy_display` plus `free(mlx)` in `destroy_game`, and
+- [x] **T5** — Clean shutdown: `mlx_destroy_display` plus `free(mlx)` in `destroy_game`, and
   the `init_mlx` failure path.
   **Done when:** the AC2 section passes without `mlx.supp` for both binaries, with ESC and
   close-button exits. Then `mlx.supp` is deleted, or reduced to the documented exact stacks,
   and the decision is recorded in `research` as R9.
+  **Done 2026-09-29:** see research R9. 0 bytes in use in every case, with no suppressions
+  file. `mlx.supp` was deleted. Both edited functions stay within the norm (19, 23 and 18
+  lines), and norminette reports OK.
 - [ ] **T6** — Movement by time: shared `tick_clock`, `last_time` in the mandatory `loop()`,
   per-second `MOVE_SPEED` and `ROT_SPEED`, `rotate_player` taking an angle, `MOUSE_SENS`.
   **Done when:** the AC1 section passes: the same distance within 10% on `minimal` and
