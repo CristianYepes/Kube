@@ -43,9 +43,13 @@
   - The configure check was timing-dependent (missed 1 time in 3). It now bumps the
     directory's mtime and catches it 3 times in 3.
   - Baseline FPS on `subject_map`: 90, 91, 90, so 90 was recorded.
-- [ ] **T3** — Maps: new `good/`, `bonus/` and `bad/` layout with `git mv`, the `'3'` fix
+- [x] **T3** — Maps: new `good/`, `bonus/` and `bad/` layout with `git mv`, the `'3'` fix
   (per T0), and `bad/invalid_char.cub`.
   **Done when:** the AC3 section passes, and adding a wrong map to `good/` makes it fail.
+  **Done 2026-09-29.** `good/` holds 5 maps, `bonus/` 4 (`forbidden.cub` became
+  `sprite_small.cub`) and `bad/` 26 (with the new `invalid_char.cub`). Both `'3'`s became
+  `'2'`. The map matrix and the messages against the baseline pass. A bad map copied into
+  `good/` makes the section fail for both binaries.
 - [ ] **T4** — Makefile: pinned MiniLibX, an order-only prerequisite, libraries as
   prerequisites.
   **Done when:** the AC6 section passes (a second make is silent, the pinned commit is

@@ -184,7 +184,7 @@ docker run -d --name kube-test kube-dev sleep infinity
 git archive HEAD | docker exec -i kube-test tar -x -C /kube   # copy the tree in (see gotcha)
 docker exec kube-test bash -c 'make && make bonus'
 docker exec kube-test bash -c 'Xvfb :99 -screen 0 1280x720x24 >/dev/null 2>&1 &
-  sleep 1; DISPLAY=:99 ./cub3D_bonus maps/good/subject_map.cub'   # maps/bonus/ after spec 001 T3
+  sleep 1; DISPLAY=:99 ./cub3D_bonus maps/bonus/subject_map.cub'
 # input:       DISPLAY=:99 xdotool keydown w; sleep 1; xdotool keyup w; xdotool key Up
 # screenshot:  DISPLAY=:99 xwd -root -silent | convert xwd:- /tmp/shot.png ; docker cp kube-test:/tmp/shot.png .
 ```
