@@ -3,9 +3,8 @@
 > Build order. 🔑 = needs the owner. Each task is closed by a check, not a vibe.
 > Tests come first so that every fix is proven by something that could fail.
 
-- [ ] 🔑 **T0** — Answer the four NEEDS CLARIFICATION items in `spec.md`: the `'3'` map,
-  the speed reference, the deliverable status and Rodrigo, and the unused textures.
-  **Done when:** the answers are written into `spec.md` (v0.2).
+- [x] 🔑 **T0** — Answer the four open questions in `spec.md`. **Done 2026-09-29:**
+  `spec.md` v0.2, section "Decisions". The work branch is renamed `feature/game-ready`.
 - [ ] **T1** — Dev container in the repo: `dev/Dockerfile` (R1 recipe, plus `python3-pip` and
   `norminette==3.3.60`) and `dev/dev.sh up|sync|build|check|down`.
   **Done when:** `dev/dev.sh up && dev/dev.sh build` builds both binaries, and `dev/dev.sh
@@ -45,6 +44,10 @@
 - [ ] 🔑 **T10** — x86_64 check on a campus machine: `make`, `make bonus`, the map matrix and
   valgrind.
   **Done when:** it passes there.
-- [ ] 🔑 **T11** — Decide with Rodrigo: commit granularity, push of `feature/jev-agent`, and
-  the merge into `main`.
-  **Done when:** the owner says so.
+- [ ] **T11** — Merge `feature/game-ready` into `main` locally (decided on 2026-09-29).
+  **Done when:** `main` contains every commit of the branch, and `dev/dev.sh check` passes on
+  `main`.
+- [ ] 🔑 **T12** — Push `main` to GitHub.
+  **Done when:** the owner gives the explicit OK at that moment.
+- [ ] **T13** — Create `feature/jev-agent` from the updated `main` for spec 002.
+  **Done when:** the branch exists and `specs/002-jev-agent/tasks.md` T0 is the next step.

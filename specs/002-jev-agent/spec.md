@@ -114,9 +114,8 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 
 ## [NEEDS CLARIFICATION]
 
-1. **Where the code lives:** a branch in the shared `Kube` repo (with Rodrigo), or a separate
-   personal repo that uses Kube as a submodule or copy? Nothing is committed until this is
-   decided.
+1. ~~Where the code lives~~ **Answered 2026-09-29:** on its own branch `feature/jev-agent`
+   in the `Kube` repo, created from `main` after spec 001 is merged.
 2. **Evaluation map(s):** `subject_map` by default (bonus-valid, 75-105 fps, under the 64-cell
    flow-field guard). Add `doors_test`?
 3. **Episode budget:** default 20 development seeds for tuning, 20 test seeds per policy, a

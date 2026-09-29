@@ -12,8 +12,12 @@
 >   002-jev-agent/             THEN: the game plays itself with Jev (spec, plan, tasks)
 > ```
 >
-> Written 2026-09-28 on branch `feature/jev-agent`, created from `main@34f4aff`. Facts are
-> dated. Re-verify anything external (model ids, prices, versions) before relying on it.
+> Written 2026-09-28 from `main@34f4aff`.
+> - Spec 001 is built on branch `feature/game-ready` and then merged into `main`.
+> - Spec 002 gets its own branch, `feature/jev-agent`, created from that `main`.
+>
+> Facts are dated. Re-verify anything external (model ids, prices, versions) before relying
+> on it.
 
 ## The goal
 
@@ -210,18 +214,18 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
     - the build and test path on the Mac was verified: builds, parser matrix, headless play,
       xdotool, valgrind and relink;
     - both specs were written (v0.1 of 001, v0.2 of 002).
-- **Waiting on the owner.** Spec 001, T0:
-    1. the `'3'` map: replace with `'2'` (recommended), or add a new sprite type;
-    2. the speed reference (60 fps, like the zombies, recommended);
-    3. whether the project was already evaluated or submitted, and whether Rodrigo agrees;
-    4. deleting the unused textures (recommended).
-- **Waiting on the owner.** Spec 002, T0, answerable later:
-    1. where the agent code lives;
-    2. the evaluation map;
-    3. the episode budget;
-    4. which OpenRouter key.
-- **Next:** spec 001 T1 (the dev container in the repo), then T2 (tests first, proven to
-  fail), then the fixes.
+- **Spec 001, T0 answered on 2026-09-29** (`001-game-ready/spec.md`, "Decisions"):
+    - `'3'` becomes `'2'`, and `sprite_2.xpm` is deleted;
+    - speed uses the 60-fps reference;
+    - the project was already delivered, so it is polished and merged into `main`;
+    - the unused textures are deleted.
+- **Spec 002, T0, still open:**
+    - the evaluation map;
+    - the episode budget;
+    - which OpenRouter key.
+    - Already answered: its code goes on `feature/jev-agent`.
+- **Next:** follow `001-game-ready/tasks.md` in order. Each task gets its own commit on
+  `feature/game-ready`.
 
 ## Known defects of the deliverable (the scope of spec 001)
 

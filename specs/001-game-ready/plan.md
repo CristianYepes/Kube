@@ -21,7 +21,7 @@
 | Parser answers unchanged | ✅ | Error messages are compared against a baseline recorded on `main@34f4aff` (AC7) |
 | English everywhere | ✅ | code, comments, docs, commit messages |
 | YAGNI | ✅ | No new features. Tests only prove the FRs. One helper script for the container |
-| No push or merge without the owner's (and Rodrigo's) OK | ✅ | Work on `feature/jev-agent`, local |
+| No push without the owner's OK | ✅ | Work on `feature/game-ready`; merged into `main` when done; push only on an explicit OK |
 
 ## Chosen approach, per requirement
 
@@ -59,7 +59,7 @@
 | Folder | Rule | Contents |
 |---|---|---|
 | `maps/good/` | accepted by both binaries | `minimal`, `spaces_inside`, `valid_ids`, `jail_test`, `test_map` |
-| `maps/bonus/` | accepted by the bonus; mandatory says `Invalid character in map` | `doors_test`, `subject_map`, `subject_map_sprites` (fixed per NEEDS CLARIFICATION 1), `sprite_small` (today `maps/bad/forbidden.cub`) |
+| `maps/bonus/` | accepted by the bonus; mandatory says `Invalid character in map` | `doors_test`, `subject_map`, `subject_map_sprites` (`'3'` -> `'2'`, Decision 1), `sprite_small` (today `maps/bad/forbidden.cub`) |
 | `maps/bad/` | rejected by both, `Error` + exit 1 | the other 25 current bad maps, plus a new `invalid_char.cub` with an `X`, so an invalid-character case exists for the bonus too |
 
 The files are moved with `git mv`, so their history follows them.
@@ -93,7 +93,8 @@ The files are moved with `git mv`, so their history follows them.
   the state can never be observed.
 - Delete `anim_timer`, `frame_idx` and `type` from `t_sprite`, and their writes in
   `set_sprite`.
-- Delete the orphan assets per NEEDS CLARIFICATION 1 and 4.
+- Delete the orphan assets (Decisions 1 and 4): `sprite_2.xpm`, `wall_cross.xpm`, `wall_pipes.xpm` and
+  `shotgun_fire3.xpm`.
 - Before closing the task, re-run a full sweep: every `#define`, every struct field and every
   non-static function has at least one reader. Report any new finding instead of silently
   deleting it.
@@ -108,11 +109,11 @@ The files are moved with `git mv`, so their history follows them.
 
 ## Risks & mitigations
 
-- **Movement feel changes on the owner's machine** if its usual FPS is far from 60.
-  NEEDS CLARIFICATION 2 decides the reference. The constants are one line each.
+- **Movement feel changes on the owner's machine** if its usual FPS is far from 60. The
+  reference is 60 (Decision 2), and the constants are one line each if it needs tuning.
 - **`dt` spikes** (window dragged, machine busy): the existing 0.05 s cap bounds the step.
 - **libX11 still reports some blocks** after `mlx_destroy_display`: documented, with the
   exact stack (AC2). That is not the same as hiding everything with a broad suppression.
 - **aarch64 vs x86_64:** T10 re-runs the check on a campus machine before merging.
-- **Shared repo:** everything stays on the local branch until the owner and Rodrigo agree
-  (T11).
+- **Shared repo:** it is merged into `main` locally when 001 is complete. The push waits for
+  the owner's explicit OK (T11).

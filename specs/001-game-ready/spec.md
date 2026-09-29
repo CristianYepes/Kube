@@ -1,4 +1,4 @@
-# Spec 001 — Game ready (v0.1)
+# Spec 001 — Game ready (v0.2)
 
 > WHAT and WHY only. HOW lives in plan.md; facts in ../research-2026-09-28.md (wins on
 > conflict: see "Observed defects" and R8).
@@ -44,7 +44,8 @@ container and passes, covering:
 - **FR1 — Frame-rate independent movement.** WHEN a movement or rotation key is held, THE
   SYSTEM SHALL move and turn the player by an amount proportional to elapsed time, in both
   binaries.
-  - Speeds match the game's existing 60-fps reference: the one the zombies already use.
+  - Speeds match the game's existing 60-fps reference: the one the zombies already use
+    (Decision 2).
   - Mouse rotation keeps its current sensitivity per pixel.
 - **FR2 — Clean shutdown.** WHEN the game exits normally (ESC or the window's close button) or
   through an error after the display was opened, THE SYSTEM SHALL release the display
@@ -53,7 +54,7 @@ container and passes, covering:
   - Maps valid for both binaries, maps valid only for the bonus, and maps invalid for both
     SHALL live in separate folders.
   - Every map SHALL behave as its folder says.
-  - The `'3'` map SHALL be fixed per NEEDS CLARIFICATION 1.
+  - The `'3'` map SHALL be fixed (Decision 1).
 - **FR4 — Automated checks.** One command SHALL build everything and run all checks in the
   Linux container, failing on any mismatch.
 - **FR5 — Accurate README.** Every command and path in the README SHALL exist and work. The
@@ -83,7 +84,7 @@ container and passes, covering:
   file, for both binaries, with an ESC exit and a close-button exit, reports definitely 0,
   indirectly 0 and still reachable 0 bytes, and 0 errors.
   - If libX11 keeps internal blocks that the program cannot free, the exact remainder and its
-    stack are documented. The owner then accepts it, or not, as part of T0/T5.
+    stack are documented. The owner then accepts it, or not, in T5.
   - Error paths still report 0 bytes in use at exit.
 - **AC3 (FR3, FR4)** — `dev/dev.sh check` reports 0 mismatches over every map:
   - `maps/good/*` accepted by both binaries;
@@ -113,23 +114,17 @@ container and passes, covering:
 
 ## Out of scope
 
-- New gameplay: new enemies, door tactics, a second sprite type (unless chosen in NEEDS
-  CLARIFICATION 1).
+- New gameplay: new enemies, door tactics, a second sprite type.
 - Feel changes that were not asked for: diagonal speed normalization, a collision radius, new
   visuals.
 - Anything of the agent (spec 002).
-- Pushing to GitHub or merging into `main` without the owner's and Rodrigo's OK.
+- Pushing to GitHub without the owner's explicit OK at that moment.
 
-## [NEEDS CLARIFICATION]
+## Decisions (answered by the owner on 2026-09-29)
 
-1. **The `'3'` in `maps/good/subject_map_sprites.cub`** (no build accepts it, and
-   `textures/sprites/sprite_2.xpm` is unused): replace every `'3'` with `'2'` and delete
-   `sprite_2.xpm` (recommended, YAGNI), or add a second decorative sprite type `'3'` that uses
-   `sprite_2.xpm`?
-2. **Speed reference:** keep the 60-fps reference the zombies already use (1.2 cells/s,
-   1.8 rad/s; recommended)? Or should the game feel like it does today on your usual machine?
-   In that case tell me that machine's FPS, or we measure it on campus.
-3. **Deliverable status:** has the project already been evaluated or submitted? Is Rodrigo
-   fine with these changes going to `main` after review?
-4. **Unused wall textures** (`files/wall_cross.xpm`, `files/wall_pipes.xpm`) and
-   `textures/shotgun/shotgun_fire3.xpm`: delete them (recommended), or use them?
+1. **The `'3'` map:** replace every `'3'` with `'2'` and delete `textures/sprites/sprite_2.xpm`.
+2. **Speed reference:** the 60-fps reference the zombies already use (1.2 cells/s, 1.8 rad/s).
+3. **Deliverable status:** the project has already been delivered. The owner decides to polish
+   it on `feature/game-ready` and merge that into `main`. Pushing is confirmed separately.
+4. **Unused textures:** delete `files/wall_cross.xpm`, `files/wall_pipes.xpm` and
+   `textures/shotgun/shotgun_fire3.xpm`.
