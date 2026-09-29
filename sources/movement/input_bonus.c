@@ -67,7 +67,7 @@ int	mouse_tracker(int x, int y, t_data *data)
 	delta_x = x - WIN_W / 2;
 	if (delta_x == 0)
 		return (0);
-	rotate_player(&data->player, (double)delta_x * 0.01);
+	rotate_player(&data->player, delta_x * MOUSE_SENS);
 	mlx_mouse_move(data->mlx, data->win, WIN_W / 2, WIN_H / 2);
 	return (0);
 }

@@ -11,6 +11,8 @@ MLX_PATH    = minilibx-linux/
 MLX_NAME    = libmlx.a
 MLX         = $(MLX_PATH)$(MLX_NAME)
 MLX_REPO    = https://github.com/42Paris/minilibx-linux.git
+# Pinned so every build uses the same MiniLibX, whatever master says later.
+MLX_COMMIT  = f07d00f07c5c652223f505b526f84dab73cf2598
 
 INC         = -I ./includes/ \
               -I ./$(LIBFT_PATH) \
@@ -62,7 +64,6 @@ BONUS_SRC   =	render/minimap.c \
 				bonus/mod/player_state.c \
 				bonus/mod/restart.c \
 				bonus/render/enemy_render.c \
-				bonus/render/weapon.c \
 				bonus/render/hud.c \
 				bonus/render/font.c
 
@@ -89,22 +90,26 @@ $(OBJ_B_PATH)%.o: $(SRC_PATH)%.c
 
 $(MLX_PATH):
 	@echo "\033[1;34mCloning MiniLibX...\033[0m"
-	@git clone --depth 1 $(MLX_REPO) $(MLX_PATH)
+	@git clone --quiet $(MLX_REPO) $(MLX_PATH)
+	@git -C $(MLX_PATH) checkout --quiet $(MLX_COMMIT)
 
-$(MLX): $(MLX_PATH)
+$(MLX): | $(MLX_PATH)
 	@echo "\033[1;34mBuilding MiniLibX...\033[0m"
 	@make -sC $(MLX_PATH)
 
-$(LIBFT):
-	@echo "\033[1;34mBuilding libft...\033[0m"
+# Always ask libft's own Makefile, which knows its sources; it prints nothing
+# when libft.a is up to date, and the binaries relink only if libft.a changed.
+$(LIBFT): FORCE
 	@make -sC $(LIBFT_PATH)
 
-$(NAME): $(OBJS)
+FORCE:
+
+$(NAME): $(OBJS) $(LIBFT) $(MLX)
 	@echo "\033[1;34mLinking $(NAME)...\033[0m"
 	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(MLX) -lXext -lX11 -lm
 	@echo "\033[1;32m$(NAME) compiled successfully!\033[0m"
 
-$(NAME_BONUS): $(OBJS_BONUS)
+$(NAME_BONUS): $(OBJS_BONUS) $(LIBFT) $(MLX)
 	@echo "\033[1;34mLinking $(NAME_BONUS)...\033[0m"
 	@$(CC) $(CFLAGS) -o $(NAME_BONUS) $(OBJS_BONUS) $(LIBFT) $(MLX) -lXext -lX11 -lm
 	@echo "\033[1;32m$(NAME_BONUS) compiled successfully!\033[0m"
@@ -124,4 +129,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re bonus
+.PHONY: all clean fclean re bonus FORCE

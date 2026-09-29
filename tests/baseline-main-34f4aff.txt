@@ -1,0 +1,31 @@
+# Baseline recorded on main@34f4aff (unchanged code), 2026-09-29, in the dev container.
+# msg: <map in maps/bad>  <second stderr line of cub3D>. fps: frames/s of cub3D_bonus
+# idle on minimal over 5 s, with the same per-frame probe as check.sh. The fps line was
+# re-measured on the same commit, side by side with the change (research R10): 75 75 76.
+msg	dup_color.cub	Duplicate color
+msg	dup_texture.cub	Duplicate Texture
+msg	empty.cub	maps/bad/empty.cub: Empty file
+msg	empty_line_in_map.cub	Empty line in map
+msg	empty_path.cub	Empty path
+msg	forbidden.cub	Invalid character in map
+msg	id_after_map.cub	Map must be last
+msg	no_map.cub	Map not found
+msg	open_side.cub	Map is not closed
+msg	player_multiple.cub	Map must have exactly one player
+msg	player_none.cub	Map must have exactly one player
+msg	player_on_border.cub	Map is not closed
+msg	rgb_256.cub	Invalid color format
+msg	rgb_double_comma.cub	Invalid color format
+msg	rgb_four_values.cub	Invalid color format
+msg	rgb_leading_comma.cub	Invalid color format
+msg	rgb_letters.cub	Invalid color format
+msg	rgb_overflow.cub	Invalid color format
+msg	rgb_spaces.cub	Invalid color format
+msg	rgb_trailing_commas.cub	Invalid color format
+msg	rgb_two_values.cub	Invalid color format
+msg	rgb_zeropad.cub	Invalid color format
+msg	tex_missing.cub	Missing texture path
+msg	tex_not_xpm.cub	./files/wall_cross.png: Texture is not a .xpm file
+msg	tex_wrong_size.cub	Texture load failed
+msg	wall_hole.cub	Map is not closed
+fps	minimal_bonus	75

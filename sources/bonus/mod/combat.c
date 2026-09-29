@@ -52,8 +52,6 @@ static int	find_target(t_data *data)
 	i = -1;
 	while (++i < data->enemy_count)
 	{
-		if (data->enemies[i].state == E_DEAD)
-			continue ;
 		if (!hitscan_hit(data, &data->enemies[i]))
 			continue ;
 		d = (data->enemies[i].pos_x - data->player.pos_x)

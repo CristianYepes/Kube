@@ -40,9 +40,6 @@ static void	set_sprite(t_data *data, int counter, int x, int y)
 {
 	data->sprites[counter].pos_x = x + 0.5;
 	data->sprites[counter].pos_y = y + 0.5;
-	data->sprites[counter].anim_timer = 0;
-	data->sprites[counter].frame_idx = 0;
-	data->sprites[counter].type = 0;
 }
 
 void	init_sprites(char type, t_data *data)
