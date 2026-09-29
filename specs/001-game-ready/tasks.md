@@ -102,10 +102,17 @@
   **Done 2026-09-29.** The examples point to `maps/good/minimal.cub` and
   `maps/bonus/subject_map.cub`. Left mouse click was added to the controls. New "Maps" and
   "Tests" sections cover Linux, and macOS through `dev/dev.sh`. The AC4 section passes.
-- [ ] **T9** — Full regression: `dev/dev.sh check` from a clean container.
+- [x] **T9** — Full regression: `dev/dev.sh check` from a clean container.
   **Done when:** every section passes. That includes AC7 (the messages equal the baseline,
   norminette 0, the 60 s bonus smoke run, FPS within 15%), and one screenshot of the bonus
   looks as before.
+  **Done 2026-09-29.**
+  - From a fresh container (with a fresh pinned MiniLibX clone), `dev/dev.sh check` passes
+    all 10 sections in 2 min 30 s.
+  - W for 2 s: 2.41-2.43 cells. Left for 1 s: 1.83 rad. Mouse: 0.0300 rad. FPS 76 against
+    75.
+  - Screenshots of the bonus, idle and firing, look as before (zombies, gun, minimap,
+    health bar, muzzle flash).
 - [ ] 🔑 **T10** — x86_64 check on a campus machine: `make`, `make bonus`, the map matrix and
   valgrind.
   **Done when:** it passes there.
