@@ -48,8 +48,6 @@
 # define SUCCESS 0
 # define FAILURE 1
 # define ERR 2
-# define BREAK 3
-# define CONTINUE 4
 
 /*Line Types*/
 # define TYPE_EMPTY 0
@@ -112,7 +110,6 @@
 # define E_IDLE 0
 # define E_CHASE 1
 # define E_ATTACK 2
-# define E_DEAD 3
 
 /*Mod — weapon states*/
 # define W_IDLE 0
@@ -126,7 +123,6 @@
 /*Mod — timers*/
 # define FIRE_COOLDOWN 0.6
 # define ATTACK_RATE 1.0
-# define DEATH_TIME 0.4
 
 /*Structs*/
 typedef struct s_img
@@ -164,7 +160,6 @@ typedef struct s_enemy
 	int		type;
 	int		state;
 	int		hp;
-	double	timer;
 	double	atk_timer;
 }			t_enemy;
 
@@ -183,9 +178,6 @@ typedef struct s_sprite
 	double	transform_y;
 	int		screen_x;
 	int		size;
-	double	anim_timer;
-	int		frame_idx;
-	int		type;
 }			t_sprite;
 
 typedef struct s_ray
@@ -352,7 +344,6 @@ int				has_los(t_data *data, double cx, double cy);
 void			restart_game(t_data *data);
 /*Mod — render*/
 void			render_enemies(t_data *data);
-void			render_weapon(t_data *data);
 void			render_hud(t_data *data);
 void			draw_text(t_data *data, char *s, int y, int color);
 int				apply_fog(int color, double dist, int fog);

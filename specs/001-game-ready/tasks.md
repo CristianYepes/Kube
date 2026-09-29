@@ -79,8 +79,24 @@
   1.8; before, 2.4-2.8. The mouse is unchanged at 0.0300 rad. Norminette passes on the five
   edited files. Performance cost: none. An A/B of the original code and this one gives 75-76
   against 76-77 fps on `minimal`; see research R10.
-- [ ] **T7** — Dead code and orphan assets (verified list, plus the full sweep).
+- [x] **T7** — Dead code and orphan assets (verified list, plus the full sweep).
   **Done when:** the AC5 section passes and the sweep report lists 0 unexplained findings.
+  **Done 2026-09-29.**
+  - Removed from the verified list:
+    - `weapon.c`, with its Makefile entry, prototype and call;
+    - `BREAK`, `CONTINUE` and `DEATH_TIME`;
+    - `E_DEAD` and its 2 checks;
+    - `t_sprite.anim_timer`, `.frame_idx` and `.type`;
+    - `sprite_2.xpm` and `shotgun_fire3.xpm`.
+  - Automatic sweep of 67 defines, 77 functions and 46 files: 0 findings.
+    - On the original code it finds 5 of the 8 known items, which proves it can find them.
+    - Its blind spots were checked by hand: fields sharing a name across structs, states that
+      are tested but never set, and empty functions (this search does find `render_weapon`
+      on the original).
+  - **New finding, removed:** `t_enemy.timer` is written once in `waves.c` and never read. It
+    hid behind `t_weapon.timer`.
+  - Norminette reports 0 errors (94 files). Dead code, maps, messages and the 60 s smoke run
+    all pass.
 - [ ] **T8** — README: paths, the Maps section, controls and the Tests line.
   **Done when:** the AC4 section passes.
 - [ ] **T9** — Full regression: `dev/dev.sh check` from a clean container.

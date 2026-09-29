@@ -45,7 +45,6 @@ int	game_loop(t_data *data)
 	{
 		tick_shotgun(data, data->dt);
 		draw_shotgun(data);
-		render_weapon(data);
 	}
 	render_hud(data);
 	if (data->player.minimap)
