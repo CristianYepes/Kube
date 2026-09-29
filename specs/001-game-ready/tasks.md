@@ -70,10 +70,15 @@
   **Done 2026-09-29:** see research R9. 0 bytes in use in every case, with no suppressions
   file. `mlx.supp` was deleted. Both edited functions stay within the norm (19, 23 and 18
   lines), and norminette reports OK.
-- [ ] **T6** — Movement by time: shared `tick_clock`, `last_time` in the mandatory `loop()`,
+- [x] **T6** — Movement by time: shared `tick_clock`, `last_time` in the mandatory `loop()`,
   per-second `MOVE_SPEED` and `ROT_SPEED`, `rotate_player` taking an angle, `MOUSE_SENS`.
   **Done when:** the AC1 section passes: the same distance within 10% on `minimal` and
   `test_map`, in both binaries, and the rotation and mouse checks.
+  **Done 2026-09-29.** W for 2 s gives 2.42 and 2.43 cells (mandatory) and 2.30 and 2.39
+  (bonus), against 2.4 expected; before, 3.0-4.7. Left for 1 s gives 1.82 rad in both, against
+  1.8; before, 2.4-2.8. The mouse is unchanged at 0.0300 rad. Norminette passes on the five
+  edited files. Performance cost: none. An A/B of the original code and this one gives 75-76
+  against 76-77 fps on `minimal`; see research R10.
 - [ ] **T7** — Dead code and orphan assets (verified list, plus the full sweep).
   **Done when:** the AC5 section passes and the sweep report lists 0 unexplained findings.
 - [ ] **T8** — README: paths, the Maps section, controls and the Tests line.

@@ -12,8 +12,6 @@
 
 #include "cub3d.h"
 
-#ifdef BONUS
-
 static void	tick_clock(t_data *data)
 {
 	struct timeval	now;
@@ -28,6 +26,8 @@ static void	tick_clock(t_data *data)
 	data->last_time = now;
 	data->anim_clock += data->dt;
 }
+
+#ifdef BONUS
 
 int	game_loop(t_data *data)
 {
@@ -57,6 +57,7 @@ int	game_loop(t_data *data)
 
 int	game_loop(t_data *data)
 {
+	tick_clock(data);
 	move_player(data);
 	paint_floor_ceiling(data);
 	cast_rays(data);

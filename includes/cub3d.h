@@ -27,9 +27,10 @@
 # define WIN_W 1280
 # define WIN_H 720
 
-/*movement*/
-# define MOVE_SPEED 0.02
-# define ROT_SPEED 0.03
+/*movement, per second: the 60-fps reference the enemies use (dt * 60)*/
+# define MOVE_SPEED 1.2
+# define ROT_SPEED 1.8
+# define MOUSE_SENS 0.0003
 
 /*Keycodes*/
 # define KEY_M 109
@@ -310,7 +311,7 @@ void			render_sprites(t_data *data);
 int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
 void			move_player(t_data *data);
-void			rotate_player(t_player *p, double dir);
+void			rotate_player(t_player *p, double angle);
 int				is_wall(t_data *data, double x, double y);
 void			toggle_door(t_data *data);
 # ifdef BONUS
