@@ -209,25 +209,21 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
 
 ## Status and next step
 
-- **Done:**
-    - the whole repo was read;
-    - the build and test path on the Mac was verified: builds, parser matrix, headless play,
-      xdotool, valgrind and relink;
-    - both specs were written (v0.1 of 001, v0.2 of 002).
-- **Spec 001, T0 answered on 2026-09-29** (`001-game-ready/spec.md`, "Decisions"):
-    - `'3'` becomes `'2'`, and `sprite_2.xpm` is deleted;
-    - speed uses the 60-fps reference;
-    - the project was already delivered, so it is polished and merged into `main`;
-    - the unused textures are deleted.
-- **Spec 002, T0, still open:**
-    - the evaluation map;
-    - the episode budget;
-    - which OpenRouter key.
-    - Already answered: its code goes on `feature/jev-agent`.
-- **Next:** follow `001-game-ready/tasks.md` in order. Each task gets its own commit on
-  `feature/game-ready`.
+- **Spec 001 (game-ready): done on 2026-09-29.** Every task is closed in
+  `001-game-ready/tasks.md`, each with its evidence.
+    - `dev/dev.sh check` passes all 10 sections from a fresh container.
+    - The x86_64 build was checked under emulation. One clean `make re` on a campus machine
+      remains a good idea.
+    - It is merged into `main`. The push waits for the owner's explicit OK.
+- **Spec 002 (Jev agent): next,** on branch `feature/jev-agent` created from that `main`
+  ("the base"). Its T0 is still open: the evaluation map, the episode budget and which
+  OpenRouter key.
+- Tooling now in the repo:
+    - `dev/dev.sh up|sync|build|check|down`, the Linux container;
+    - `tests/check.sh`, with one section per acceptance criterion of 001;
+    - `tests/baseline-main-34f4aff.txt`.
 
-## Known defects of the deliverable (the scope of spec 001)
+## Defects that spec 001 fixed (kept for history)
 
 1. `maps/good/subject_map_sprites.cub` contains `'3'`, which no build accepts.
 2. Three "good" maps are bonus-only, and `maps/bad/forbidden.cub` is only bad for the
@@ -242,5 +238,11 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
    prerequisites of the binaries (no relink happens, R8).
 9. There is dead code (verified list in the research).
 
-Details: research, "Observed defects" and R8. Spec 001 fixes them; spec 002 must not touch
-the deliverable.
+All of them are fixed, except the part of item 5 that was wrong: `wall_cross.xpm` and
+`wall_pipes.xpm` are used by the bad maps, so they stay. Two more were found and fixed along
+the way:
+- 136 bytes definitely lost on the texture-failure path;
+- build outputs that were not in `.gitignore`.
+
+Details: research, "Observed defects", R8-R10, and `001-game-ready/tasks.md`. Spec 002 must
+not touch the deliverable.
