@@ -117,7 +117,8 @@ container and passes, covering:
     (baseline file in `tests/`).
   - `norminette sources includes libft` exits 0.
   - A 60 s headless bonus run with xdotool input does not crash.
-  - The FPS on `subject_map` stays within 15% of the baseline (75-105).
+  - The FPS of the bonus on `minimal` (no random spawns) stays within 15% of `main`'s (75).
+    Why not `subject_map`: research R10.
 
 ## Out of scope
 

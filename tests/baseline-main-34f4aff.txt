@@ -1,6 +1,7 @@
 # Baseline recorded on main@34f4aff (unchanged code), 2026-09-29, in the dev container.
 # msg: <map in maps/bad>  <second stderr line of cub3D>. fps: frames/s of cub3D_bonus
-# idle on subject_map over 5 s, measured with the same per-frame probe as check.sh.
+# idle on minimal over 5 s, with the same per-frame probe as check.sh. The fps line was
+# re-measured on the same commit, side by side with the change (research R10): 75 75 76.
 msg	dup_color.cub	Duplicate color
 msg	dup_texture.cub	Duplicate Texture
 msg	empty.cub	maps/bad/empty.cub: Empty file
@@ -27,4 +28,4 @@ msg	tex_missing.cub	Missing texture path
 msg	tex_not_xpm.cub	./files/wall_cross.png: Texture is not a .xpm file
 msg	tex_wrong_size.cub	Texture load failed
 msg	wall_hole.cub	Map is not closed
-fps	subject_map_bonus	90
+fps	minimal_bonus	75

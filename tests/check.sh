@@ -188,13 +188,15 @@ check_movement() {
 	within "$r" 0.03 0.10 || ok=1
 	return $ok
 }
+# On minimal no zombie can spawn, so every frame draws the same: +-1 fps between
+# runs. On subject_map random spawns spread it over 76-92 for the same code,
+# which made a 15% band fail by chance (research R10).
 check_fps() {
-	local m base r
+	local base r
 	build_probe || { note "probe build failed"; return 1; }
-	m=$(ls maps/*/subject_map.cub | head -1)
-	base=$(awk -F'\t' '$1 == "fps" && $2 == "subject_map_bonus" { print $3 }' "$BASELINE")
-	r=$(probe_run cub3D_bonus "$m" idle 5)
-	note "cub3D_bonus $m idle: $r fps (baseline ${base:-none})"
+	base=$(awk -F'\t' '$1 == "fps" && $2 == "minimal_bonus" { print $3 }' "$BASELINE")
+	r=$(probe_run cub3D_bonus maps/good/minimal.cub idle 5)
+	note "cub3D_bonus minimal idle: $r fps (baseline ${base:-none})"
 	[ -n "$base" ] && within "$r" "$base" 0.15
 }
 
