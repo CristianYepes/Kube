@@ -136,6 +136,8 @@
   was still `34f4aff` when checked just before the merge.
 - [ ] 🔑 **T12** — Push `main` to GitHub.
   **Done when:** the owner gives the explicit OK at that moment.
+  **2026-09-29, the owner's call:** push `feature/jev-agent` for now, which carries all of
+  001 plus the merge. `main` on GitHub stays at `34f4aff` until the owner decides.
 - [x] **T13** — Create `feature/jev-agent` from the updated `main` for spec 002.
   **Done when:** the branch exists and `specs/002-jev-agent/tasks.md` T0 is the next step.
   **Done 2026-09-29:** created locally from `main` after T11. Not pushed.

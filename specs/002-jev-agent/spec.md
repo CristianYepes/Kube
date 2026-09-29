@@ -3,7 +3,8 @@
 > WHAT and WHY only. HOW lives in plan.md; facts in ../research-2026-09-28.md (wins on conflict).
 >
 > **Depends on spec 001 (`../001-game-ready/`).** It starts from the commit where 001 is
-> complete, called **the base** below. 001 makes player movement frame-rate independent, so
+> complete, called **the base** below: the tip of `feature/jev-agent`. The implementation
+> goes on `feature/jev-agentv1`, created from it. 001 makes player movement frame-rate independent, so
 > this spec does not reimplement it.
 
 ## Problem & goal
@@ -114,8 +115,9 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 
 ## [NEEDS CLARIFICATION]
 
-1. ~~Where the code lives~~ **Answered 2026-09-29:** on its own branch `feature/jev-agent`
-   in the `Kube` repo, created from `main` after spec 001 is merged.
+1. ~~Where the code lives~~ **Answered 2026-09-29:** in the `Kube` repo, on
+   `feature/jev-agentv1`, branched from `feature/jev-agent` (the base, which carries spec 001).
+   The owner will give implementation directions before coding starts.
 2. **Evaluation map(s):** `subject_map` by default (bonus-valid, 75-105 fps, under the 64-cell
    flow-field guard). Add `doors_test`?
 3. **Episode budget:** default 20 development seeds for tuning, 20 test seeds per policy, a

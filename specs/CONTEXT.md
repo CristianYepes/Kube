@@ -214,10 +214,13 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
     - `dev/dev.sh check` passes all 10 sections from a fresh container.
     - The x86_64 build was checked under emulation. One clean `make re` on a campus machine
       remains a good idea.
-    - It is merged into `main`. The push waits for the owner's explicit OK.
-- **Spec 002 (Jev agent): next,** on branch `feature/jev-agent` created from that `main`
-  ("the base"). Its T0 is still open: the evaluation map, the episode budget and which
-  OpenRouter key.
+    - It is merged into the local `main`. On GitHub it lives on `feature/jev-agent`, pushed
+      on 2026-09-29. `origin/main` stays at `34f4aff` until the owner decides.
+- **Spec 002 (Jev agent): next.**
+    - **The base** is `feature/jev-agent`: 001 complete.
+    - **Implementation branch:** `feature/jev-agentv1`, created from the base.
+    - The owner will say how to implement before any code is written.
+    - Its T0 is still open: the evaluation map, the episode budget and which OpenRouter key.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;
