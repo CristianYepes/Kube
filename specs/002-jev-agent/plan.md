@@ -1,7 +1,9 @@
 # Plan 002 — Jev plays cub3D_bonus
 
 > HOW. Every choice is argued on ../research-2026-09-28.md (R-numbers below).
-> Starts from **the base**: the commit where spec 001 (game-ready) is complete.
+> Starts from **the base**: `origin/feature/jev-agent` (`0ac5649`), where spec 001 is complete.
+> Work happens on `feature/jev-agentv1`. The section "Implementation decisions" below is
+> binding: follow it rather than re-deciding.
 
 ## Tech context
 
@@ -10,8 +12,9 @@
   MiniLibX and libft. Norm-compliant, because it lives in the same tree.
 - **Agent side (Python 3.12, uv):** `agent/` package with `typesafe-sdk==0.7.2` (MIT, R2) and
   pytest. It runs **on the Mac host**, so the key never enters the container (FR13). It talks
-  to the game over a pipe: `docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent <map> <seed>` on the Mac, or
-  `./cub3D_agent ...` on native Linux (FR14). The pipe costs 0.2 ms (R1).
+  to the game over a pipe (the pipe costs 0.2 ms, R1):
+  - on the Mac: `docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent <map> <seed>`;
+  - on native Linux, from the repo root: `./agent/cub3D_agent <map> <seed>` (FR14).
 - **Runtime for the game on the Mac:** Colima + Docker, Ubuntu 22.04 aarch64, Xvfb `:99`
   (R1). The image and helper script come from spec 001 (`dev/`).
 - **Jev:** OpenRouter `typesafe/jev-1.13`, expected response model
@@ -26,7 +29,7 @@
 | Norminette | ✅ | `sources/agent/*.c` follow the norm too, and `norminette sources` still exits 0 |
 | English everywhere | ✅ | code, logs, docs |
 | YAGNI | ✅ | One Choice question; four tactics; no door tactics, no viewer, no database (JSONL logs) |
-| No commit/push without asking | ✅ | Work stays uncommitted until NEEDS CLARIFICATION 1 is answered |
+| No push without asking | ✅ | One commit per task on `feature/jev-agentv1`; push only when the owner asks |
 | Key never exposed | ✅ | Read from the host environment (`OPENROUTER_API_KEY`); never passed to Docker; never logged |
 
 ## Chosen approach
@@ -161,11 +164,251 @@ Bands are defined in code: distance `touching` (< 1.0), `close` (< 2.5), `medium
 - `result.json`: outcome, survival seconds, wave reached, kills, damage taken, and the config
   sha256.
 
+## Implementation decisions (v0.3, verified 2026-09-29)
+
+Every fact below was checked in the code or with a command on 2026-09-29. Where a detail is
+left open, the tasks say how to verify it before relying on it.
+
+### Layout (only these paths may change: `agent/`, `sources/agent/`, `specs/`; AC1)
+
+```
+agent/
+  Makefile            builds agent/cub3D_agent (see "Build")
+  .gitignore          cub3D_agent, obj/, runs/, .venv/, __pycache__/, .pytest_cache/
+  pyproject.toml      uv project "kube-agent", requires-python >=3.12,
+                      deps: typesafe-sdk==0.7.2; dev: pytest; script: kube-agent = kube_agent.cli:main
+  src/kube_agent/
+    config.py         constants, the question, config_sha256()
+    bridge.py         start the game (docker | local), read init/obs lines, send C/Q lines
+    features.py       obs -> semantic state (pure functions)
+    controller.py     tactic + obs + map -> C line (aim, fire, movement, BFS)
+    policies.py       idle, scripted, jev
+    jev_client.py     SDK wrapper: pinned model, cost, request id, budget, decision rows
+    episode.py        one episode: the loop, the logs, result.json
+    evaluate.py       many episodes, statistics, report.md
+    cli.py            kube-agent run | eval | spend | latency
+  tests/              pytest; no X, no network; tests/fixtures/ holds obs recorded in T3
+  runs/               logs, gitignored
+sources/agent/
+  agent.h             prototypes of the bridge (includes cub3d.h)
+  agent_main.c        replaces sources/main.c
+  agent_loop.c        replaces sources/mlx_loop_and_hook/mlx.c
+  agent_frame.c       replaces sources/render/game_loop.c
+  agent_io.c          stdin commands; the init line
+  agent_obs.c         the obs line (a separate file because of the norm's 5 functions per file)
+```
+
+**Never edit** the top-level `Makefile`, `.gitignore`, `dev/`, `tests/`, `includes/`, `libft/`,
+`maps/`, `textures/`, `files/` or any `sources/` file outside `sources/agent/`.
+
+### Build (`agent/Makefile`, run with `make -C agent` from the repo root)
+
+- The first step is `$(MAKE) -s -C .. bonus`, which guarantees `../libft/libft.a` and the
+  pinned `../minilibx-linux/libmlx.a`.
+- The sources:
+
+  ```
+  SRCS = $(filter-out ../sources/main.c ../sources/mlx_loop_and_hook/mlx.c ../sources/render/game_loop.c, $(wildcard ../sources/*.c ../sources/*/*.c ../sources/*/*/*.c))
+  ```
+
+  - A wildcard is fine here: this is not the 42 Makefile.
+  - It picks up `sources/agent/*.c` by itself.
+  - It cannot drift from the deliverable's list, because the bonus build compiles every `.c`
+    under `sources/` (checked on 2026-09-28).
+- Flags: `-Wall -Wextra -Werror -D BONUS -D AGENT -I../includes -I../libft -I../minilibx-linux`.
+- Objects go to `obj/`; the link line is `../libft/libft.a ../minilibx-linux/libmlx.a -lXext
+  -lX11 -lm`, producing `cub3D_agent`.
+- **Run it from the repo root.** The maps name textures relative to the working directory
+  (`./files/...`), and the code loads `textures/...` the same way:
+
+  ```
+  ./agent/cub3D_agent maps/bonus/subject_map.cub 7
+  ```
+
+- In the dev container: `dev/dev.sh sync && docker exec kube-dev make -s -C agent`.
+  `sync` wipes everything but `minilibx-linux/`, so build again after every sync.
+
+### C bridge
+
+- **`agent_main.c`**:
+  - with `argc != 3`, print `Error` and `Usage: ./cub3D_agent <map.cub> <seed>`, then return 1;
+  - then `check_file`, `parsing` and `init_game`, exactly as in `sources/main.c:15-33`;
+  - **then** `data.seed = (unsigned int)ft_atoi(argv[2])`. `init_mod_state` has just seeded
+    from the clock. Enemies spawn at the first `update_sim`, after this override, so the same
+    seed gives the same spawns (AC5). Later positions depend on `dt` and are not bit-exact;
+    only spawns are;
+  - then `agent_init_io(&data)`, which sets stdin and stdout to `O_NONBLOCK` with `fcntl` and
+    prints the init line;
+  - then `loop(&data)`.
+- **`agent_loop.c`**: `loop()` is `sources/mlx_loop_and_hook/mlx.c:17-27` without the key and
+  mouse hooks. It keeps hook 17 (`close_window`), `gettimeofday(&data->last_time, NULL)`,
+  `mlx_loop_hook(..., game_loop, ...)` and `mlx_loop`.
+- **`agent_frame.c`**:
+  - a static `tick_clock`, copied from `sources/render/game_loop.c:15-28`;
+  - `game_loop`, copied from `game_loop.c:32-54`, with `agent_read_commands(data)` as its
+    first statement and `agent_print_obs(data)` right after `mlx_put_image_to_window`;
+  - a header comment naming the file and the base commit it mirrors.
+- **Commands:**
+  - A `C a b c d e f g` line sets `player.key_up`, `key_down`, `key_left`, `key_right`,
+    `rotate_left` and `rotate_right` from `a..f`.
+  - While `g == 1`, every frame does `data->fire = 1; fire_shotgun(data);`. That is what the Up
+    key does in `sources/movement/input_bonus.c` (`key_press_bonus`). `try_fire` enforces the
+    0.6 s cooldown.
+  - `Q`, or EOF on stdin, calls `exit_game(data)`: a clean exit that frees everything. EOF
+    matters, because a killed Python side must not leave the game running.
+  - Malformed lines are ignored.
+- **Reading stdin:** `read` into a static buffer (`EAGAIN` means nothing new), split on `\n`,
+  apply each complete line in order.
+- **Writing obs:**
+  - `snprintf` the whole line into a buffer, then one `write(STDOUT_FILENO, ...)`;
+  - keep every line under 4096 bytes. On Linux a pipe write of at most `PIPE_BUF` (4096)
+    bytes is atomic: all of it or `EAGAIN`. So a full pipe drops the frame's line (`drops++`)
+    and never writes half a line;
+  - floats use `%.3f`, and fields come in the contract's order.
+- **Norm:** every file in `sources/agent/` passes `norminette`. Run it; do not guess the rules
+  (25 lines per function, 5 functions per file, 4 parameters, 5 variables, 80 columns, ...).
+
+### Conventions (verified in the code; write the worked example as a unit test)
+
+- `data->map[row][col]`: x is the column and y is the row. **y grows downward** (screen space).
+- `dir` is a unit vector: it starts axis-aligned and rotation keeps its length. `plane` is
+  `dir` rotated +90°, length 0.66, and points to the player's **right**: facing N, `dir = (0,-1)`
+  and `plane = (0.66, 0)`, i.e. east (`set_ns` in `check_map.c`). The unit right vector is
+  `(-dy, dx)`.
+- A positive angle, which is what the right-arrow key produces through `rotate_right`, turns
+  **right**, clockwise on screen: east `(1,0)` becomes `(cos a, sin a)`, toward south.
+- For `v = target - player`:
+  - `dot = dx*vx + dy*vy` is the distance ahead;
+  - `cross = dx*vy - dy*vx`: `cross > 0` means the target is on the **right**, `cross < 0` on
+    the **left**;
+  - `bearing = atan2(cross, dot)` is 0 straight ahead and +pi/2 to the right.
+
+  **Worked example:** the player is at (5.5, 5.5) facing east (1, 0) and the enemy is at
+  (5.5, 4.5), one row up. `cross = 1*(-1) - 0*0 = -1`, so the enemy is on the LEFT: facing
+  east, north is on the left.
+- The hitscan (`combat.c` `hitscan_hit`) hits when `dot > 0`, `perp = |cross| < 0.5`,
+  `dot < 10` and `has_los`.
+- FOV half-angle: `atan(0.66) = 0.583 rad` (33.4°).
+- A cell is walkable if its character is not in `"1D"`: `is_wall` treats `1` and closed doors
+  `D` as walls, while sprites `2` and open doors `O` are walkable.
+
+### Semantic features (exact values)
+
+- **Distance band:** `touching` below 1.0, `close` below 2.5, `medium` below 6.0, `far`
+  otherwise.
+- **Direction:** 8 sectors of 45°, centred ahead:
+  - `ahead`: |b| < 22.5°;
+  - `ahead-right`: 22.5-67.5°;
+  - `right`: 67.5-112.5°;
+  - `behind-right`: 112.5-157.5°;
+  - `behind`: |b| >= 157.5°;
+  - the mirror images to the left for negative b.
+- **`in_view`:** `los == 1` and |bearing| <= 0.583.
+- **Health:** `high` from 60, `medium` from 30, `low` below 30. The HUD bar changes colour at
+  the same values (`hud.c`).
+- **`being_hit`:** hp is lower than it was 1.0 s ago.
+- **`kind`:** type 0 `grunt`, 1 `runner`, 2 `boss`. **`wounded`:** hp below its spawn hp
+  (grunt 2, runner 1, boss 8; `waves.c`).
+- **`open_directions`:** ahead, back, right or left is open when the cell at
+  `player + 1.0 * (dir | -dir | right_u | -right_u)` is walkable. **`cornered`:** at most one
+  is open.
+- **`remaining`** is the number of enemies; **`in_view`** counts the enemies in view;
+  **`close_count`** counts enemies nearer than 2.5.
+- **`wave`:** `"<w> of 3"`. **`boss_present`:** there is a type 2.
+- **No numbers with decimals anywhere in the state** (AC6).
+
+### Controller (exact)
+
+- **Target:** the nearest enemy with `los`, or the nearest enemy if none has it.
+- **Turn:** if |bearing| > 0.05 rad, turn right when bearing > 0 and left otherwise. SEARCH
+  aims at the next path cell instead of the enemy.
+- **Fire** when the target has `los`, `0 < dot < 10`, `|cross| < 0.45` (a margin under the
+  game's 0.5) and `weapon_ready == 1`.
+- **Movement:** take the desired world vector `w` of the tactic, then:
+  - forward if `w·dir > 0.3`, back if `< -0.3`;
+  - strafe right if `w·right_u > 0.3`, strafe left if `< -0.3`.
+
+  The vector `w` of each tactic:
+  - **ENGAGE:** `w = 0`.
+  - **KITE:** `w = -unit(target - player)`. If the cell 0.6 along `w` is not walkable, use
+    RETREAT's `w` instead.
+  - **RETREAT:** BFS (4 neighbours) from the player's cell over walkable cells, up to depth 8.
+    Pick the cell that maximises the minimum euclidean distance to any enemy; on ties, the one
+    with fewer steps. `w` = centre of the first step's cell - player position.
+  - **SEARCH:** BFS to the nearest enemy's cell. `w` = centre of the first step's cell - player
+    position.
+- **Stuck:** if `w != 0` and the player moved less than 0.05 cells over the last 0.5 s, add a
+  strafe toward an open side for 0.5 s.
+- Send a `C` line only when it differs from the last one sent.
+
+### SDK facts (`typesafe-sdk` 0.7.2, introspected 2026-09-29; 0.7.2 only added an http2 extra)
+
+- The client and the call:
+
+  ```
+  AsyncTypeSafeClient(*, api_key, model, retry, timeout, headers, transport, http_client, base_url)
+  await client.system_one(state, questions, *, model, retry, timeout, extra_headers,
+                          extra_body, response_model)
+  ```
+
+  Use `base_url="https://openrouter.ai/api"` and `model="typesafe/jev-1.13"`.
+- `Choice(instructions=..., criteria={name: str | dict | None})`.
+  `r.answers["tactic"]` is a `ChoiceAnswer` with `type`, `choice`, `confidence` and
+  `probabilities`.
+- **Retries:** `RetryPolicy(max_retries=2, backoff_initial=0.5, backoff_max=5.0,
+  backoff_jitter=0.25, http_statuses={408, 429, 500..599}, respect_retry_after=True,
+  timeout=30.0, ...)`. The defaults already retry 429 and 529.
+  - **Before relying on it, read `typesafe_sdk/_core/retry.py`** to learn whether
+    `RetryPolicy.timeout` is the total across attempts.
+  - Target: at most 1.5 s per attempt and a few seconds in total. A late answer is discarded
+    anyway.
+- `SystemOneResponse` has `model`, `usage` and `answers`. `usage` only keeps `input_tokens`
+  and `output_tokens`, because the model ignores extra fields.
+  - **The cost is only in the raw JSON:** `r.raw_http_response.json()["usage"].get("cost")`.
+  - **The request id:** `r.raw_http_response.headers.get("x-typesafe-request-id")`. It is
+    missing through OpenRouter, and `r.request_id` may raise (field notes; `libros`).
+  - **The model that answered:** `r.model`, expected `typesafe/jev-1.13-20260917`.
+- **The HTTP layer is `httpx2`, not `httpx`.** Tests pass `transport=httpx2.MockTransport(handler)`.
+- Exceptions: `TypeSafeRateLimitError` (429), `TypeSafeAPITimeoutError`,
+  `TypeSafeAPIConnectionError`, base `TypeSafeAPIError`, root `TypeSafeError`.
+
+### Key
+
+- The owner's key is in `~/jev/libros/.env`, one line: `OPENROUTER_API_KEY=sk-or-...`.
+- Load it into the command that needs it, in the same shell call. Never echo it:
+
+  ```
+  set -a; . ~/jev/libros/.env; set +a; cd agent && uv run kube-agent run --policy jev --seed 1
+  ```
+
+- The agent reads `os.environ["OPENROUTER_API_KEY"]`. Its error names the variable, never the
+  value. The key never goes to Docker or into a log.
+
+### Budget ledger ($1 total, Decision 3)
+
+- Every Jev call appends a row with its `cost` to `agent/runs/<run>/decisions.jsonl`.
+- `kube-agent spend` sums every row under `agent/runs/` and prints the total and what is left
+  of $1.00.
+- **`run` and `eval` with the Jev policy refuse to start once the total reaches $1.00.** They
+  stop calling Jev (falling back to the scripted rules) when the run's cap is reached:
+  `cap = min(--budget-usd, remaining)`. Defaults: `run` 0.05, `eval` 0.50.
+- Estimate [calc]: at most 2 calls/s × 180 s × about 1,300 tokens × $0.042/M, so at most
+  about $0.02 per episode. 40 Jev episodes cost at most about $0.80. `spend` is the real
+  number.
+
+### Runtime expectations
+
+- One episode at a time: one Xvfb, 2 CPUs.
+- Idle episodes end in about 10 s (death); the others last up to 180 s.
+- The final evaluation (20 seeds × 3 policies) can take up to about 2 h in the worst case. Run
+  it in the background and log progress per episode.
+
 ## Evaluation protocol (mirrors the `libros` dev/test discipline)
 - Seeds 1-20 are **development**: tune the criteria and θ there only.
 - Seeds 101-120 are **test**. Before running them, freeze the config (sha256 of the question,
   bands, θ and controller constants).
-- Each policy runs once per test seed on `subject_map`, with a 180 s cap.
+- Each policy runs once per test seed on `maps/bonus/subject_map.cub`, with a 180 s cap.
+- Every Jev call of the spec counts against the $1 ledger (see "Budget ledger").
 - Report per policy:
   - n and wins, with a Wilson 95% interval;
   - survival median and IQR;

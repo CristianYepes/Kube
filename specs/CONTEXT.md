@@ -4,6 +4,9 @@
 > conversation where this started. It says what we want, why, what already exists, the
 > rules, and how to run things today.
 >
+> **Implementing spec 002?** Go to `002-jev-agent/START_HERE.md`: reading order, rules,
+> environment, workflow, and the checklist in `002-jev-agent/tasks.md`.
+>
 > ```
 > specs/
 >   CONTEXT.md                 this file
@@ -163,8 +166,8 @@ The Mac cannot link this MiniLibX (X11) natively, so a Linux VM is used:
 - Docker server 28.4.0;
 - Ubuntu 22.04, aarch64.
 
-Spec 001 task T1 turns this into `dev/Dockerfile` and `dev/dev.sh`. Until then, the verified
-recipe is:
+**Use `dev/dev.sh`** (`up | sync | build | check | down`, added by spec 001). The manual recipe
+below is what it automates, kept for reference:
 
 ```dockerfile
 FROM ubuntu:22.04
@@ -191,7 +194,7 @@ docker exec kube-test bash -c 'Xvfb :99 -screen 0 1280x720x24 >/dev/null 2>&1 &
 
 What those commands showed:
 - both binaries build with `-Wall -Wextra -Werror`;
-- the 26 bad maps exit 1 with `Error` in the mandatory binary (the bonus accepts `forbidden.cub`: its `2` is a sprite);
+- every map in `maps/bad/` exits 1 with `Error` in both binaries (the layout since spec 001);
 - the bonus runs headless and takes xdotool keys;
 - a player who does nothing died in about 10 s (one run);
 - a pipe from Python on the Mac through `docker exec -i` costs 0.2 ms per line.
@@ -219,8 +222,9 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
 - **Spec 002 (Jev agent): next.**
     - **The base** is `feature/jev-agent`: 001 complete.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base.
-    - The owner will say how to implement before any code is written.
-    - Its T0 is still open: the evaluation map, the episode budget and which OpenRouter key.
+    - T0 answered (`spec.md`, "Decisions"): `subject_map`, dev seeds 1-20 and test seeds
+      101-120, 180 s per episode, $1 total, the key from `~/jev/libros/.env`.
+    - Ready to implement: `002-jev-agent/START_HERE.md`, then `tasks.md` from T1.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;
