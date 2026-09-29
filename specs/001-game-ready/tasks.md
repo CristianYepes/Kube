@@ -97,8 +97,11 @@
     hid behind `t_weapon.timer`.
   - Norminette reports 0 errors (94 files). Dead code, maps, messages and the 60 s smoke run
     all pass.
-- [ ] **T8** — README: paths, the Maps section, controls and the Tests line.
+- [x] **T8** — README: paths, the Maps section, controls and the Tests line.
   **Done when:** the AC4 section passes.
+  **Done 2026-09-29.** The examples point to `maps/good/minimal.cub` and
+  `maps/bonus/subject_map.cub`. Left mouse click was added to the controls. New "Maps" and
+  "Tests" sections cover Linux, and macOS through `dev/dev.sh`. The AC4 section passes.
 - [ ] **T9** — Full regression: `dev/dev.sh check` from a clean container.
   **Done when:** every section passes. That includes AC7 (the messages equal the baseline,
   norminette 0, the 60 s bonus smoke run, FPS within 15%), and one screenshot of the bonus
