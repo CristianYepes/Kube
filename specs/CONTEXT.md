@@ -82,6 +82,8 @@ that a non-AI bot could play Doom better. If our rule policy beats Jev, the repo
     - **Answers to different questions are not mutually coherent**, so use one tactical
       Choice, not several axes.
     - A threshold tuned for a Noul does not transfer to a Choice.
+    - **A Choice leans toward its first option** (docs, 2026-10-03), so the order of the
+      tactics is not neutral. T8 of spec 002 measures it.
     - `confidence` measures how concentrated the distribution is. It is **not** the
       probability of being right.
     - It is trained mostly on English, so all instructions and state keys are in English.
@@ -99,8 +101,9 @@ that a non-AI bot could play Doom better. If our rule policy beats Jev, the repo
     - Log the `model` of every answer.
 - **Unknown:** Jev's latency from here. The docs say about 100 ms and the blog 70-500 ms. It
   is the first thing to measure (spec 002, task T6b).
-- Limits: 64k tokens per request (32k for state plus the longest question), 250k tokens/s,
-  1,200 requests/min. These can change without notice.
+- Limits: 64k tokens per request (32k for state plus the longest question), 100K tokens/s
+  and 80 requests/s (read 2026-10-03; they were 250K tokens/s and 1,200 requests/min on
+  2026-09-22). These can change without notice.
 
 ## The game the agent plays (cub3D_bonus, read from the code)
 

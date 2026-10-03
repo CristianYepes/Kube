@@ -151,7 +151,12 @@ Bands are defined in code: distance `touching` (< 1.0), `close` (< 2.5), `medium
 ### Jev policy
 - Decide every 0.5 s, or at once when a new wave starts or health drops a band, with at most
   one request in flight.
-- Apply the answer only if `confidence >= θ`; θ starts at 0.6 and is tuned in T8.
+- Apply the answer only if `confidence >= θ`; θ starts at 0.6 and is tuned in T8. For a Choice
+  with n options TypeSafe publishes the formula (docs, read 2026-10-03):
+  `confidence = (p_max - 1/n) / (1 - 1/n)`. With our four tactics, θ = 0.6 means the chosen
+  tactic has `p_max >= 0.70` [calc]. Check against the docs' own example: 0.85 over 3 options
+  gives 0.775, and the docs print 0.78. `probabilities` is also returned, so a threshold on
+  `p_max` is an equivalent alternative if it reads better in the logs.
 - Retries: the SDK's `RetryPolicy`, plus one attempt timeout of 1.5 s. A late answer is
   discarded if a newer one has already been applied.
 - Budget: cumulative `usage.cost` per run; stop calling at the cap and fall back to the
@@ -419,6 +424,10 @@ sources/agent/
 - **Jev latency is unknown** (R2). If p95 > 500 ms, tactics lag behind the fight. Measure it
   in T6 before tuning. If it is too slow, decide on events only instead of every 0.5 s.
 - **The scripted policy may beat Jev.** That is a valid result (R3). The report says so plainly.
+- **Option order bias.** The `jev-1.13` jaggedness page (reviewed 2026-10-02) says a Choice
+  leans toward its first option, and ENGAGE is listed first. If that bias is real here, Jev
+  could look better or worse than it is because of a list order. T8 measures it on logged
+  states before anything is frozen; the mitigation is described there.
 - **aarch64 vs x86_64** (R1). Run the final AC1 and a smoke episode on x86_64 before any
   submission-related step.
 - **The three replaced files drift from the deliverable's.** Each copy starts with a comment

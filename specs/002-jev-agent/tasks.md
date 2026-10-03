@@ -214,6 +214,18 @@
   - **Do:**
     - run the Jev policy on dev seeds and look at `decisions.jsonl`: where does the tactic
       look wrong?
+    - **option-order check** (R5, "Choice option order": `jev-1.13` leans toward the first
+      option of a Choice). Take at least 100 states already logged in `decisions.jsonl` on dev seeds, ask
+      each one twice through `jev_client` (same criteria text, only the order of the options
+      reversed), and log both answers under `agent/runs/order-check/`. Report how often the
+      `choice` differs, and how often the first-listed option wins in each order. The spend
+      counts against the $1 ledger (about $0.005 [calc]: 200 calls of roughly 600 tokens).
+      - If the choice differs in more than 10% of the states (**ASSUMPTION**: a starting
+        value, the owner may change it), the order is not neutral. Then ask the same Choice
+        twice in one request (two question ids, reversed orders; same state, so the state
+        tokens are paid once) and apply a tactic only when both agree. Measure that on the
+        same states before adopting it.
+      - Otherwise keep one question and note the result in R13.
     - adjust only the question's criteria text, θ and the decision cadence;
     - log every iteration in the research as **R13**: what changed, dev numbers, spend;
     - never use seeds >= 101;

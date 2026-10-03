@@ -183,7 +183,8 @@ new shell, so load it in the same call that needs it. Never `echo` it.
    crashes now and then under QEMU. That is not your code.
 9. **Jev** cannot do arithmetic or compare numbers, reads literally, and its answers to
    different questions are not mutually coherent. Hence: words, not numbers, in the state, and
-   one question.
+   one question. It also leans toward the first option of a Choice, so T8 checks the order of
+   the tactics before the config is frozen.
 
 ## 10. The owner's working Jev client (from `~/jev/libros/src/libros/jev.py`, inlined for sessions without `~/jev`)
 
