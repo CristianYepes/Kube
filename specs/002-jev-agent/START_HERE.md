@@ -2,7 +2,7 @@
 
 > For the model (or person) that implements this spec. It is self-contained: everything
 > decided and verified so far is in `specs/`, so nothing needs to be rediscovered. Written
-> 2026-09-29.
+> 2026-09-29; updated 2026-10-03 (T8 option-order check, new Jev rate limits).
 
 ## 1. The mission in five lines
 

@@ -17,7 +17,8 @@
 >   002-jev-agent/             THEN: the game plays itself with Jev (spec, plan, tasks)
 > ```
 >
-> Written 2026-09-28 from `main@34f4aff`.
+> Written 2026-09-28 from `main@34f4aff`; the "Jev in two minutes" facts were re-verified on
+> 2026-10-03 (still `jev-1.13`).
 > - Spec 001 is built on branch `feature/game-ready` and then merged into `main`.
 > - Spec 002 gets its own branch, `feature/jev-agent`, created from that `main`.
 >

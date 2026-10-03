@@ -1,5 +1,8 @@
-# Tasks 002 — Jev plays cub3D_bonus (v0.3: the checklist)
+# Tasks 002 — Jev plays cub3D_bonus (v0.4: the checklist)
 
+> **Changes since v0.3 (2026-10-03):** T8 gained the option-order check, because TypeSafe's
+> docs now say `jev-1.13` leans toward the first option of a Choice. Nothing else moved.
+>
 > **How to use this file.** Start with `START_HERE.md`.
 > - Work top to bottom, one task at a time. Before a task, read its **Read** list.
 > - When its **Verify** passes, tick `[x]` and append `Done <date>:` with the evidence
