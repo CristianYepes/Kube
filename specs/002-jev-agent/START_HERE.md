@@ -26,14 +26,24 @@
 
 ## 2. Where you are
 
-- **Branch:** `feature/jev-agentv1`. The base is `origin/feature/jev-agent` (`ad4244a`): spec 001
-  complete (`0ac5649`) plus a strafing fix of 2026-10-05, and all its checks pass.
+- **Branch:** `feature/jev-agentv1`, the only working branch (since 2026-10-06).
+  `feature/jev-agent` (`ad4244a`: spec 001 plus a strafing fix of 2026-10-05) is the old base and
+  is not touched again.
+- **Done (2026-10-06): T0 to T3e, that is phases 1 and 2.** The C bridge `cub3D_agent`
+  (`sources/jev/`), its 24 checks in `agent/check_bridge.py`, and **L1 and L2 passed on the
+  owner's Linux** (UTM, aarch64, Ubuntu 22.04.5).
+- **Next: T4a**, the Python package skeleton (phase 3). Then T4b to T5c. Phase 3 ends with
+  checkpoint L3 on the owner's Linux: stop there and list every open row of the Linux ledger
+  in `tasks.md`.
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
+  - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` after T0.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T4a on.
+- **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
+  back (section 5).
 
 ## 2b. On a new machine (do this once)
 
