@@ -58,6 +58,11 @@ static void	try_move(t_data *data, double dx, double dy)
 		p->pos_y += dy;
 }
 
+/*
+** Strafing goes along the unit vector to the right of dir, (-dir_y, dir_x).
+** plane points the same way but is 0.66 long, since it sets the field of view,
+** so strafing along it was a third slower than walking.
+*/
 void	move_player(t_data *data)
 {
 	t_player	*p;
@@ -76,7 +81,7 @@ void	move_player(t_data *data)
 	if (p->key_down)
 		try_move(data, -p->dir_x * step, -p->dir_y * step);
 	if (p->key_left)
-		try_move(data, -p->plane_x * step, -p->plane_y * step);
+		try_move(data, p->dir_y * step, -p->dir_x * step);
 	if (p->key_right)
-		try_move(data, p->plane_x * step, p->plane_y * step);
+		try_move(data, -p->dir_y * step, p->dir_x * step);
 }

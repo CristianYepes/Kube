@@ -152,8 +152,10 @@ probe_run() {
 	sleep 1
 	case $3 in
 		key) t0=$(now); xdotool keydown "$4"; sleep "$5"; xdotool keyup "$4"; sleep 0.3; t1=$(now)
-			[ "$4" = w ] && r=$(dist "$(pose "$log" "$t0")" "$(pose "$log" "$t1")") \
-				|| r=$(turn "$(pose "$log" "$t0")" "$(pose "$log" "$t1")") ;;
+			case $4 in
+				w|a|d) r=$(dist "$(pose "$log" "$t0")" "$(pose "$log" "$t1")") ;;
+				*) r=$(turn "$(pose "$log" "$t0")" "$(pose "$log" "$t1")") ;;
+			esac ;;
 		mouse) xdotool mousemove --window "$w" 640 360; sleep 0.5; t0=$(now)
 			xdotool mousemove --window "$w" 740 360; sleep 0.5; t1=$(now)
 			r=$(turn "$(pose "$log" "$t0")" "$(pose "$log" "$t1")") ;;
@@ -167,9 +169,12 @@ probe_maps() {
 	# facing east along free cells.
 	printf 'NO ./files/wall_bunker_ns.xpm\nSO ./files/wall_bunker_ns.xpm\nWE ./files/wall_bunker_ew.xpm\nEA ./files/wall_bunker_ew.xpm\nF 120,120,115\nC 40,40,45\n\n1111111111111111\n1E00000000000001\n1111111111111111\n' >"$TMP/corridor.cub"
 	sed 's/0N0/0E0/' maps/good/test_map.cub >"$TMP/long.cub"
+	# An open room, player in the middle facing north: strafing has 4 cells of
+	# floor each way, where the corridor's walls would stop it.
+	printf 'NO ./files/wall_bunker_ns.xpm\nSO ./files/wall_bunker_ns.xpm\nWE ./files/wall_bunker_ew.xpm\nEA ./files/wall_bunker_ew.xpm\nF 120,120,115\nC 40,40,45\n\n11111111111\n10000000001\n10000000001\n10000N00001\n10000000001\n10000000001\n11111111111\n' >"$TMP/room.cub"
 }
 check_movement() {
-	local ok=0 b m d small long r
+	local ok=0 b m d small long left right r
 	build_probe || { note "probe build failed"; return 1; }
 	probe_maps
 	for b in cub3D cub3D_bonus; do
@@ -178,6 +183,11 @@ check_movement() {
 		long=$(probe_run "$b" "$TMP/long.cub" key w 2)
 		note "$b W 2 s: corridor $small cells, test_map $long cells (expected 2.4)"
 		within "$small" 2.4 0.10 && within "$long" 2.4 0.10 || ok=1
+		# Strafing is as fast as walking: 2 s of A or D is 2.4 cells too.
+		left=$(probe_run "$b" "$TMP/room.cub" key a 2)
+		right=$(probe_run "$b" "$TMP/room.cub" key d 2)
+		note "$b A 2 s: $left cells, D 2 s: $right cells (expected 2.4)"
+		within "$left" 2.4 0.10 && within "$right" 2.4 0.10 || ok=1
 		# 1 s of Left at 1.8 rad/s is 1.8 rad (kept under pi: turn() is modulo 2 pi).
 		r=$(probe_run "$b" "$TMP/corridor.cub" key Left 1)
 		note "$b Left 1 s: $r rad (expected 1.8)"
