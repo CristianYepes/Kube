@@ -28,7 +28,18 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BINARY = os.path.join(ROOT, "agent", "cub3D_agent")
 MAP = "maps/bonus/subject_map.cub"
 MINIMAL_MAP = "maps/good/minimal.cub"
+TEST_MAP = "maps/good/test_map.cub"
 SEED = 1
+
+# The two maps of tests/check.sh probe_maps(), for the fair-timing check: a short
+# corridor and test_map, both facing east along free cells. What matters is that
+# their frame rates differ, and check_fair checks that (on 2026-10-05 the corridor ran
+# at 74-77 observations per second and test_map at 90-99, the other way round from
+# before spec 001).
+TEXTURES = ("NO ./files/wall_bunker_ns.xpm\nSO ./files/wall_bunker_ns.xpm\n"
+            "WE ./files/wall_bunker_ew.xpm\nEA ./files/wall_bunker_ew.xpm\n"
+            "F 120,120,115\nC 40,40,45\n\n")
+CORRIDOR = TEXTURES + "1111111111111111\n1E00000000000001\n1111111111111111\n"
 
 # The contract of plan.md, "Contracts": fields, in this order.
 INIT_KEYS = ["type", "map", "width", "height", "seed"]
@@ -417,6 +428,53 @@ def script_idle(game, phases):
         phase(game, phases, "idle%d" % number, [("", 3.0)])
 
 
+def script_forward2(game, phases):
+    phase(game, phases, "forward2", [("", 0.2), ("C 1 0 0 0 0 0 0\n", 2.0), (STOP, 0.3)])
+
+
+def write_probe_maps(folder):
+    """The corridor and test_map facing east, as files in `folder`."""
+    with open(os.path.join(ROOT, TEST_MAP)) as handle:
+        text = handle.read()
+    if text.count("0N0") != 1:  # the same turn tests/check.sh does with sed
+        raise RuntimeError("%s no longer has exactly one '0N0' to turn east" % TEST_MAP)
+    paths = []
+    for name, content in (("corridor.cub", CORRIDOR),
+                          ("long.cub", text.replace("0N0", "0E0"))):
+        paths.append(os.path.join(folder, name))
+        with open(paths[-1], "w") as handle:
+            handle.write(content)
+    return paths
+
+
+def run_fair_sessions():
+    """One session per probe map. A problem making the maps fails both sessions."""
+    with tempfile.TemporaryDirectory() as folder:
+        try:
+            corridor_map, long_map = write_probe_maps(folder)
+        except (OSError, RuntimeError) as error:
+            broken = Session(error="%s: %s" % (type(error).__name__, error))
+            return broken, broken
+        return (run_session(script_forward2, corridor_map),
+                run_session(script_forward2, long_map))
+
+
+def first_enemies(seed):
+    """Run the game with `seed` and stdin silent. Returns the (x, y, type, hp) of the
+    enemies in its first observation that has any, and an error text if it has none."""
+    game = Game(MAP, seed)
+    try:
+        if not game.start():
+            return None, "the game printed no init line and observation in 15 s"
+        game.read(0.3)
+        for one in observations(game.lines):
+            if one.get("enemies"):
+                return [(e["x"], e["y"], e["type"], e["hp"]) for e in one["enemies"]], None
+        return None, "no observation had enemies"
+    finally:
+        game.finish()
+
+
 def run_exit(how):
     """Start the game, stop it with "Q" or by closing stdin, and see how it exits."""
     game = Game()
@@ -535,7 +593,8 @@ def check_move(session, name, direction, distance=None):
     if abs(speed - MOVE_SPEED) > 0.1 * MOVE_SPEED:
         problems.append("%.2f cells/s, expected %.1f +-10%%" % (speed, MOVE_SPEED))
     if distance is not None and abs(length - distance) > 0.1 * distance:
-        problems.append("%.2f cells after about 1 s, expected %.1f +-10%%" % (length, distance))
+        problems.append("%.2f cells while the key was held, expected %.1f +-10%%"
+                        % (length, distance))
     if any(moved(a, b) for a, b in zip(obs[-3:], obs[-2:])):
         problems.append("still moving at the end: the stop command did not stop it")
     return problems, ["%.2f cells in %.2f s of game time = %.2f cells/s"
@@ -558,7 +617,8 @@ def check_turn(session, name, sign, angle=None):
     if abs(abs(rate) - TURN_SPEED) > 0.1 * TURN_SPEED:
         problems.append("%.2f rad/s, expected %.1f +-10%%" % (abs(rate), TURN_SPEED))
     if angle is not None and abs(abs(total) - angle) > 0.1 * angle:
-        problems.append("%.2f rad after about 1 s, expected %.1f +-10%%" % (abs(total), angle))
+        problems.append("%.2f rad while the key was held, expected %.1f +-10%%"
+                        % (abs(total), angle))
     if any(turned(a, b) for a, b in zip(obs[-3:], obs[-2:])):
         problems.append("still turning at the end: the stop command did not stop it")
     return problems, ["%.2f rad in %.2f s of game time = %.2f rad/s" % (total, seconds, rate)]
@@ -651,6 +711,49 @@ def check_idle_rate(session):
                       "3 s: %s" % ", ".join("%.1f" % rate for rate in rates)]
 
 
+def check_fair(corridor, long_run):
+    """AC4: the same 2 s of forward moves the same distance whatever the frame rate. That
+    only shows something if the two maps really run at different frame rates, so that is
+    checked too."""
+    problems, notes, rates = [], [], []
+    for label, session in (("corridor", corridor), ("test_map", long_run)):
+        if session.error:
+            return ["%s: %s" % (label, session.error)], []
+        obs = session.phases["forward2"]
+        span = obs[-1]["t"] - obs[0]["t"]
+        rates.append((len(obs) - 1) / span if span > 0 else 0.0)
+        found, found_notes = check_move(session, "forward2", (1, 0), 2.4)
+        problems += ["%s: %s" % (label, problem) for problem in found]
+        notes += ["%s: %s, at %.0f observations per second" % (label, found_notes[0], rates[-1])
+                  if found_notes else "%s: no movement measured" % label]
+    if abs(rates[0] - rates[1]) < 0.1 * max(rates):
+        problems.append("the maps ran at about the same frame rate (%.0f and %.0f), so this "
+                        "does not show the movement is independent of it" % tuple(rates))
+    return problems, notes
+
+
+def check_same_seed(first, second):
+    (spawns_a, error_a), (spawns_b, error_b) = first, second
+    if error_a or error_b:
+        return [error_a or error_b], []
+    problems = []
+    if spawns_a != spawns_b:
+        problems.append("the same seed gave different enemies: %s and %s" % (spawns_a, spawns_b))
+    return problems, ["seed 7 twice: %d enemies, the first at (%s, %s)"
+                      % (len(spawns_a), spawns_a[0][0], spawns_a[0][1])]
+
+
+def check_other_seed(first, other):
+    (spawns_a, error_a), (spawns_c, error_c) = first, other
+    if error_a or error_c:
+        return [error_a or error_c], []
+    problems = []
+    if spawns_a == spawns_c:
+        problems.append("seeds 7 and 8 gave the same enemies, so the comparison "
+                        "could not tell two seeds apart")
+    return problems, ["seed 8: the first enemy at (%s, %s)" % (spawns_c[0][0], spawns_c[0][1])]
+
+
 # ------------------------------------------------------------------------- driver
 
 def fatal(message):
@@ -666,7 +769,7 @@ def main():
         fatal("%s is missing; build it first: make -C agent" % BINARY)
     expected = read_map_file(os.path.join(ROOT, MAP))
     print("check_bridge.py: observations on %s, seed %d (10 s, then 8 s with a stalled "
-          "reader), then commands in 6 short runs" % (MAP, SEED))
+          "reader), then commands, timing and seeds in short runs" % (MAP, SEED))
     run_a = run_game(10)
     run_b = run_game(8, stall=5)
     records_a, bad_a = parse(run_a)
@@ -676,6 +779,8 @@ def main():
     turns = run_session(script_turns)
     fire = run_session(script_fire)
     idle = run_session(script_idle, MINIMAL_MAP)
+    corridor, long_run = run_fair_sessions()
+    spawns_7a, spawns_7b, spawns_8 = first_enemies(7), first_enemies(7), first_enemies(8)
     failed = []
 
     def section(name, result):
@@ -723,6 +828,12 @@ def main():
             check_terminal, run_on_terminal(4))
     guarded("no commands: 75 observations per second on minimal.cub (+-10%, best of 3)",
             check_idle_rate, idle)
+
+    print("--- fair timing and the seed (AC4, AC5)")
+    guarded("2 s of forward moves 2.4 cells on two maps with different frame rates",
+            check_fair, corridor, long_run)
+    guarded("the same seed spawns the same enemies", check_same_seed, spawns_7a, spawns_7b)
+    guarded("another seed spawns different enemies", check_other_seed, spawns_7a, spawns_8)
 
     print()
     if not failed:

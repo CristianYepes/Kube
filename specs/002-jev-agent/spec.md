@@ -98,8 +98,10 @@ its uncertainty, plus the measured Jev cost and latency per episode.
   all, the frame rate matches the no-agent build within 10%.
 - **AC4 (FR4)** — Spec 001's movement check, re-run on `cub3D_agent` through the bridge:
   holding "forward" for 2 s moves the player 2.4 cells within 10% on the two maps of
-  `tests/check.sh` `probe_maps()`: a short corridor (fast to render) and `test_map` facing east
-  (slow; 44-56 fps before spec 001).
+  `tests/check.sh` `probe_maps()`: a short corridor and `test_map` facing east. Their frame
+  rates must differ by at least 10%, or the check shows nothing about frame rate (before
+  spec 001 the corridor ran at 74-78 fps and test_map at 44-56; through the bridge on
+  2026-10-05 it was 71-87 and 90-100 observations per second, the other way round).
 - **AC5 (FR5)** — Two idle runs with the same seed print identical enemies (x, y, type, hp)
   in their first observation that has enemies. A run with another seed prints different ones,
   which shows the comparison can fail.

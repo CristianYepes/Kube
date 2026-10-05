@@ -287,19 +287,44 @@
     - the rate check on `minimal` measured 64.5 once, with 5.7 s of game time in 6 s of wall
       time (a stall of the VM; the other values of the day were 73-77). It now takes the best
       of three stretches of 3 s, since noise only slows a run down.
-- [ ] **T3d** — Fair timing and the seed (AC4, AC5).
+- [x] **T3d** — Fair timing and the seed (AC4, AC5).
   - **Do:** no game code is expected: spec 001 made movement time-based, and T3a set the
     seed. Add these checks to `check_bridge.py`:
     - AC4: forward for 2 s gives 2.4 cells ± 10% on two maps with different frame rates: the
       corridor and the test_map-facing-east maps of `tests/check.sh` `probe_maps()`.
-      `check_bridge.py` writes the same two map texts into a temporary folder. Do not source
-      `check.sh`: sourcing it runs every section.
+      `check_bridge.py` writes the same two map texts into a temporary folder (and checks
+      that the `0N0` to `0E0` turn of test_map changed something). Do not source `check.sh`:
+      sourcing it runs every section. The check also measures each map's observations per
+      second and **fails if they differ by less than 10%**: the same distance on two maps
+      shows nothing about frame rate if the frame rates are the same.
     - AC5: two idle runs with seed 7 print **identical `enemies` (x, y, type, hp)** in their
       first obs that has enemies. The spawn does not depend on `dt`; see `plan.md`,
       "C bridge", `agent_main.c`. A run with seed 8 must print different ones, so the
       comparison is seen able to fail.
-  - **Verify:** `check_bridge.py` passes.
+  - **Verify:** `check_bridge.py` passes. Then two deliberate breaks, each file restored from
+    a copy:
+    - the seed line of `agent_main.c` removed: only the same-seed check FAILs;
+    - a fixed `dt` of 0.0125 in `tick_clock` of `agent_frame.c`, so movement is per frame:
+      the fair-timing check FAILs.
   - **Commit:** `agent: check fair timing and seeded spawns (AC4, AC5)`.
+  - **Done 2026-10-05:** no C change was needed. `check_bridge.py`: 24 of 24 PASS, and
+    `check_isolation.sh` ALL PASSED against the pushed base `ad4244a` (71 identical objects,
+    101 files OK). Measured:
+    - AC4: 2.38 cells on the corridor and 2.39 on test_map, both 1.20 cells/s, while the maps
+      ran at 77 and 100 observations per second. Four more runs of the same sessions gave
+      74-77 and 90-99, so the difference is stable;
+    - AC5: seed 7 twice gave the same 3 enemies, the first at (26.41, 7.35); seed 8 gave (25.66,
+      7.63);
+    - the breaks: with no seed, the two seed-7 runs spawned enemies at (24.55, 6.42)… and
+      (25.58, 7.45)…, and only the same-seed check failed; with a fixed `dt`, test_map moved
+      2.97 cells against 2.4 and only the fair-timing check failed.
+
+    Finding: **test_map is now the fast map** (90-100 observations per second) **and the
+    corridor the slow one** (71-87), the other way round from the 44-56 and 74-78 fps measured
+    before spec 001 (research R1). The cause was not investigated: AC4 only needs the rates to
+    differ, and the check now enforces it. The comment of `probe_maps()` in `tests/check.sh`
+    still calls the corridor fast and test_map slow; it belongs to the base branch and was left
+    alone.
 - [ ] **T3e** — Fixtures and the regression.
   - **Do:** record `agent/tests/fixtures/idle_seed7.jsonl` (5 s, stdin open and silent) and
     `agent/tests/fixtures/moves_seed7.jsonl` (the T3c sequence). Keep each under 500 KB: cut
