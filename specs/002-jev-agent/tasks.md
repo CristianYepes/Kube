@@ -112,6 +112,30 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 | 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |
 | 11 | The final x86_64 check of AC1 and one episode | pending | L5 |
 
+## Open decision, to take after L1 and L2: the game is no longer for 42
+
+On 2026-10-06 the owner said the game will no longer be used at 42 (the scope is to be
+confirmed). That removes the reason for several choices. **Nothing is changed until L1 and L2
+are closed**: changing the tree under test would blur what the owner is testing. Then propose
+the simplification with the results at hand, and apply what the owner confirms, in the
+documents and in this ledger:
+
+- **Two branches.** `feature/jev-agent` (the game) and `feature/jev-agentv1` (the agent)
+  existed so that the agent never mixed with the game handed in. It could be one branch. The
+  owner's earlier choice, "when finished, put only the game into `main` and leave the agent on
+  its own branch", was taken for the same reason and is open again.
+- **`agent/check_isolation.sh` (AC1).** It proves the game does not change. It could go, or
+  stay as one more check.
+- **Norminette on `sources/jev/`.** The 42 norm (5 functions per file, 25 lines, no ternary)
+  would no longer bind. `tests/check.sh` and the guard still run norminette, and L1 needs it
+  installed while they do.
+- **Ledger rows 7 and 11 (x86_64).** They were justified by 42's x86_64 machines. They could
+  be closed.
+- To review as well: the push of `main` (the local `main` is 16 commits ahead of
+  `origin/main`) and Rodrigo's part in the repository.
+
+What does not change: the tests, the honest measurement, and the agent itself.
+
 ## Phase 1 — Setup
 
 - [x] **T0** — Owner decisions. **Done 2026-09-29:** `spec.md`, "Decisions": map

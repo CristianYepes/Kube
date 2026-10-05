@@ -53,8 +53,14 @@ The repo carries everything **except the API key**, which must never be in it.
    sudo apt install -y build-essential git curl libx11-dev libxext-dev libbsd-dev
    sudo apt install -y zlib1g-dev xvfb xdotool valgrind
    curl -LsSf https://astral.sh/uv/0.8.24/install.sh | sh     # the Mac's uv version
+   export PATH="$HOME/.local/bin:$PATH"                       # uv is installed there
    uv tool install norminette==3.3.60                         # the container's version
    ```
+
+   - On 2026-10-06 the `uv` 0.8.24 installer printed `everything's installed!` but did not
+     create `~/.local/bin/env`, so `source $HOME/.local/bin/env` failed. The `export` line
+     is what makes the terminal find `uv` and, later, `norminette`. A terminal opened after a
+     new login may find them by itself; one opened before does not.
 
    - The apt line is split in two on purpose. On 2026-10-06 the single long line was cut in
      two when the owner pasted it into a terminal: the second half ran as a command
