@@ -16,8 +16,9 @@
    RETREAT or SEARCH. It is asked every 0.5 s, and its confidence is used.
 4. Compare Jev against an idle player and a hand-written rule policy on the same seeds, and
    report it honestly, with its cost.
-5. **Do not change the 42 game itself.** Spec 001 already polished it; this spec only adds
-   files.
+5. **The game is no longer handed in at 42** (the owner, 2026-10-06), so it is no longer
+   protected: it may change on this branch when a task needs it, keeping `tests/check.sh`
+   passing. Spec 001 polished it; the agent is still built as new files by design.
 6. **Keep every run's logs in git.** The owner studies them to see how the game gets beaten,
    and may later add obstacles where a pattern shows.
 7. **Develop on the Mac (Colima); prove each phase on Linux.** The owner re-runs each phase's
@@ -120,15 +121,17 @@ one fails, fix it and correct this section in the same commit.
 
 ## 4. Hard rules
 
-1. **Only these paths may change:** `agent/`, `sources/jev/`, `specs/` and the root
-   `CLAUDE.md`. Never edit the
-   top-level `Makefile`, `.gitignore`, `dev/`, `tests/`, `includes/`, `libft/`, `maps/`,
-   `textures/`, `files/`, or any other `sources/` file. `agent/check_isolation.sh` (T2)
-   enforces it.
+1. **Work on `feature/jev-agentv1` only.** `feature/jev-agent` (`ad4244a`) stays as it is and
+   is not touched again. The old rule that only `agent/`, `sources/jev/`, `specs/` and
+   `CLAUDE.md` may change is **retired** (2026-10-06): the game was protected because it was
+   handed in at 42, and it no longer is. Ask before changing it, and keep `tests/check.sh`
+   passing. `agent/check_isolation.sh` is retired too: it would fail on purpose after such a
+   change.
 2. **English** in every file, comment, identifier and commit message. Talk to the owner in
    **Spanish**.
 3. **YAGNI.** Build only what a task needs. No placeholders, no speculative options.
-4. **C in `sources/jev/` must pass `norminette`.** Run it; do not guess.
+4. **C in `sources/jev/` passes `norminette` today; keep it so when it is easy.** It is no
+   longer a gate (2026-10-06): the 42 norm does not bind. Run it rather than guess.
 5. **The API key:** never print, log, commit, or pass it to Docker. Load it only into the
    command that uses it (section 5).
 6. **Budget:** $1 in total for every Jev call of this spec. Check `kube-agent spend` before any
@@ -175,7 +178,6 @@ new shell, so load it in the same call that needs it. Never `echo` it.
 **On Linux** the same commands run without the container:
 - `make -C agent` builds the binary;
 - `--runner local` replaces the default `--runner docker`;
-- `check_isolation.sh --local` builds in temporary folders on the machine itself;
 - the virtual display is started once per shell:
   `Xvfb :99 -screen 0 1280x720x24 & export DISPLAY=:99`.
 
@@ -243,8 +245,9 @@ The checkpoints in `tasks.md` (L1-L5) list the exact commands.
    - `usage.cost` is only in the raw JSON;
    - `models.list()` fails.
 7. **`typesafe-sdk` uses `httpx2`,** not `httpx`, so mock with `httpx2.MockTransport`.
-8. **The container is aarch64,** and 42 machines are x86_64. Emulated x86_64 works, but `cc1`
-   crashes now and then under QEMU. That is not your code.
+8. **The container is aarch64,** and so is the owner's Linux (UTM). 42's machines were x86_64,
+   but that no longer matters (2026-10-06). If you ever emulate x86_64 anyway, `cc1` crashes
+   now and then under QEMU: that is not your code.
 9. **Jev** cannot do arithmetic or compare numbers, reads literally, and its answers to
    different questions are not mutually coherent. Hence: words, not numbers, in the state, and
    one question. It also leans toward the first option of a Choice, so T8 checks the order of

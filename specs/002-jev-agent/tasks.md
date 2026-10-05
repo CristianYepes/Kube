@@ -1,4 +1,14 @@
-# Tasks 002 — Jev plays cub3D_bonus (v0.8: the checklist)
+# Tasks 002 — Jev plays cub3D_bonus (v0.9: the checklist)
+
+> **Changes since v0.8 (2026-10-06, after L1 and L2 passed on the owner's Linux): the game is
+> no longer handed in at 42, so the rules that protected it are retired.** See "Decided
+> 2026-10-06" below. In short:
+> - the work goes on `feature/jev-agentv1` alone, and the game may change on it when a task
+>   needs it;
+> - `agent/check_isolation.sh` is out of the checkpoints and of T10 (it stays as a file);
+> - the x86_64 ledger rows (7 and 11) are closed;
+> - norminette on `sources/jev/` is no longer a gate (it passes today);
+> - nothing was deleted, and `main` is as it was.
 
 > **Changes since v0.7 (2026-10-05, the owner's rule: everything that needs Linux is written
 > down, in the phases, so that nothing is forgotten):**
@@ -80,8 +90,9 @@
 >   A failure seen only on Linux comes back with its output and is fixed here, never by hand
 >   on Linux. The next phase starts only after its checkpoint passes.
 > - 🛑 means stop, report to the owner, and wait. Stop also whenever a check fails for a reason
->   you do not understand, or a task seems to need a path outside `agent/`, `sources/jev/`,
->   `specs/` or `CLAUDE.md`.
+>   you do not understand, or a task seems to need a change to the game itself (the sources
+>   outside `sources/jev/`, `includes/`, `libft/`, the `Makefile`): that is allowed since
+>   2026-10-06, but ask first and keep `tests/check.sh` passing.
 >
 > Paths are relative to the repo root. "The container" is `kube-dev` (see `START_HERE.md`,
 > "Environment"). "The base" is `origin/feature/jev-agent` (`ad4244a`: `0ac5649`, where spec
@@ -106,33 +117,35 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 | 4 | `agent/check_isolation.sh --local` | **DONE 2026-10-06** on the owner's machine: PASS, 71 identical objects, 101 files OK | L1, L2 |
 | 5 | `make -C agent` with the owner's compiler under `-Werror` | **DONE 2026-10-06**: gcc 11.4.0, exit 0, a binary of 144,760 bytes (the same as in the container) | L2 |
 | 6 | `python3 agent/check_bridge.py`: 24 checks | **DONE 2026-10-06**: 24 of 24 | L2 |
-| 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **the owner's Linux is aarch64** (UTM, Ubuntu 22.04.5, gcc 11.4.0, Python 3.10.12, checked 2026-10-06): the same architecture as the Mac's container, so L1 and L2 cannot settle this row. **It stays open for L5** | L5 |
+| 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **CLOSED 2026-10-06, not done: no longer needed.** The owner's Linux is aarch64 (UTM, Ubuntu 22.04.5), the same architecture as the Mac's container, and the game is no longer handed in at 42, whose machines are x86_64 | (L5) |
 | 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | does not exist yet | L3 |
 | 9 | Seeing the game on the real display (`DISPLAY=:0`) | not verified; optional | L3 |
 | 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |
-| 11 | The final x86_64 check of AC1 and one episode | pending | L5 |
+| 11 | The final x86_64 check of AC1 and one episode | **CLOSED 2026-10-06, not done: no longer needed** (see row 7) | (L5) |
 
-## Open decision, to take after L1 and L2: the game is no longer for 42
+## Decided 2026-10-06: the game is no longer handed in at 42
 
-On 2026-10-06 the owner said the game will no longer be used at 42 (the scope is to be
-confirmed). That removes the reason for several choices. **Nothing is changed until L1 and L2
-are closed**: changing the tree under test would blur what the owner is testing. Then propose
-the simplification with the results at hand, and apply what the owner confirms, in the
-documents and in this ledger:
+The owner said the game will no longer be used at 42, and after L1 and L2 passed asked to
+simplify. What changed:
 
-- **Two branches.** `feature/jev-agent` (the game) and `feature/jev-agentv1` (the agent)
-  existed so that the agent never mixed with the game handed in. It could be one branch. The
-  owner's earlier choice, "when finished, put only the game into `main` and leave the agent on
-  its own branch", was taken for the same reason and is open again.
-- **`agent/check_isolation.sh` (AC1).** It proves the game does not change. It could go, or
-  stay as one more check.
-- **Norminette on `sources/jev/`.** The 42 norm (5 functions per file, 25 lines, no ternary)
-  would no longer bind. `tests/check.sh` and the guard still run norminette, and L1 needs it
-  installed while they do.
-- **Ledger rows 7 and 11 (x86_64).** They were justified by 42's x86_64 machines. They could
-  be closed.
-- To review as well: the push of `main` (the local `main` is 16 commits ahead of
-  `origin/main`) and Rodrigo's part in the repository.
+- **One working branch.** The work goes on `feature/jev-agentv1`. `feature/jev-agent` stays
+  on GitHub as it is (`ad4244a`: spec 001 plus the strafing fix) and is not touched again. It
+  was kept apart so the agent never mixed with the game handed in; that reason is gone. The
+  earlier idea of putting only the game into `main` when finished is dropped with it.
+- **The game may change on this branch** when a task needs it (for example the harder maps
+  the owner wants to try later), keeping `tests/check.sh` passing. FR1 and AC1 of `spec.md`
+  are retired, and so is the "only these paths may change" rule of `START_HERE.md`.
+- **`agent/check_isolation.sh` is out of the checkpoints and of T10.** The file stays, and its
+  header says it is retired: it still proves the game is as it was, but a change to the game
+  would now fail it on purpose.
+- **Norminette is no longer a gate for `sources/jev/`.** The code passes today and may keep
+  passing, but the 42 norm (5 functions per file, 25 lines, no ternary) does not bind.
+  `tests/check.sh` still runs norminette on the game, so it stays installed.
+- **The x86_64 ledger rows (7 and 11) are closed,** as not needed: they existed for 42's
+  machines.
+- **Nothing was deleted and `main` was not touched.** The local `main` is still 16 commits
+  ahead of `origin/main`; pushing it, and Rodrigo's part in the repository, are left for the
+  owner to decide.
 
 What does not change: the tests, the honest measurement, and the agent itself.
 
@@ -213,7 +226,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
     Xvfb :99 -screen 0 1280x720x24 & export DISPLAY=:99
     make && make bonus
     bash tests/check.sh                          # last line: ALL PASSED
-    agent/check_isolation.sh --local             # PASS on all three parts
+    agent/check_isolation.sh --local             # RETIRED 2026-10-06: skip it (was: PASS on all three)
     ```
 
     The virtual display `:99` keeps the checks off the real screen: `check.sh` moves the
@@ -452,7 +465,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
   ```bash
   make -C agent
   python3 agent/check_bridge.py                # 24 checks, ALL PASSED
-  agent/check_isolation.sh --local             # PASS on all three parts
+  agent/check_isolation.sh --local             # RETIRED 2026-10-06: skip it (was: PASS on all three)
   ```
 
   - **Report back** (paste the text): the output of `make -C agent` (it should print nothing
@@ -736,17 +749,17 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - **Commit** (with the whole evaluation folder): `agent: final evaluation on test seeds
     101-120`.
 - [ ] **T10** — Regression on the Mac.
-  - **Verify:** `agent/check_isolation.sh` passes, `check_bridge.py` passes in the container,
-    `dev/dev.sh check` prints `ALL PASSED`, and `cd agent && uv run pytest -q` is green.
+  - **Verify:** `check_bridge.py` passes in the container, `dev/dev.sh check` prints
+    `ALL PASSED`, and `cd agent && uv run pytest -q` is green. (`check_isolation.sh` was
+    dropped from here on 2026-10-06.)
   - **Commit:** `specs: spec 002 complete`, with `CONTEXT.md` "Status" updated.
-- [ ] 🔑 **L5** — Linux checkpoint, the final one. Ledger rows 7 and 11, and **every row that
-  is still open**: nothing may remain in the ledger when the spec is closed. On Linux, after
-  `git pull --ff-only`, with `DISPLAY=:99` as in L1:
+- [ ] 🔑 **L5** — Linux checkpoint, the final one. **Every ledger row that is still open**:
+  nothing may remain in the ledger when the spec is closed (rows 7 and 11, x86_64, were closed
+  on 2026-10-06). On Linux, after `git pull --ff-only`, with `DISPLAY=:99` as in L1:
 
   ```bash
   uname -m
   make && make bonus && bash tests/check.sh    # ALL PASSED
-  agent/check_isolation.sh --local             # PASS on all three parts
   make -C agent && python3 agent/check_bridge.py
   cd agent && uv sync && uv run pytest -q
   uv run kube-agent run --runner local --policy scripted --seed 3
@@ -754,8 +767,6 @@ What does not change: the tests, the honest measurement, and the agent itself.
   ```
 
   - **Done when:** every line passed.
-  - If `uname -m` is `x86_64`, this is also the final x86_64 check (`plan.md`, "Risks"). If
-    not, repeat L5 once on an x86_64 machine before any submission-related step.
 - [ ] **T11** — (optional, only if the owner asks) Watch or record an episode: on a Linux
   desktop with `DISPLAY=:0` (see L3); on the Mac, `ffmpeg -f x11grab` in the container, or
   `x11vnc` plus macOS Screen Sharing. None of these is verified yet.

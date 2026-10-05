@@ -24,6 +24,9 @@
 >   GitHub it lives on `feature/jev-agent` (`0ac5649`), "the base", which gained one fix on
 >   2026-10-05 (`ad4244a`, strafing speed; see the end of this file).
 > - Spec 002 is implemented on `feature/jev-agentv1`, created from the base.
+> - **2026-10-06: the game is no longer handed in at 42.** The work goes on
+>   `feature/jev-agentv1` alone, the base is only history, and the hard rule below about not
+>   changing the game is retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
 >
 > Facts are dated. Re-verify anything external (model ids, prices, versions) before relying
 > on it.
@@ -153,8 +156,10 @@ that a non-AI bot could play Doom better. If our rule policy beats Jev, the repo
 
 ## Hard rules (do not break)
 
-1. **The 42 deliverable changes only in spec 001, on purpose, and under guards.** Norminette
-   stays at 0 (it is 0 errors on `main`, verified). The parser's answers and messages match a
+1. **RETIRED 2026-10-06: the game is no longer handed in at 42,** so it is no longer
+   protected. It may change on `feature/jev-agentv1` when a task needs it, keeping
+   `tests/check.sh` passing. Until then: **the 42 deliverable changes only in spec 001, on
+   purpose, and under guards.** Norminette stays at 0 (it is 0 errors on `main`, verified). The parser's answers and messages match a
    baseline recorded on `main@34f4aff`. There is no relink, valgrind is clean, and gameplay
    rules are unchanged. **Spec 002 does not change it at all:** `make` and `make bonus` must
    produce byte-identical objects to the base.

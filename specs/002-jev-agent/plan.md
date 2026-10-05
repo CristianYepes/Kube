@@ -5,6 +5,11 @@
 > plus the strafing fix of 2026-10-05 (`ad4244a`, see "Conventions"): the base is now `ad4244a`.
 > Work happens on `feature/jev-agentv1`. The section "Implementation decisions" below is
 > binding: follow it rather than re-deciding.
+>
+> **2026-10-06: the game is no longer handed in at 42.** The base is now only history, the
+> isolation of the game (FR1, AC1) and the norm on `sources/jev/` are retired, and the game may
+> change on this branch when a task needs it. The rows below that say otherwise are marked.
+> See "Decided 2026-10-06" in `tasks.md`.
 
 ## Tech context
 
@@ -34,8 +39,8 @@
 
 | Constraint | Respected? | How / why |
 |---|---|---|
-| 42 deliverable unchanged | ✅ | No existing file is edited. `agent/Makefile` compiles the deliverable's sources except the three it replaces (see below) and adds `sources/jev/`. Top-level `Makefile`, `sources/**` (outside `sources/jev/`), `includes/` and `libft/` are untouched. Checked by AC1 (objects identical to the base) |
-| Norminette | ✅ | `sources/jev/*.c` follow the norm too, and `norminette sources` still exits 0 |
+| 42 deliverable unchanged | **retired 2026-10-06** (held until then) | No existing file is edited. `agent/Makefile` compiles the deliverable's sources except the three it replaces (see below) and adds `sources/jev/`. Top-level `Makefile`, `sources/**` (outside `sources/jev/`), `includes/` and `libft/` are untouched. Checked by AC1 (objects identical to the base) |
+| Norminette | **no longer a gate (2026-10-06)**; it passes today | `sources/jev/*.c` follow the norm too, and `norminette sources` still exits 0 |
 | English everywhere | ✅ | code, logs, docs |
 | YAGNI | ✅ | One Choice question; four tactics; no door tactics, no viewer, no database (JSONL logs) |
 | No push without asking | ✅ | One commit per task on `feature/jev-agentv1`; push only when the owner asks |
@@ -237,13 +242,13 @@ Every fact below was checked in the code or with a command on 2026-09-29, and re
 the code on 2026-10-05. Where a detail is left open, the tasks say how to verify it before
 relying on it.
 
-### Layout (only these paths may change: `agent/`, `sources/jev/`, `specs/` and the root `CLAUDE.md`; AC1)
+### Layout (until 2026-10-06 only these paths could change: `agent/`, `sources/jev/`, `specs/` and the root `CLAUDE.md`; that rule is retired)
 
 ```
 agent/
   Makefile            builds agent/cub3D_agent (see "Build")
   .gitignore          cub3D_agent, obj/, .venv/, __pycache__/, .pytest_cache/ (not runs/: FR15)
-  check_isolation.sh  AC1 guard (T2); --local runs it without the container, on Linux
+  check_isolation.sh  AC1 guard (T2), RETIRED 2026-10-06: kept as a file, out of the checkpoints
   check_bridge.py     the C bridge's checks (T3b-T3d); Python standard library only, so it runs
                       in the container (Python 3.10) and on native Linux alike
   frozen.json         config_sha256 and date, written at the freeze (T8)
@@ -573,10 +578,9 @@ sources/jev/
   leans toward its first option, and ENGAGE is listed first. If that bias is real here, Jev
   could look better or worse than it is because of a list order. T8 measures it on logged
   states before anything is frozen; the mitigation is described there.
-- **aarch64 vs x86_64** (R1). The container is aarch64. The Linux checkpoints record
-  `uname -m`; if the owner's Linux is x86_64, L5 is the final x86_64 check of AC1 and of an
-  episode. If it is not, run L5 once more on an x86_64 machine (a 42 campus machine) before
-  any submission-related step.
+- **aarch64 vs x86_64** (R1). **Closed 2026-10-06, not done: no longer needed.** The container
+  and the owner's Linux (UTM) are both aarch64. The x86_64 check existed for 42's machines, and
+  the game is no longer handed in there.
 - **Mac and Linux drift apart** (owner's decision 6). Each phase is closed on the Mac first
   and then re-checked on Linux with the same commands. A failure seen only on Linux goes back
   to the Mac session with its output; it is not patched by hand on Linux.

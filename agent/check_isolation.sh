@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# RETIRED 2026-10-06: the game is no longer handed in at 42, so it is out of the
+# checkpoints and the game may change on this branch. It still works, and a change to the
+# game makes it fail on purpose. It was last run against ad4244a: ALL PASSED, 71 identical
+# objects, on the Mac's container and on the owner's Linux.
+#
 # Isolation guard for spec 002 (AC1): the agent work must never change the 42 deliverable.
 #
 #   agent/check_isolation.sh            build in the kube-dev container (the Mac)

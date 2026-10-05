@@ -1,5 +1,9 @@
-# Spec 002 — Jev plays cub3D_bonus (v0.5)
+# Spec 002 — Jev plays cub3D_bonus (v0.6)
 
+> v0.6 (2026-10-06): the game is no longer handed in at 42 (the owner). **FR1 and AC1 are
+> retired**, with the 42-student story and the out-of-scope bullet about the deliverable; the
+> text stays below, struck through in words, as the record of why the design is as it is. See
+> "Decided 2026-10-06" in `tasks.md`.
 > v0.5 (2026-10-05): the owner's decisions 5-8 (see "Decisions") add FR15, AC14, the Linux
 > checkpoints and the `sources/jev/` name. See "Changes since v0.5" in `tasks.md`.
 > v0.4 (2026-10-05): FR5, AC1, AC4, AC5, AC8 and AC12 corrected after checking them against
@@ -31,8 +35,8 @@ its uncertainty, plus the measured Jev cost and latency per episode.
   tactic chosen and its confidence), so that I can fix the criteria rather than guess.
 - As the developer, I want a one-command evaluation that runs every policy on the same seeds,
   so that the comparison is fair and repeatable.
-- As a 42 student, I want the deliverable untouched, so that the agent can never cost me an
-  evaluation.
+- *(Retired 2026-10-06: the game is no longer handed in at 42.)* As a 42 student, I want the
+  deliverable untouched, so that the agent can never cost me an evaluation.
 - As the developer, I want every episode's decisions and the player's path kept in the repo,
   so that I can look for the ways the game gets beaten, and later make it harder where a
   pattern shows (for example with obstacles).
@@ -41,9 +45,10 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 
 ## Functional requirements
 
-- **FR1 — Isolation.** The agent MUST live in new files only. Building `cub3D` and
-  `cub3D_bonus` MUST produce the same result as on the base, and the deliverable MUST still
-  pass norminette.
+- **FR1 — Isolation. RETIRED 2026-10-06** (the game is no longer handed in at 42): the game
+  may change on this branch when a task needs it, keeping `tests/check.sh` passing. It held
+  until then: *the agent MUST live in new files only. Building `cub3D` and `cub3D_bonus` MUST
+  produce the same result as on the base, and the deliverable MUST still pass norminette.*
 - **FR2 — Observation.** WHILE an episode runs, the game SHALL publish, every frame, what the
   agent needs to know: player position, heading, health and weapon readiness; wave and game
   state; and for every enemy its position, type, health, AI state and line of sight.
@@ -84,7 +89,9 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 
 ## Acceptance criteria (verifiable)
 
-- **AC1 (FR1)** — Building `make` and `make bonus` on this spec's working tree and on the
+- **AC1 (FR1) — RETIRED 2026-10-06, with FR1.** It passed until then, on the Mac's container
+  and on the owner's Linux (`agent/check_isolation.sh`: 71 identical objects). The text, as it
+  was: building `make` and `make bonus` on this spec's working tree and on the
   base gives identical `obj/*.o` and `obj_bonus/*.o` (sha256).
   `git diff --stat <base> -- . ':(exclude)agent' ':(exclude)sources/jev' ':(exclude)specs' ':(exclude)CLAUDE.md'`
   is empty, and so is the same path set in `git ls-files --others --exclude-standard`: every
@@ -142,8 +149,9 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 - Seeing pixels; any vision model.
 - Door tactics (closing a door between the player and the zombies). This is a candidate for
   v2 once v1 is measured.
-- Changing the 42 deliverable. The defects listed in the research are fixed by spec 001,
-  before this one starts.
+- *(Retired 2026-10-06: the game may now change on this branch.)* Changing the 42
+  deliverable. The defects listed in the research were fixed by spec 001, before this one
+  started.
 - Training or fine-tuning (Jev does not allow it).
 - Live viewing or video recording (optional task only). On a Linux desktop, a run on the real
   display (`DISPLAY=:0`) should show the game with no extra tooling (not verified yet).
