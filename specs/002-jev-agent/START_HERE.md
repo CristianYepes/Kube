@@ -54,8 +54,13 @@ The repo carries everything **except the API key**, which must never be in it.
    sudo apt install -y zlib1g-dev xvfb xdotool valgrind
    curl -LsSf https://astral.sh/uv/0.8.24/install.sh | sh     # the Mac's uv version
    export PATH="$HOME/.local/bin:$PATH"                       # uv is installed there
-   uv tool install norminette==3.3.60                         # the container's version
+   uv tool install --force norminette==3.3.60                 # the container's version
    ```
+
+   - `--force` is there because a machine can already hold an older `norminette`. On
+     2026-10-06 the owner's had 3.3.59 (an old `pip --user`), `uv` printed `Executable already
+     exists` and `norminette --version` kept answering 3.3.59. Check with
+     `norminette --version`: it must say 3.3.60, the version the container and the checks use.
 
    - On 2026-10-06 the `uv` 0.8.24 installer printed `everything's installed!` but did not
      create `~/.local/bin/env`, so `source $HOME/.local/bin/env` failed. The `export` line

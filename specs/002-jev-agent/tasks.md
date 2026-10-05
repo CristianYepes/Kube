@@ -100,12 +100,12 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 
 | # | What | State today | Due |
 |---|---|---|---|
-| 1 | The one-time setup of `START_HERE.md` 2b: the `apt` packages, `uv` 0.8.24, `norminette==3.3.60` | written from the Mac's image, never run on a fresh machine | L1 |
-| 2 | `make && make bonus` from scratch | rehearsed in a clean container copy (Ubuntu 22.04 aarch64): the MiniLibX was cloned at the pinned `f07d00f` and both binaries built | L1 |
-| 3 | `bash tests/check.sh`: `ALL PASSED`, 10 sections | passes in the container; machine-dependent, see L1 | L1 |
-| 4 | `agent/check_isolation.sh --local` | rehearsed in the container: PASS, 71 identical objects. Never run on the owner's machine | L1, L2 |
-| 5 | `make -C agent` with the owner's compiler under `-Werror` | builds with the container's gcc | L2 |
-| 6 | `python3 agent/check_bridge.py`: 24 checks | 24 of 24 in the container; machine-dependent, see L2 | L2 |
+| 1 | The one-time setup of `START_HERE.md` 2b: the `apt` packages, `uv` 0.8.24, `norminette==3.3.60` | **DONE 2026-10-06** on the owner's Linux, with three fixes to the instructions (see L1) | L1 |
+| 2 | `make && make bonus` from scratch | **DONE 2026-10-06**: the MiniLibX cloned at `f07d00f`, binaries of 109,088 and 139,376 bytes, the same as in the container | L1 |
+| 3 | `bash tests/check.sh`: `ALL PASSED`, 10 sections | **DONE 2026-10-06**: `ALL PASSED`; the `minimal` rate was 75 fps against the 75 baseline | L1 |
+| 4 | `agent/check_isolation.sh --local` | **DONE 2026-10-06** on the owner's machine: PASS, 71 identical objects, 101 files OK | L1, L2 |
+| 5 | `make -C agent` with the owner's compiler under `-Werror` | **DONE 2026-10-06**: gcc 11.4.0, exit 0, a binary of 144,760 bytes (the same as in the container) | L2 |
+| 6 | `python3 agent/check_bridge.py`: 24 checks | **DONE 2026-10-06**: 24 of 24 | L2 |
 | 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **the owner's Linux is aarch64** (UTM, Ubuntu 22.04.5, gcc 11.4.0, Python 3.10.12, checked 2026-10-06): the same architecture as the Mac's container, so L1 and L2 cannot settle this row. **It stays open for L5** | L5 |
 | 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | does not exist yet | L3 |
 | 9 | Seeing the game on the real display (`DISPLAY=:0`) | not verified; optional | L3 |
@@ -203,8 +203,8 @@ What does not change: the tests, the honest measurement, and the agent itself.
     The last row is why part 1 also lists untracked files: nothing else sees that file.
     `--local` is **not** run yet: the Mac cannot build the X11 MiniLibX, so it is first run for
     real at L1.
-- [ ] 🔑 **L1** — Linux checkpoint, phase 1 (the owner, on Linux; see "How to use"). **Due
-  now, together with L2: run this one first.** Ledger rows 1, 2, 3, 4 and 7.
+- [x] 🔑 **L1** — Linux checkpoint, phase 1 (the owner, on Linux; see "How to use"). **Done
+  2026-10-06, see the note at the end of this checkpoint.** Ledger rows 1, 2, 3, 4 and 7.
   - The first time, set up the machine (`START_HERE.md`, 2b, "On a Linux machine"). Then, from
     the repo root, after `git pull --ff-only`:
 
@@ -233,6 +233,25 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - `valgrind` and `norminette` must be installed (setup 2b). A missing one fails with
       "command not found".
   - **Done when:** every line passed. The tick records `uname -m` and each last line.
+  - **Done 2026-10-06**, on the owner's machine, commit `8104824`: a UTM virtual machine,
+    **aarch64**, Ubuntu 22.04.5, gcc 11.4.0, Python 3.10.12, `norminette` 3.3.60, `uv` 0.8.24.
+    - `make` and `make bonus` from scratch: exit 0; the MiniLibX cloned at the pinned
+      `f07d00f`; its only warning is its own (`mlx_new_image.c`, `write`). `git status` was
+      clean after building;
+    - `bash tests/check.sh`: `ALL PASSED`, 10 of 10 sections. W for 2 s moved 2.43-2.45
+      cells, A and D 2.42-2.43 (the strafing fix holds on native Linux), and `cub3D_bonus` on
+      `minimal` ran at **75 fps against the 75 baseline**, so the machine-dependent check did
+      not fail;
+    - `agent/check_isolation.sh --local`: ALL PASSED, 71 identical objects, 101 files OK. It
+      was the first run of `--local` outside the container.
+    - **Three fixes to the setup instructions came out of it** (all in `START_HERE.md` 2b):
+      the one long `apt` line was cut in two when pasted, and four packages were left
+      uninstalled; the `uv` 0.8.24 installer does not create `~/.local/bin/env`, so the step
+      is an `export` of `~/.local/bin`; and the machine already had a `norminette` 3.3.59 (an
+      old `pip --user`), so `uv tool install norminette==3.3.60` failed to link and needs
+      `--force`.
+    - The machine is **aarch64, like the Mac's container**, so this checkpoint does not settle
+      the x86_64 row.
 
 ## Phase 2 — C bridge (`sources/jev/`, `agent/Makefile`)
 
@@ -426,7 +445,8 @@ What does not change: the tests, the honest measurement, and the agent itself.
       observations per second).
     - Not rehearsed: `tests/check.sh` in the copy (the same suite passed through
       `dev/dev.sh check`), and everything in the ledger that depends on the owner's machine.
-- [ ] 🔑 **L2** — Linux checkpoint, phase 2. **Due now, after L1.** Ledger rows 4, 5 and 6.
+- [x] 🔑 **L2** — Linux checkpoint, phase 2. **Done 2026-10-06, see the note at the end of
+  this checkpoint.** Ledger rows 4, 5 and 6.
   On Linux, after `git pull --ff-only`, with `DISPLAY=:99` as in L1:
 
   ```bash
@@ -452,6 +472,20 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - the checks need `python3` 3.10 or newer (tested on 3.10.12), the `pty` module (standard
       on Linux) and `DISPLAY` pointing at a running X server.
   - **Done when:** every line passed. The tick records each check's numbers.
+  - **Done 2026-10-06**, on the owner's machine (as in L1), commit `8104824`:
+    `make -C agent` exit 0 (a 144,760-byte binary), and `check_bridge.py` **24 of 24 PASS**,
+    exit 0. Its machine-dependent numbers:
+    - the rate on `minimal` (best of three): 78.5, 73.1 and 76.8 observations per second, the
+      best within the 75 ±10% band;
+    - the fair-timing check: the corridor ran at 76 and `test_map` at 100 observations per
+      second, as in the container, and both moved 2.39-2.41 cells in 2 s;
+    - the rate on `subject_map`: 82.0 observations per second;
+    - the stalled reader kept 399 lines and dropped 180, with the game reaching 7.5 s;
+    - `Q` and closing stdin exited with code 0 in 0.02 and 0.00 s;
+    - strafing 1.20 cells/s, as walking.
+    - **The same seeds spawn the same enemies on the Linux machine as in the Mac's
+      container:** seed 7 gave the first enemy at (26.41, 7.35) and seed 8 at (25.66, 7.63) on
+      both. Both machines are aarch64, so this does not show it holds across architectures.
 
 ## Phase 3 — Python agent and baselines (`agent/`, runs on the host)
 
