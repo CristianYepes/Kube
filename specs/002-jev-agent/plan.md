@@ -8,15 +8,23 @@
 ## Tech context
 
 - **Game side (C):** a third binary, `cub3D_agent`, built by its own `agent/Makefile` from the
-  deliverable's sources plus `sources/agent/*.c`, with `-D BONUS`. It uses the same
+  deliverable's sources plus `sources/jev/*.c`, with `-D BONUS`. It uses the same
   MiniLibX and libft. Norm-compliant, because it lives in the same tree.
 - **Agent side (Python 3.12, uv):** `agent/` package with `typesafe-sdk==0.7.2` (MIT, R2) and
-  pytest. It runs **on the Mac host**, so the key never enters the container (FR13). It talks
-  to the game over a pipe (the pipe costs 0.2 ms, R1):
+  pytest. It runs **on the host**: the Mac, or the owner's Linux at the checkpoints. It never
+  runs in the container, so the key never enters it (FR13). It talks to the game over a pipe
+  (the pipe costs 0.2 ms, R1):
   - on the Mac: `docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent <map> <seed>`;
   - on native Linux, from the repo root: `./agent/cub3D_agent <map> <seed>` (FR14).
 - **Runtime for the game on the Mac:** Colima + Docker, Ubuntu 22.04 aarch64, Xvfb `:99`
   (R1). The image and helper script come from spec 001 (`dev/`).
+- **Linux checkpoints (owner's decision 6):** at the end of each phase the owner re-runs that
+  phase's checks on native Linux (`tasks.md`, L1-L5). Every check script therefore runs in
+  both places:
+  - the shell scripts take `--local`, meaning "here, without the container";
+  - `agent/check_bridge.py` uses only Python's standard library, because the container has
+    Python 3.10 and no uv;
+  - the agent picks `--runner local`.
 - **Jev:** OpenRouter `typesafe/jev-1.13`, expected response model
   `typesafe/jev-1.13-20260917`, $0.042/Mtok input (R2). The client is adapted from
   `~/jev/libros/src/libros/jev.py`, which is the user's own code.
@@ -25,8 +33,8 @@
 
 | Constraint | Respected? | How / why |
 |---|---|---|
-| 42 deliverable unchanged | ✅ | No existing file is edited. `agent/Makefile` compiles the deliverable's sources except the three it replaces (see below) and adds `sources/agent/`. Top-level `Makefile`, `sources/**` (outside `sources/agent/`), `includes/` and `libft/` are untouched. Checked by AC1 (objects identical to the base) |
-| Norminette | ✅ | `sources/agent/*.c` follow the norm too, and `norminette sources` still exits 0 |
+| 42 deliverable unchanged | ✅ | No existing file is edited. `agent/Makefile` compiles the deliverable's sources except the three it replaces (see below) and adds `sources/jev/`. Top-level `Makefile`, `sources/**` (outside `sources/jev/`), `includes/` and `libft/` are untouched. Checked by AC1 (objects identical to the base) |
+| Norminette | ✅ | `sources/jev/*.c` follow the norm too, and `norminette sources` still exits 0 |
 | English everywhere | ✅ | code, logs, docs |
 | YAGNI | ✅ | One Choice question; four tactics; no door tactics, no viewer, no database (JSONL logs) |
 | No push without asking | ✅ | One commit per task on `feature/jev-agentv1`; push only when the owner asks |
@@ -61,9 +69,9 @@ deliverable.
 
 | Deliverable file | Agent replacement | Why |
 |---|---|---|
-| `sources/main.c` | `sources/agent/agent_main.c` | accept `<map> <seed>`, override `data.seed` after `init_game` (FR5) |
-| `sources/mlx_loop_and_hook/mlx.c` | `sources/agent/agent_loop.c` | no keyboard or mouse hooks; the loop hook reads commands (FR3) |
-| `sources/render/game_loop.c` | `sources/agent/agent_frame.c` | same frame as the bonus, plus stdin poll and one obs line (FR2) |
+| `sources/main.c` | `sources/jev/agent_main.c` | accept `<map> <seed>`, override `data.seed` after `init_game` (FR5) |
+| `sources/mlx_loop_and_hook/mlx.c` | `sources/jev/agent_loop.c` | no keyboard or mouse hooks; the loop hook reads commands (FR3) |
+| `sources/render/game_loop.c` | `sources/jev/agent_frame.c` | same frame as the bonus, plus stdin poll and one obs line (FR2) |
 
 **Rejected alternatives**
 - `#ifdef AGENT` inside the deliverable's files: less code, but it edits the deliverable (FR1).
@@ -180,26 +188,55 @@ fast as walking forwards (`player.c`), and only a player who faces a threat can 
 - Budget: cumulative `usage.cost` per run; stop calling at the cap and fall back to the
   scripted rules. An answer that arrives after that switch is discarded.
 
-### Logs (JSONL, one file per episode, under `agent/runs/`, gitignored)
-- `episode.jsonl`: per-second summaries.
-- `decisions.jsonl`: `t`, the state sent, `answers`, `confidence`, `model`, `input_tokens`,
-  `cost`, `latency_ms`, `applied`, and `error` (null unless every retry failed).
-- `result.json`: outcome, survival seconds, wave reached, kills, damage taken, drops,
-  `stalls` (gaps above 100 ms between observations handled by the controller, host monotonic
-  clock; AC8), and the config sha256.
+### Logs (JSONL, one folder per episode, under `agent/runs/`, **committed**; FR15)
 
-## Implementation decisions (v0.4, verified 2026-09-29; corrected 2026-10-05)
+The owner keeps every run, to study how the game gets beaten (which tactics, where, in what
+order) and to decide later where obstacles would make it harder. Runs are committed with the
+task that made them, and after each Linux checkpoint. Git therefore also carries the spend
+ledger between the Mac and Linux. **Never delete a run:** its cost would leave the ledger.
+
+- **Folder name:** `<UTC date-time>-<policy>-s<seed>-<darwin|linux>`, for example
+  `20261005T170312Z-jev-s1-darwin`, so runs from the two machines never clash. The other paid
+  commands follow the same pattern:
+  - an evaluation is `eval-<UTC date-time>-<machine>/`, with one sub-folder per episode and
+    `report.md`;
+  - the probes are `latency-<UTC date-time>-<machine>/` and
+    `order-check-<UTC date-time>-<machine>/`, each with its `decisions.jsonl`.
+- `result.json`:
+  - what was run: map path and the map file's sha256, seed, policy, machine and config sha256;
+  - how it went: outcome, survival seconds, wave reached, kills, damage taken and drops;
+  - `stalls`: gaps above 100 ms between observations handled by the controller, timed with
+    the host's monotonic clock (AC8);
+  - how the game was played: `tactic_seconds` (seconds spent in each tactic) and `switches`
+    (tactic changes).
+- `episode.jsonl`: one row every 0.5 s with `t`, the player's `x` and `y` (2 decimals), `hp`,
+  `wave`, enemies left and the current tactic. It is the player's path, for a map of where
+  episodes are won or lost.
+- `decisions.jsonl`: one row per decision, for **every policy**, with `t`, the state sent, the
+  tactic chosen and `applied`. Jev rows add `answers` (the probabilities), `confidence`,
+  `model`, `input_tokens`, `cost`, `latency_ms` and `error` (null unless every retry failed).
+- `run` ends by printing one line: outcome, survival, decisions made and applied, and the run's
+  spend.
+- **Size** [calc]: about 1 KB per decision row and 2 decisions per second, so about 360 KB per
+  180 s episode. 60-80 Jev episodes come to about 20-30 MB in git. If that ever matters,
+  compress old runs with `gzip`; never delete them.
+
+## Implementation decisions (v0.5, verified 2026-09-29; corrected and extended 2026-10-05)
 
 Every fact below was checked in the code or with a command on 2026-09-29, and re-read against
 the code on 2026-10-05. Where a detail is left open, the tasks say how to verify it before
 relying on it.
 
-### Layout (only these paths may change: `agent/`, `sources/agent/`, `specs/` and the root `CLAUDE.md`; AC1)
+### Layout (only these paths may change: `agent/`, `sources/jev/`, `specs/` and the root `CLAUDE.md`; AC1)
 
 ```
 agent/
   Makefile            builds agent/cub3D_agent (see "Build")
-  .gitignore          cub3D_agent, obj/, runs/, .venv/, __pycache__/, .pytest_cache/
+  .gitignore          cub3D_agent, obj/, .venv/, __pycache__/, .pytest_cache/ (not runs/: FR15)
+  check_isolation.sh  AC1 guard (T2); --local runs it without the container, on Linux
+  check_bridge.py     the C bridge's checks (T3b-T3d); Python standard library only, so it runs
+                      in the container (Python 3.10) and on native Linux alike
+  frozen.json         config_sha256 and date, written at the freeze (T8)
   pyproject.toml      uv project "kube-agent", requires-python >=3.12,
                       deps: typesafe-sdk==0.7.2; dev: pytest; script: kube-agent = kube_agent.cli:main
   .python-version     3.12 (uv python pin 3.12), so every machine uses the same interpreter
@@ -213,10 +250,11 @@ agent/
     jev_client.py     SDK wrapper: pinned model, cost, request id, budget, decision rows
     episode.py        one episode: the loop, the logs, result.json
     evaluate.py       many episodes, statistics, report.md
-    cli.py            kube-agent run | eval | spend | latency | order-check
+    cli.py            kube-agent run | eval | spend | latency | order-check;
+                      run and eval take --map (default maps/bonus/subject_map.cub)
   tests/              pytest; no X, no network; tests/fixtures/ holds obs recorded in T3
-  runs/               logs, gitignored
-sources/agent/
+  runs/               every run's logs, committed (see "Logs")
+sources/jev/
   agent.h             prototypes of the bridge (includes cub3d.h)
   agent_main.c        replaces sources/main.c
   agent_loop.c        replaces sources/mlx_loop_and_hook/mlx.c
@@ -226,7 +264,14 @@ sources/agent/
 ```
 
 **Never edit** the top-level `Makefile`, `.gitignore`, `dev/`, `tests/`, `includes/`, `libft/`,
-`maps/`, `textures/`, `files/` or any `sources/` file outside `sources/agent/`.
+`maps/`, `textures/`, `files/` or any `sources/` file outside `sources/jev/`.
+
+- **The C folder is `sources/jev/`** (owner's decision 5), so `agent/` is the only folder named
+  agent. The files inside keep the `agent_` prefix, because they build `cub3D_agent`.
+- **Harder maps**, if the owner adds them after v1, go in `agent/maps/`, created with its first
+  map, never in `maps/`. They need `F`/`C` colours and textures that exist under `files/`, the
+  bonus charset (`012DNSEW`) and fewer than 64 rows and columns (flow-field guard). They load
+  through `--map`.
 
 ### Build (`agent/Makefile`, run with `make -C agent` from the repo root)
 
@@ -239,9 +284,10 @@ sources/agent/
   ```
 
   - A wildcard is fine here: this is not the 42 Makefile.
-  - It picks up `sources/agent/*.c` by itself.
+  - It picks up `sources/jev/*.c` by itself.
   - It cannot drift from the deliverable's list, because the bonus build compiles every `.c`
-    under `sources/` (checked on 2026-09-28).
+    under `sources/` (checked on 2026-09-28, and again on 2026-10-05: all 46 files are in the
+    Makefile's two lists).
 - Flags: `-Wall -Wextra -Werror -D BONUS -I../includes -I../libft -I../minilibx-linux`. No
   `-D AGENT`: no file reads it, and the deliverable must never test for it.
 - Objects go to `obj/`; the link line is `../libft/libft.a ../minilibx-linux/libmlx.a -lXext
@@ -301,13 +347,13 @@ sources/agent/
     bytes is atomic: all of it or `EAGAIN`. So a full pipe drops the frame's line (`drops++`)
     and never writes half a line;
   - floats use `%.3f`, and fields come in the contract's order.
-- **Norm:** every file in `sources/agent/` passes `norminette`. Run it; do not guess the rules
+- **Norm:** every file in `sources/jev/` passes `norminette`. Run it; do not guess the rules
   (25 lines per function, 5 functions per file, 4 parameters, 5 variables, 80 columns, ...).
 - **State that `t_data` cannot hold** (the frame counter, the start time, `drops`, the stdin
-  buffer): `includes/` may not change, so these are `static` variables in `sources/agent/`.
+  buffer): `includes/` may not change, so these are `static` variables in `sources/jev/`.
 - **Names to avoid:** `tests/check.sh` (`check_dead_code`) fails if `BREAK`, `CONTINUE`,
   `DEATH_TIME`, `E_DEAD`, `render_weapon`, `anim_timer` or `frame_idx` appears as a word
-  anywhere under `sources/`, `sources/agent/` included.
+  anywhere under `sources/`, `sources/jev/` included.
 
 ### Conventions (verified in the code; write the worked example as a unit test)
 
@@ -445,9 +491,14 @@ sources/agent/
   `eval` with the Jev policy, `latency` and `order-check`. They stop calling Jev when the
   run's cap is reached: `cap = min(--budget-usd, remaining)`. `run` and `eval` then fall back
   to the scripted rules. Defaults: `run` 0.05, `eval` 0.50.
-- **The ledger is local.** It lives in `agent/runs/` on one machine, so do not delete
-  `agent/runs/` before T10, and make every paid call from the same machine. If paid runs ever
-  happen on two machines, add both ledgers and cross-check the OpenRouter account's usage.
+- **The ledger travels with git,** because runs are committed (FR15). That only works if both
+  machines keep in step:
+  - before any paid run, on either machine, `git pull --ff-only`;
+  - after it, commit the run, and push before switching machines (the owner asks for the
+    push);
+  - never delete a run.
+
+  Then `spend` sums the paid calls of both machines.
 - Estimate [calc]: at most 2 calls/s × 180 s × about 1,300 tokens × $0.042/M, so at most
   about $0.02 per episode. 40 Jev episodes cost at most about $0.80. `spend` is the real
   number.
@@ -469,6 +520,8 @@ sources/agent/
   - n and wins, with a Wilson 95% interval;
   - survival median and IQR;
   - waves cleared;
+  - the share of time in each tactic, in wins and in losses (from `tactic_seconds`): the
+    first answer to "how does the game get beaten";
   - for Jev: cost per episode and latency p50/p95.
 
 ## Risks & mitigations
@@ -483,8 +536,13 @@ sources/agent/
   leans toward its first option, and ENGAGE is listed first. If that bias is real here, Jev
   could look better or worse than it is because of a list order. T8 measures it on logged
   states before anything is frozen; the mitigation is described there.
-- **aarch64 vs x86_64** (R1). Run the final AC1 and a smoke episode on x86_64 before any
-  submission-related step.
+- **aarch64 vs x86_64** (R1). The container is aarch64. The Linux checkpoints record
+  `uname -m`; if the owner's Linux is x86_64, L5 is the final x86_64 check of AC1 and of an
+  episode. If it is not, run L5 once more on an x86_64 machine (a 42 campus machine) before
+  any submission-related step.
+- **Mac and Linux drift apart** (owner's decision 6). Each phase is closed on the Mac first
+  and then re-checked on Linux with the same commands. A failure seen only on Linux goes back
+  to the Mac session with its output; it is not patched by hand on Linux.
 - **The three replaced files drift from the deliverable's.** Each copy starts with a comment
   naming the source file and base commit it mirrors. AC1 catches edits to the originals, which
   would mean the copies need a look.

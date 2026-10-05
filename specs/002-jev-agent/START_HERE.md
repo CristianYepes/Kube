@@ -3,9 +3,10 @@
 > For the model (or person) that implements this spec. It is self-contained: everything
 > decided and verified so far is in `specs/`, so nothing needs to be rediscovered. Written
 > 2026-09-29; updated 2026-10-03 (T8 option-order check, new Jev rate limits) and 2026-10-05
-> (every task re-checked against the code: `tasks.md` v0.5).
+> (every task re-checked against the code; then the owner's decisions 5-8: `sources/jev/`,
+> Linux checkpoints, kept logs, harder maps later; `tasks.md` v0.6).
 
-## 1. The mission in five lines
+## 1. The mission in seven lines
 
 1. Build `cub3D_agent`, a **separate** binary of the game. Every frame it prints the state as
    one JSON line on stdout, and it takes movement/turn/fire commands on stdin.
@@ -17,6 +18,10 @@
    report it honestly, with its cost.
 5. **Do not change the 42 game itself.** Spec 001 already polished it; this spec only adds
    files.
+6. **Keep every run's logs in git.** The owner studies them to see how the game gets beaten,
+   and may later add obstacles where a pattern shows.
+7. **Develop on the Mac (Colima); prove each phase on Linux.** The owner re-runs each phase's
+   checks natively on Linux before the next phase starts.
 
 ## 2. Where you are
 
@@ -40,7 +45,22 @@ The repo carries everything **except the API key**, which must never be in it.
    ```
 
    That gave colima 0.9.1, docker 28.5.0 and uv 0.8.24; Lima comes in as a Colima dependency.
-   On Linux, install Docker and `uv` instead: `dev/dev.sh` only needs `docker`.
+
+   **On a Linux machine** (the owner's, for the checkpoints L1-L5), everything runs natively,
+   with no Docker. On Ubuntu or Debian:
+
+   ```bash
+   sudo apt install build-essential git curl libx11-dev libxext-dev libbsd-dev zlib1g-dev xvfb xdotool valgrind
+   curl -LsSf https://astral.sh/uv/0.8.24/install.sh | sh     # the Mac's uv version
+   uv tool install norminette==3.3.60                         # the container's version
+   ```
+
+   - The packages are the image's (`dev/Dockerfile`), minus the screenshot tools.
+   - The `uv` installer URL with a version is the official form (docs.astral.sh, checked
+     2026-10-05, and this URL answered 200).
+   - Python 3.12 comes through `uv` (`agent/.python-version`). `check_bridge.py` uses the
+     system `python3`, which must be 3.10 or newer.
+   - The list has not been run on a fresh Linux yet; L1 is where it is tried.
 2. **The branch:**
 
    ```bash
@@ -64,8 +84,8 @@ The repo carries everything **except the API key**, which must never be in it.
    ```
 
    **The key never goes into the chat,** and it is never pasted as a command argument.
-4. **Start:** `colima start` (macOS only), then `dev/dev.sh up`, then `dev/dev.sh check`. That is
-   task T1.
+4. **Start:** on the Mac, `colima start`, then `dev/dev.sh up`, then `dev/dev.sh check`. That
+   is task T1. On Linux, start with checkpoint L1 in `tasks.md`.
 
 These steps were written from the original Mac and have not been run on a fresh machine: if
 one fails, fix it and correct this section in the same commit.
@@ -73,8 +93,8 @@ one fails, fix it and correct this section in the same commit.
 ## 3. Reading order (about 20 minutes; do not skip)
 
 1. `specs/CONTEXT.md`: the goal, "Jev in two minutes", the game's rules, the hard rules.
-2. `specs/002-jev-agent/spec.md`: requirements FR1-FR14, acceptance criteria AC1-AC13,
-   "Decisions".
+2. `specs/002-jev-agent/spec.md`: requirements FR1-FR15, acceptance criteria AC1-AC14,
+   "Decisions" 1-8.
 3. `specs/002-jev-agent/plan.md`: **"Implementation decisions" is binding.** It covers the
    layout, build, bridge, the sign conventions with a worked example, the exact features and
    controller, the SDK facts, the key and the budget.
@@ -84,7 +104,7 @@ one fails, fix it and correct this section in the same commit.
 
 ## 4. Hard rules
 
-1. **Only these paths may change:** `agent/`, `sources/agent/`, `specs/` and the root
+1. **Only these paths may change:** `agent/`, `sources/jev/`, `specs/` and the root
    `CLAUDE.md`. Never edit the
    top-level `Makefile`, `.gitignore`, `dev/`, `tests/`, `includes/`, `libft/`, `maps/`,
    `textures/`, `files/`, or any other `sources/` file. `agent/check_isolation.sh` (T2)
@@ -92,7 +112,7 @@ one fails, fix it and correct this section in the same commit.
 2. **English** in every file, comment, identifier and commit message. Talk to the owner in
    **Spanish**.
 3. **YAGNI.** Build only what a task needs. No placeholders, no speculative options.
-4. **C in `sources/agent/` must pass `norminette`.** Run it; do not guess.
+4. **C in `sources/jev/` must pass `norminette`.** Run it; do not guess.
 5. **The API key:** never print, log, commit, or pass it to Docker. Load it only into the
    command that uses it (section 5).
 6. **Budget:** $1 in total for every Jev call of this spec. Check `kube-agent spend` before any
@@ -102,6 +122,10 @@ one fails, fix it and correct this section in the same commit.
    before reporting. A zero proves nothing until you have seen the same check find something.
 8. **One commit per task,** with the message given in `tasks.md`. **Never push** unless the
    owner asks.
+9. **Runs are kept.** Every run's folder under `agent/runs/` is committed with its task, and
+   no run is ever deleted: the logs are the owner's material, and their costs are the ledger.
+10. **Phases end on Linux.** After a phase's last task, stop (🛑). The owner asks for the push
+    and runs the phase's Linux checkpoint. The next phase starts only after it passes.
 
 ## 5. Environment (commands verified on 2026-09-29)
 
@@ -132,20 +156,35 @@ set -a; . ~/jev/libros/.env; set +a; cd agent && uv run kube-agent run --policy 
 The second line loads the owner's OpenRouter key into that shell only. Every Bash call is a
 new shell, so load it in the same call that needs it. Never `echo` it.
 
+**On Linux** the same commands run without the container:
+- `make -C agent` builds the binary;
+- `--runner local` replaces the default `--runner docker`;
+- `check_isolation.sh --local` builds in temporary folders on the machine itself;
+- the virtual display is started once per shell:
+  `Xvfb :99 -screen 0 1280x720x24 & export DISPLAY=:99`.
+
+The checkpoints in `tasks.md` (L1-L5) list the exact commands.
+
 ## 6. Workflow
 
+0. At the start of a session, `git pull --ff-only`. The owner may have pushed Linux runs, and
+   the spend ledger needs them.
 1. Take the first unticked task in `tasks.md` and read its **Read** list.
 2. Implement only that task. Write its tests first and see them fail; a check never seen
    failing proves nothing.
 3. Run its **Verify**. If it fails, find out why; do not loosen the check to make it pass.
 4. Tick it: `[x]` plus `Done <date>:` and the evidence (numbers).
-5. Commit with the task's message.
+5. Commit with the task's message, including the runs it made.
 6. Give the owner a two-line status in Spanish, then take the next task.
+7. **At the end of a phase,** stop. Give the owner the phase's summary and the checkpoint's
+   commands. Wait for the push request and then for the Linux results. Tick the checkpoint
+   with those results in the next commit.
 
 ## 7. When to stop and ask the owner (🛑)
 
 - the tasks marked 🛑: T6b if the answering model is unexpected, T8 before freezing, T9's
   results, T12 push;
+- the end of every phase: the Linux checkpoints L1-L5 (🔑, run by the owner);
 - a check fails and you do not understand why;
 - a task seems to need a path outside the allowed ones (rule 1);
 - spend would cross $1, or a decision is not covered by `plan.md`.
@@ -230,3 +269,8 @@ def _coste(respuesta: dict) -> float:          # respuesta = r.raw_http_response
 - **Tactic:** ENGAGE, KITE, RETREAT or SEARCH. The controller turns it into keys.
 - **obs:** one JSON line per frame from the game. **State:** the words sent to Jev.
 - **Dev seeds** 1-20 are for tuning. **Test seeds** 101-120 are measured once, after the freeze.
+- **Phase:** a group of tasks in `tasks.md` (1 setup, 2 C bridge, 3 Python agent, 4 Jev,
+  5 tuning and evaluation). **Checkpoint (L1-L5):** the owner re-running that phase's checks
+  on native Linux.
+- **Run:** one folder under `agent/runs/`, committed. Its `decisions.jsonl` rows carry what
+  each Jev call cost, so all runs together are the spend ledger.

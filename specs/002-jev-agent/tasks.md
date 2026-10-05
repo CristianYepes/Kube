@@ -1,5 +1,18 @@
-# Tasks 002 — Jev plays cub3D_bonus (v0.5: the checklist)
+# Tasks 002 — Jev plays cub3D_bonus (v0.6: the checklist)
 
+> **Changes since v0.5 (2026-10-05, the owner's decisions 5-8 in `spec.md`):**
+> - The C bridge folder is `sources/jev/` (it was `sources/agent/`), so `agent/` is the only
+>   folder named agent.
+> - **Five phases, each ending with a Linux checkpoint (L1-L5)** that the owner runs natively.
+>   - `check_isolation.sh --local` and `agent/check_bridge.py` make every check runnable there.
+>   - AC13 moves from T10's in-container workaround to those checkpoints.
+> - **Every run's logs are committed** (FR15, AC14):
+>   - richer `result.json` and `episode.jsonl`;
+>   - decisions logged for every policy;
+>   - git carries the spend ledger between machines.
+> - T3b-T3d keep their checks in `agent/check_bridge.py`, so T3d now has code and a commit.
+> - `run` and `eval` take `--map`, for harder maps after v1 (`agent/maps/`, never `maps/`).
+>
 > **Changes since v0.4 (2026-10-05, a review of every task against the code):**
 > - **Checks that could not work as written:**
 >   - T9's `grep "sk-or-"` always matched these docs. It now looks for a full key.
@@ -18,8 +31,7 @@
 > - **Gaps filled:**
 >   - AC5 is exact, with a second seed as a negative control;
 >   - AC7 moved to T7, where the gate is built;
->   - AC6 is checked on the real decision log, AC13 has a task (T10), and T9's report is
->     copied where git keeps it;
+>   - AC6 is checked on the real decision log;
 >   - T3c names its map and how to unwrap the heading;
 >   - "no input" runs keep stdin open, because EOF quits;
 >   - T4a pins Python 3.12 and commits `uv.lock`;
@@ -35,19 +47,29 @@
 > - Work top to bottom, one task at a time. Before a task, read its **Read** list.
 > - When its **Verify** passes, tick `[x]` and append `Done <date>:` with the evidence
 >   (numbers, not adjectives).
-> - Make **one commit per task**, with the given message. **Never push** unless the owner asks.
+> - Make **one commit per task**, with the given message. A task's commit includes the runs
+>   it made under `agent/runs/` (FR15). **Never push** unless the owner asks.
+> - **Each phase ends with a Linux checkpoint (L1-L5).**
+>   1. 🛑 Stop and give the owner the phase's summary. The owner asks for the push.
+>   2. The owner pulls the branch on Linux and runs the checkpoint's commands.
+>   3. The owner reports the results, and the checkpoint is ticked in the next commit with
+>      them.
+>
+>   A failure seen only on Linux comes back with its output and is fixed here, never by hand
+>   on Linux. The next phase starts only after its checkpoint passes.
 > - 🛑 means stop, report to the owner, and wait. Stop also whenever a check fails for a reason
->   you do not understand, or a task seems to need a path outside `agent/`, `sources/agent/`,
+>   you do not understand, or a task seems to need a path outside `agent/`, `sources/jev/`,
 >   `specs/` or `CLAUDE.md`.
 >
 > Paths are relative to the repo root. "The container" is `kube-dev` (see `START_HERE.md`,
-> "Environment"). "The base" is `origin/feature/jev-agent` (`0ac5649`).
+> "Environment"). "The base" is `origin/feature/jev-agent` (`0ac5649`). "Linux" is the owner's
+> machine; its one-time setup is in `START_HERE.md`, section 2b.
 
-## Setup
+## Phase 1 — Setup
 
 - [x] **T0** — Owner decisions. **Done 2026-09-29:** `spec.md`, "Decisions": map
   `subject_map`, dev seeds 1-20 and test seeds 101-120, 180 s cap, $1 total, the key from
-  `~/jev/libros/.env`.
+  `~/jev/libros/.env`. Decisions 5-8 were added on 2026-10-05.
 - [ ] **T1** — The environment works on this branch (no code).
   - **Read:** `START_HERE.md` ("Environment").
   - **Do:** `colima start` if it is not running, then `dev/dev.sh up`, then `dev/dev.sh check`.
@@ -56,21 +78,29 @@
 - [ ] **T2** — Isolation guard `agent/check_isolation.sh` (AC1).
   - **Read:** `spec.md` AC1; `plan.md`, "Layout"; `dev/dev.sh` (how the tree is copied into
     the container).
-  - **Do:** a bash script, run on the Mac, that:
+  - **Do:** a bash script that:
     1. checks that nothing outside the allowed paths changed or was added. With the pathspec
-       `-- . ':(exclude)agent' ':(exclude)sources/agent' ':(exclude)specs' ':(exclude)CLAUDE.md'`,
+       `-- . ':(exclude)agent' ':(exclude)sources/jev' ':(exclude)specs' ':(exclude)CLAUDE.md'`,
        both `git diff --stat origin/feature/jev-agent <pathspec>` (committed and uncommitted
        changes) and `git ls-files --others --exclude-standard <pathspec>` (new untracked
        files, which `git diff` does not list) must print nothing;
-    2. in the container, builds the base and the working tree with `make -s && make -s bonus`
-       and compares the sorted `sha256sum` lists of every `obj/**/*.o` and `obj_bonus/**/*.o`
-       (same files, same hashes):
-       - the base: `git archive origin/feature/jev-agent` piped into `/tmp/base`, with
-         `/kube/minilibx-linux` copied next to it;
-       - the working tree: `dev/dev.sh sync`, then `/kube`;
+    2. builds the base and the working tree with `make -s && make -s bonus`, and compares the
+       sorted `sha256sum` lists of every `obj/**/*.o` and `obj_bonus/**/*.o` (same files, same
+       hashes):
+       - the base: `git archive origin/feature/jev-agent`, extracted into an empty folder;
+       - the working tree: the files `dev/dev.sh sync` copies (tracked, plus untracked but
+         not ignored);
+       - each gets a copy of `minilibx-linux/` when it exists, so MiniLibX is not cloned
+         again;
        - the top-level `Makefile` compiles with relative paths (`$<`), so objects from two
          directories can match byte for byte;
     3. runs `norminette sources includes libft` (exit 0).
+
+    **Where it builds:**
+    - by default, on the Mac, parts 2 and 3 run in the container: the base goes to
+      `/tmp/base` and the working tree is `/kube` after `dev/dev.sh sync`;
+    - with `--local`, on Linux, they run in two temporary folders on the machine itself. The
+      Mac cannot build this MiniLibX, so `--local` is first run for real at L1.
 
     It prints PASS or FAIL per part and exits 1 on any failure.
   - **Verify:** it passes. Then **see each part fail once**, reverting after each edit:
@@ -82,8 +112,23 @@
 
     After the last revert it passes again. A part never seen failing proves nothing.
   - **Commit:** `agent: add the isolation guard for spec 002 (AC1)`.
+- [ ] 🔑 **L1** — Linux checkpoint, phase 1 (the owner, on Linux; see "How to use").
+  - The first time, set up the machine (`START_HERE.md`, 2b, "On a Linux machine"). Then, from
+    the repo root, after `git pull --ff-only`:
 
-## C bridge (`sources/agent/`, `agent/Makefile`)
+    ```bash
+    uname -m                                     # write it down: x86_64 or aarch64
+    Xvfb :99 -screen 0 1280x720x24 & export DISPLAY=:99
+    make && make bonus
+    bash tests/check.sh                          # last line: ALL PASSED
+    agent/check_isolation.sh --local             # PASS on all three parts
+    ```
+
+    The virtual display `:99` keeps the checks off the real screen: `check.sh` moves the
+    mouse.
+  - **Done when:** every line passed. The tick records `uname -m` and each last line.
+
+## Phase 2 — C bridge (`sources/jev/`, `agent/Makefile`)
 
 - [ ] **T3a** — Skeleton that builds and runs like the bonus.
   - **Read:**
@@ -92,7 +137,7 @@
     - `includes/cub3d.h` (the prototypes).
   - **Do:**
     - `agent/Makefile` and `agent/.gitignore`;
-    - `sources/agent/agent.h`, `agent_main.c` (`<map> <seed>`, overriding the seed after
+    - `sources/jev/agent.h`, `agent_main.c` (`<map> <seed>`, overriding the seed after
       `init_game`), `agent_loop.c` (no key or mouse hooks), `agent_frame.c` (the copied frame).
       No I/O yet.
   - **Verify**, in the container, after `dev/dev.sh sync`:
@@ -100,63 +145,80 @@
     - `DISPLAY=:99 timeout 5 ./agent/cub3D_agent maps/bonus/subject_map.cub 1; echo $?` prints
       `124`, meaning it was still alive;
     - `./agent/cub3D_agent maps/bonus/subject_map.cub` prints `Error` and exits 1;
-    - `norminette sources/agent` exits 0;
+    - `norminette sources/jev` exits 0;
     - `agent/check_isolation.sh` passes.
   - **Commit:** `agent: C skeleton of cub3D_agent (bonus frame, seed argument)`.
 - [ ] **T3b** — The init line and one obs line per frame (AC2).
   - **Read:** `plan.md`: "Contracts / Game -> agent", "C bridge" (non-blocking, 4096 bytes).
-  - **Do:** `agent_io.c` (`agent_init_io`: `O_NONBLOCK` on stdin and stdout, then the init
-    line) and `agent_obs.c` (`agent_print_obs`, `drops`).
-  - **Verify:** run 10 s on `subject_map`, seed 1, with stdout to `/tmp/obs.jsonl`. Then, with
-    `python3` in the container:
-    - line 1 has `type == "init"` and a map of `height` rows of `width` characters;
-    - there are at least 40 obs lines per second of `t`;
-    - every line is valid JSON with exactly the contract's fields;
-    - `drops == 0`.
+  - **Do:**
+    - `agent_io.c` (`agent_init_io`: `O_NONBLOCK` on stdin and stdout, then the init line);
+    - `agent_obs.c` (`agent_print_obs`, `drops`);
+    - `agent/check_bridge.py`, Python's standard library only. It starts
+      `./agent/cub3D_agent` itself, with stdin held open and stdout read as it comes. It
+      prints PASS or FAIL per check and exits 1 on any failure. Its first checks, on
+      `subject_map`, seed 1, over 10 s:
+      - line 1 has `type == "init"` and a map of `height` rows of `width` characters;
+      - there are at least 40 obs lines per second of `t`;
+      - every line is valid JSON with exactly the contract's fields;
+      - `drops == 0`.
+  - **Verify:** `docker exec -e DISPLAY=:99 -w /kube kube-dev python3 agent/check_bridge.py`
+    passes. See it fail once: rename one obs field in `agent_obs.c` and rebuild; the field
+    check FAILs. Then revert.
   - **Commit:** `agent: print the init line and one observation per frame`.
 - [ ] **T3c** — Commands, fire, `Q` and EOF (AC3).
   - **Read:** `plan.md`: "Agent -> game", "C bridge / Commands";
     `sources/movement/input_bonus.c` (what Up does); `sources/movement/player.c`.
-  - **Do:** `agent_read_commands` in `agent_io.c`.
-  - **Verify** with a small feeder, a bash or `python3` script in the container that writes
-    timed lines to the game's stdin while its stdout is captured. Use
-    `maps/bonus/subject_map.cub`, seed 1: the player starts at (26.5, 11.5) facing north, with
-    5 free cells ahead (rows 6-10 of column 26). Measure each step between obs lines by their
-    `t`:
-    - `C 1 0 0 0 0 0 0` for 1 s moves the player about 1.2 cells (±10%);
-    - `C 0 0 0 0 1 0 0` for 1 s changes the heading by about 1.8 rad (±10%), and turns left:
-      the change of `atan2(dy, dx)`, unwrapped into (-pi, pi] as `turn()` in `tests/check.sh`
-      does, is negative in y-down;
-    - a fire pulse, `C 0 0 0 0 0 0 1` and then `C 0 0 0 0 0 0 0` about 0.1 s later, makes
-      `weapon_ready` drop to 0, and it is back to 1 about 0.6 s after the drop. A held fire
-      keeps it at 0, because the weapon refires the moment it is ready (`plan.md`,
-      "C bridge / Commands");
-    - `Q` exits with code 0;
-    - closing stdin exits with code 0 within 1 s;
-    - with no input, the obs rate on `maps/good/minimal.cub` is 75 ± 10% (the 001 baseline).
-      "No input" means stdin is open and silent (`sleep 6 | ...`): EOF would quit at once.
+  - **Do:** `agent_read_commands` in `agent_io.c`. Add these checks to `check_bridge.py`,
+    which writes timed lines to the game's stdin.
+    - They use `maps/bonus/subject_map.cub`, seed 1: the player starts at (26.5, 11.5) facing
+      north, with 5 free cells ahead (rows 6-10 of column 26).
+    - Each step is measured between obs lines by their `t`:
+      - `C 1 0 0 0 0 0 0` for 1 s moves the player about 1.2 cells (±10%);
+      - `C 0 0 0 0 1 0 0` for 1 s changes the heading by about 1.8 rad (±10%), and turns
+        left: the change of `atan2(dy, dx)`, unwrapped into (-pi, pi] as `turn()` in
+        `tests/check.sh` does, is negative in y-down;
+      - a fire pulse, `C 0 0 0 0 0 0 1` and then `C 0 0 0 0 0 0 0` about 0.1 s later, makes
+        `weapon_ready` drop to 0, and it is back to 1 about 0.6 s after the drop. A held fire
+        keeps it at 0, because the weapon refires the moment it is ready (`plan.md`,
+        "C bridge / Commands");
+      - `Q` exits with code 0;
+      - closing stdin exits with code 0 within 1 s;
+      - with no input, the obs rate on `maps/good/minimal.cub` is 75 ± 10% (the 001
+        baseline). "No input" means stdin is open and silent: EOF would quit at once.
+  - **Verify:** `check_bridge.py` passes, with the T3b checks and these.
   - **Commit:** `agent: apply C/Q commands from stdin; exit on EOF`.
 - [ ] **T3d** — Fair timing and the seed (AC4, AC5).
-  - **Do:** nothing new is expected. Spec 001 already made movement time-based, and T3a set
-    the seed.
-  - **Verify:**
+  - **Do:** no game code is expected: spec 001 made movement time-based, and T3a set the
+    seed. Add these checks to `check_bridge.py`:
     - AC4: forward for 2 s gives 2.4 cells ± 10% on two maps with different frame rates: the
-      corridor and the test_map-facing-east maps of `tests/check.sh` `probe_maps()`. Recreate
-      them with that function's two commands (a `printf` and a `sed`). Do not source
+      corridor and the test_map-facing-east maps of `tests/check.sh` `probe_maps()`.
+      `check_bridge.py` writes the same two map texts into a temporary folder. Do not source
       `check.sh`: sourcing it runs every section.
-    - AC5: two idle runs with seed 7 (`sleep 3 | ...`) print **identical `enemies` (x, y, type,
-      hp)** in their first obs that has enemies. The spawn does not depend on `dt`; see
-      `plan.md`, "C bridge", `agent_main.c`. Then a run with seed 8 must print different
-      ones, so the comparison is seen able to fail.
-  - **Commit** (only if code changed): `agent: ...`. Otherwise tick it in the next commit.
+    - AC5: two idle runs with seed 7 print **identical `enemies` (x, y, type, hp)** in their
+      first obs that has enemies. The spawn does not depend on `dt`; see `plan.md`,
+      "C bridge", `agent_main.c`. A run with seed 8 must print different ones, so the
+      comparison is seen able to fail.
+  - **Verify:** `check_bridge.py` passes.
+  - **Commit:** `agent: check fair timing and seeded spawns (AC4, AC5)`.
 - [ ] **T3e** — Fixtures and the regression.
-  - **Do:** record `agent/tests/fixtures/idle_seed7.jsonl` (5 s, no input: `sleep 5 | ...`) and
+  - **Do:** record `agent/tests/fixtures/idle_seed7.jsonl` (5 s, stdin open and silent) and
     `agent/tests/fixtures/moves_seed7.jsonl` (the T3c sequence). Keep each under 500 KB: cut
     lines if needed, but keep line 1.
-  - **Verify:** `agent/check_isolation.sh` passes, and `dev/dev.sh check` prints `ALL PASSED`.
+  - **Verify:** `agent/check_isolation.sh` passes, `check_bridge.py` passes, and
+    `dev/dev.sh check` prints `ALL PASSED`.
   - **Commit:** `agent: record observation fixtures for the Python tests`.
+- [ ] 🔑 **L2** — Linux checkpoint, phase 2. On Linux, after `git pull --ff-only`, with
+  `DISPLAY=:99` as in L1:
 
-## Python agent (`agent/`, runs on the Mac)
+  ```bash
+  make -C agent
+  python3 agent/check_bridge.py                # every check PASS
+  agent/check_isolation.sh --local             # PASS on all three parts
+  ```
+
+  - **Done when:** every line passed. The tick records each check's numbers.
+
+## Phase 3 — Python agent and baselines (`agent/`, runs on the host)
 
 - [ ] **T4a** — Package skeleton.
   - **Read:** `plan.md`: "Layout", "SDK facts".
@@ -177,7 +239,8 @@
   - **Do:**
     - an asyncio subprocess;
     - runner `docker` (`docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent
-      <map> <seed>`) or `local` (`./agent/cub3D_agent <map> <seed>`, cwd = repo root);
+      <map> <seed>`) or `local` (`./agent/cub3D_agent <map> <seed>`, cwd = repo root, the
+      host's `DISPLAY`);
     - parse `init` and `obs` lines; `send(command_line)`; `close()` sends `Q`, then waits.
   - **Verify:** pytest with a fake child process: a tiny Python script that prints a fixture
     and echoes stdin to a file. Lines parse, commands arrive in order, and `close()` ends the
@@ -216,23 +279,44 @@
     schedule (every 0.5 s and on events), not on every obs. The initial tactic is ENGAGE.
     Idle never sends a command.
   - **Commit:** `agent: idle and scripted policies`.
-- [ ] **T5c** — `episode.py` and `kube-agent run`.
+- [ ] **T5c** — `episode.py` and `kube-agent run` (AC14).
   - **Read:** `plan.md`: "Logs", "Runtime expectations".
   - **Do:**
     - one episode ends on `state != 0` (win or lose) or at `--max-seconds` (default 180),
       then sends `Q`;
-    - write `agent/runs/<id>/episode.jsonl` and `result.json`: outcome, `survival_s`,
-      `wave_reached`, kills (the number of enemies that disappear within the same wave),
-      `damage_taken`, drops, `stalls` and `config_sha256`;
+    - `--map` (default `maps/bonus/subject_map.cub`) and `--runner` (default `docker`);
+    - write `agent/runs/<id>/` exactly as `plan.md` "Logs" describes: `result.json`,
+      `episode.jsonl`, and `decisions.jsonl` with the scripted policy's decisions too (idle's
+      file is empty). Kills are the enemies that disappear within the same wave;
     - `stalls` counts gaps above 100 ms between observations handled by the controller, timed
-      with the host's monotonic clock (`plan.md`, "Logs"). Unit-test the counter with a fake
-      loop that blocks for 0.2 s every 0.5 s: it must count them.
-  - **Verify:** run idle and scripted on seeds 1-5 through the docker runner. Every run writes
-    a `result.json`. **The scripted median survival is longer than idle's.** Append the
-    numbers to the research as **R11** ("Baselines on dev seeds 1-5").
-  - **Commit:** `agent: episode runner and first baselines (dev seeds 1-5)`.
+      with the host's monotonic clock. Unit-test the counter with a fake loop that blocks for
+      0.2 s every 0.5 s: it must count them;
+    - `run` ends with its one-line summary.
+  - **Verify:**
+    - run idle and scripted on seeds 1-5 through the docker runner. Every run writes its
+      three files with the documented fields;
+    - **the scripted median survival is longer than idle's**;
+    - AC14: `git status --porcelain agent/runs` lists the 10 new folders;
+    - append the numbers to the research as **R11** ("Baselines on dev seeds 1-5").
+  - **Commit** (with the 10 runs): `agent: episode runner and first baselines (dev seeds 1-5)`.
+- [ ] 🔑 **L3** — Linux checkpoint, phase 3. On Linux, after `git pull --ff-only`, with
+  `DISPLAY=:99` as in L1:
 
-## Jev
+  ```bash
+  make -C agent
+  cd agent && uv sync && uv run pytest -q      # green
+  uv run kube-agent run --runner local --policy scripted --seed 1
+  git add runs && git commit -m "agent: Linux checkpoint L3 run" && git push
+  ```
+
+  - The run must write its three files and print its summary line. This is AC13's first
+    check.
+  - To watch it play instead, use the real display: `DISPLAY=:0 uv run kube-agent run
+    --runner local --policy scripted --seed 2`. Not verified yet; L3 is where we find out.
+  - **Done when:** pytest is green and the run's `result.json` exists. The tick records the
+    test count and the run's summary line.
+
+## Phase 4 — Jev in the loop
 
 - [ ] **T6** — `jev_client.py` and `kube-agent spend` (AC8, AC10).
   - **Read:** `plan.md`: "SDK facts", "Key", "Budget ledger", "Jev policy";
@@ -258,7 +342,7 @@
 - [ ] **T6b** — The first real calls, and Jev's latency (the unknown in R2).
   - **Do:** `kube-agent latency --n 50` sends one state recorded from a fixture 50 times,
     sequentially.
-  - Check `kube-agent spend` first. This costs about $0.003.
+  - `git pull --ff-only`, then check `kube-agent spend` first. This costs about $0.003.
   - Load the key as shown in `START_HERE.md`.
   - **Verify:**
     - 50 rows, each with `model`, `input_tokens`, `cost` and `latency_ms`;
@@ -267,7 +351,7 @@
   - Append **R12** to the research: latency p50/p95, tokens per call and cost per call. If
     p95 > 500 ms, switch the policy to event-only decisions (`plan.md`, "Risks") before T7,
     and note it.
-  - **Commit:** `agent: measured Jev latency and cost (R12)`.
+  - **Commit** (with the run): `agent: measured Jev latency and cost (R12)`.
 - [ ] **T7** — The Jev policy in the loop (AC6, AC7, AC8, AC9).
   - **Do:**
     - decide every 0.5 s or on an event (new wave, health band drop), with at most one request
@@ -281,7 +365,7 @@
     - an answer whose state predates a new wave is not applied, and a new request follows;
     - an answer that arrives after the budget fallback is not applied.
   - **Verify** with a real run:
-    - `kube-agent run --policy jev --seed 1 --max-seconds 60` completes. Load the key as
+    - `kube-agent run --policy jev --seed 1 --max-seconds 60` completes. Pull, load the key as
       `START_HERE.md` shows, and check `spend` first (about $0.007 [calc]);
     - AC9: every decision row has the AC9 fields;
     - AC6: the T4c check (under 2,000 characters, no float) passes on every state in this
@@ -289,20 +373,39 @@
     - AC8: run scripted on seed 1 with `--max-seconds 60` as well. Jev's `stalls` may exceed
       scripted's by at most 5 (**ASSUMPTION**: a margin for noise). A loop blocked by each
       call would add one stall per decision, about 120 in 60 s [calc].
-  - **Commit:** `agent: Jev tactic policy in the game loop`.
+  - **Commit** (with both runs): `agent: Jev tactic policy in the game loop`.
+- [ ] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). On Linux,
+  after `git pull --ff-only` (the ledger must include the Mac's runs), with `DISPLAY=:99` as
+  in L1:
+
+  ```bash
+  make -C agent
+  cd agent && uv sync && uv run pytest -q      # green
+  uv run kube-agent spend                      # what is left of $1.00
+  ( set -a; . ~/jev/libros/.env; set +a; uv run kube-agent run --runner local --policy jev --seed 2 --max-seconds 30 )
+  git add runs && git commit -m "agent: Linux checkpoint L4 run" && git push
+  ```
+
+  - The parentheses keep the key inside that one command. Never `echo` it.
+  - **Done when:** pytest is green, no model warning was printed, and the summary line shows
+    decisions applied and a spend above $0. The push carries the run's cost to the Mac's
+    ledger.
+
+## Phase 5 — Tuning, evaluation and close
+
 - [ ] **T8** — Tuning on development seeds 1-20 only, then the freeze.
   - **Read:** research R5 (Jev's weak points); `CONTEXT.md`, "Jev in two minutes".
   - **Do:**
-    - run the Jev policy on dev seeds and look at `decisions.jsonl`: where does the tactic
-      look wrong?
+    - run the Jev policy on dev seeds and look at `decisions.jsonl` and `episode.jsonl`:
+      where does the tactic look wrong, and where are episodes won or lost?
     - **option-order check** (R5, "Choice option order": `jev-1.13` leans toward the first
       option of a Choice). `kube-agent order-check --n 100` takes at least 100 states already
       logged in `decisions.jsonl` on dev seeds. It asks each one twice through `jev_client`,
       once in the current order and once with the options reversed (same criteria text), and
-      logs both answers under `agent/runs/order-check/`. Report how often the `choice`
-      differs, and how often the first-listed option wins in each order. The spend counts
-      against the $1 ledger: 200 calls times the tokens per call measured in R12, about
-      $0.011 at 1,300 tokens [calc].
+      logs both answers under `agent/runs/order-check-<UTC date-time>-<machine>/`. Report how
+      often the `choice` differs, and how often the first-listed option wins in each order.
+      The spend counts against the $1 ledger: 200 calls times the tokens per call measured in
+      R12, about $0.011 at 1,300 tokens [calc].
       - If the choice differs in more than 10% of the states (**ASSUMPTION**: a starting
         value, the owner may change it), the order is not neutral. Then ask the same Choice
         twice in one request (two question ids, reversed orders; same state, so the state
@@ -318,14 +421,19 @@
     of idle, scripted and Jev. **Wait for the OK.**
   - **Done when:** the owner said OK, and `agent/frozen.json` holds `config_sha256` plus the
     date.
-  - **Commit:** `agent: freeze the Jev policy config after dev tuning`.
+  - **Commit** (with every tuning run): `agent: freeze the Jev policy config after dev tuning`.
 - [ ] **T9** — The final evaluation on test seeds 101-120 (AC11, AC12).
   - **Do:** `kube-agent eval --seeds 101-120 --policies idle,scripted,jev` (in the
-    background; up to about 2 h) writes `agent/runs/eval-<date>/report.md`.
+    background; up to about 2 h) writes `agent/runs/eval-<UTC date-time>-<machine>/`, one
+    folder per episode plus `report.md`. Pull and check `spend` first.
   - **Verify:**
-    - AC11: the report shows, per policy, n, wins with a Wilson 95% interval, survival
-      median/IQR and waves; for Jev, $/episode and latency p50/p95. Its config hash equals
-      `frozen.json`'s.
+    - AC11: the report shows, per policy:
+      - n, and wins with a Wilson 95% interval;
+      - survival median/IQR and waves;
+      - the share of time in each tactic, in wins and in losses;
+      - for Jev, $/episode and latency p50/p95.
+
+      Its config hash equals `frozen.json`'s.
     - AC12: the pattern `sk-or-v1-[0-9a-f]{64}` (`grep -E`) matches nothing in:
       - `agent/` (logs included) and `specs/`;
       - `git log -p --all`;
@@ -337,29 +445,31 @@
       prefix. To see that the search can find something, run it once on a temporary file
       holding a made-up key of that shape.
     - The Wilson function is unit-tested with 47/50, which gives 84-98% (the `libros` result).
-  - **Keep the evidence:** `agent/runs/` is gitignored, so copy `report.md` to
-    `specs/002-jev-agent/report-<date>.md` and append its summary to the research as **R14**.
+  - Append the report's summary to the research as **R14**.
   - 🛑 **Report the results to the owner as they are.** If scripted beats Jev, say so.
-  - **Commit:** `agent: final evaluation on test seeds 101-120`.
-- [ ] **T10** — Regression, and the local runner (AC13).
-  - **Verify:** `agent/check_isolation.sh` passes, `dev/dev.sh check` prints `ALL PASSED`,
-    and `cd agent && uv run pytest -q` is green.
-  - **AC13:** every other run used `--runner docker`. `--runner local` is checked inside the
-    container, which is a native Linux. The scripted policy needs no key:
-
-    ```bash
-    dev/dev.sh sync && docker exec kube-dev make -s -C agent
-    docker exec kube-dev pip3 install uv
-    docker exec -e DISPLAY=:99 -w /kube/agent kube-dev \
-      uv run kube-agent run --runner local --policy scripted --seed 1 --max-seconds 20
-    ```
-
-    It must write a `result.json`. `pip3` exists in the image, because it installs
-    norminette. `uv` fetches Python 3.12 and the dependencies over the network.
-    - If that fails for a network reason, say so in the Done note: AC13 then stays unverified
-      for `local`.
-    - Run `dev/dev.sh up` afterwards, so later work starts from a clean container.
+  - **Commit** (with the whole evaluation folder): `agent: final evaluation on test seeds
+    101-120`.
+- [ ] **T10** — Regression on the Mac.
+  - **Verify:** `agent/check_isolation.sh` passes, `check_bridge.py` passes in the container,
+    `dev/dev.sh check` prints `ALL PASSED`, and `cd agent && uv run pytest -q` is green.
   - **Commit:** `specs: spec 002 complete`, with `CONTEXT.md` "Status" updated.
-- [ ] **T11** — (optional, only if the owner asks) Watch or record an episode: `ffmpeg -f
-  x11grab` in the container, or `x11vnc` plus macOS Screen Sharing. Neither is verified yet.
-- [ ] 🛑 **T12** — Push, only when the owner asks.
+- [ ] 🔑 **L5** — Linux checkpoint, the final one. On Linux, after `git pull --ff-only`, with
+  `DISPLAY=:99` as in L1:
+
+  ```bash
+  uname -m
+  make && make bonus && bash tests/check.sh    # ALL PASSED
+  agent/check_isolation.sh --local             # PASS on all three parts
+  make -C agent && python3 agent/check_bridge.py
+  cd agent && uv sync && uv run pytest -q
+  uv run kube-agent run --runner local --policy scripted --seed 3
+  git add runs && git commit -m "agent: Linux checkpoint L5 run" && git push
+  ```
+
+  - **Done when:** every line passed.
+  - If `uname -m` is `x86_64`, this is also the final x86_64 check (`plan.md`, "Risks"). If
+    not, repeat L5 once on an x86_64 machine before any submission-related step.
+- [ ] **T11** — (optional, only if the owner asks) Watch or record an episode: on a Linux
+  desktop with `DISPLAY=:0` (see L3); on the Mac, `ffmpeg -f x11grab` in the container, or
+  `x11vnc` plus macOS Screen Sharing. None of these is verified yet.
+- [ ] 🛑 **T12** — The final push, only when the owner asks.

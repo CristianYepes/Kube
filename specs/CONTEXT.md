@@ -19,7 +19,7 @@
 >
 > Written 2026-09-28 from `main@34f4aff`; the "Jev in two minutes" facts were re-verified on
 > 2026-10-03 (still `jev-1.13`). Spec 002's tasks were re-checked against the code on
-> 2026-10-05 (`tasks.md` v0.5).
+> 2026-10-05, and the owner added decisions 5-8 the same day (`tasks.md` v0.6).
 > - Spec 001 was built on branch `feature/game-ready` and merged into the local `main`. On
 >   GitHub it lives on `feature/jev-agent` (`0ac5649`), "the base".
 > - Spec 002 is implemented on `feature/jev-agentv1`, created from the base.
@@ -142,7 +142,7 @@ that a non-AI bot could play Doom better. If our rule policy beats Jev, the repo
 
 - `cub3D_agent` is a **third binary with its own `agent/Makefile`**. It compiles the
   deliverable's sources, replacing three files (`main.c`, `mlx.c`, `game_loop.c`) with copies
-  in `sources/agent/`. **Spec 002 edits no existing file.**
+  in `sources/jev/`. **Spec 002 edits no existing file.**
 - Jev chooses one of **ENGAGE, KITE, RETREAT, SEARCH**. Code does everything numeric.
 - Evaluation mirrors the `libros` discipline:
     - tune on development seeds (1-20);
@@ -233,6 +233,12 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
     - **Implementation branch:** `feature/jev-agentv1`, created from the base.
     - T0 answered (`spec.md`, "Decisions"): `subject_map`, dev seeds 1-20 and test seeds
       101-120, 180 s per episode, $1 total, the key from `~/jev/libros/.env`.
+    - Decisions 5-8 (2026-10-05):
+      - the C bridge lives in `sources/jev/`;
+      - development runs on the Mac through Colima, and each phase is re-checked on the
+        owner's Linux (L1-L5);
+      - every run's logs are committed, to study how the game gets beaten;
+      - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Ready to implement: `002-jev-agent/START_HERE.md`, then `tasks.md` from T1.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
