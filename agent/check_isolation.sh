@@ -11,11 +11,13 @@
 #            base and for this tree (sha256 of every .o).
 #   norm     norminette sources includes libft finds no error.
 #
-# "The base" is origin/feature/jev-agent, the game after spec 001.
+# "The base" is origin/feature/jev-agent: the game after spec 001, and any fix made
+# to the game on that branch since. ISOLATION_BASE=<ref> compares against another
+# ref, to check before a new base commit has been pushed.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BASE=origin/feature/jev-agent
+BASE=${ISOLATION_BASE:-origin/feature/jev-agent}
 NAME=kube-dev
 # Everything the agent may add or change. Any other path belongs to the deliverable.
 OUTSIDE=(-- . ':(exclude)agent' ':(exclude)sources/jev' ':(exclude)specs' ':(exclude)CLAUDE.md')

@@ -25,8 +25,8 @@
 
 ## 2. Where you are
 
-- **Branch:** `feature/jev-agentv1`. The base is `origin/feature/jev-agent` (`0ac5649`), where
-  spec 001 is complete and all its checks pass.
+- **Branch:** `feature/jev-agentv1`. The base is `origin/feature/jev-agent` (`ad4244a`): spec 001
+  complete (`0ac5649`) plus a strafing fix of 2026-10-05, and all its checks pass.
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
@@ -262,7 +262,8 @@ def _coste(respuesta: dict) -> float:          # respuesta = r.raw_http_response
 
 ## 11. Glossary
 
-- **Base:** `origin/feature/jev-agent`, the game after spec 001. AC1 compares against it.
+- **Base:** `origin/feature/jev-agent`, the game after spec 001 and the strafing fix. AC1
+  compares against it.
 - **Episode:** one run of `cub3D_agent` with one map, seed and policy, ending on a win, a loss
   or 180 s.
 - **Policy:** who picks the tactic: `idle` (nothing), `scripted` (rules), `jev`.

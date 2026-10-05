@@ -41,9 +41,7 @@ TERRAIN = str.maketrans("NSEW ", "00001")  # start cells become floor, spaces wa
 MAP_IDENTIFIERS = ("NO", "SO", "WE", "EA", "F", "C")
 
 # What the game does per second of its own clock (includes/cub3d.h).
-MOVE_SPEED = 1.2       # cells per second, forward and back
-PLANE_LENGTH = 0.66    # |plane| (set_ns): strafing moves along plane, not a unit vector
-STRAFE_SPEED = MOVE_SPEED * PLANE_LENGTH   # 0.792 cells per second
+MOVE_SPEED = 1.2       # cells per second: walking and strafing (strafing was 0.79 before ad4244a)
 TURN_SPEED = 1.8       # radians per second
 FIRE_COOLDOWN = 0.6    # seconds
 FPS_ON_MINIMAL = 75.0  # frames per second measured for spec 001 (baseline file)
@@ -519,7 +517,7 @@ def check_garbage(session):
     return problems, ["%d malformed lines sent, none applied" % len(GARBAGE)]
 
 
-def check_move(session, name, direction, distance=None, expected_speed=MOVE_SPEED):
+def check_move(session, name, direction, distance=None):
     if session.error:
         return [session.error], []
     obs = session.phases[name]
@@ -534,8 +532,8 @@ def check_move(session, name, direction, distance=None, expected_speed=MOVE_SPEE
     problems = []
     if (dx * direction[0] + dy * direction[1]) / length < 0.99:
         problems.append("moved by (%.2f, %.2f), expected along %s" % (dx, dy, direction))
-    if abs(speed - expected_speed) > 0.1 * expected_speed:
-        problems.append("%.2f cells/s, expected %.2f +-10%%" % (speed, expected_speed))
+    if abs(speed - MOVE_SPEED) > 0.1 * MOVE_SPEED:
+        problems.append("%.2f cells/s, expected %.1f +-10%%" % (speed, MOVE_SPEED))
     if distance is not None and abs(length - distance) > 0.1 * distance:
         problems.append("%.2f cells after about 1 s, expected %.1f +-10%%" % (length, distance))
     if any(moved(a, b) for a, b in zip(obs[-3:], obs[-2:])):
@@ -711,10 +709,10 @@ def main():
     guarded("C 1 0 0 0 0 0 0 (in two writes): forward, 1.2 cells/s",
             check_move, moves, "forward", (0, -1), 1.2)
     guarded("C 0 1 0 0 0 0 0: back, 1.2 cells/s", check_move, moves, "back", (0, 1))
-    guarded("C 0 0 1 0 0 0 0: strafe left, 0.79 cells/s (1.2 x the 0.66 plane)",
-            check_move, moves, "strafe_left", (-1, 0), None, STRAFE_SPEED)
-    guarded("C 0 0 0 1 0 0 0: strafe right, 0.79 cells/s (1.2 x the 0.66 plane)",
-            check_move, moves, "strafe_right", (1, 0), None, STRAFE_SPEED)
+    guarded("C 0 0 1 0 0 0 0: strafe left, 1.2 cells/s",
+            check_move, moves, "strafe_left", (-1, 0))
+    guarded("C 0 0 0 1 0 0 0: strafe right, 1.2 cells/s",
+            check_move, moves, "strafe_right", (1, 0))
     guarded("C 0 0 0 0 1 0 0: turn left, 1.8 rad/s", check_turn, turns, "turn_left", -1, 1.8)
     guarded("C 0 0 0 0 0 1 0: turn right, 1.8 rad/s", check_turn, turns, "turn_right", 1)
     guarded("fire pulse: weapon_ready is 0 for 0.6 s", check_pulse, fire)

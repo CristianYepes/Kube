@@ -1,7 +1,8 @@
 # Plan 002 — Jev plays cub3D_bonus
 
 > HOW. Every choice is argued on ../research-2026-09-28.md (R-numbers below).
-> Starts from **the base**: `origin/feature/jev-agent` (`0ac5649`), where spec 001 is complete.
+> Starts from **the base**: `origin/feature/jev-agent`, where spec 001 is complete (`0ac5649`),
+> plus the strafing fix of 2026-10-05 (`ad4244a`, see "Conventions"): the base is now `ad4244a`.
 > Work happens on `feature/jev-agentv1`. The section "Implementation decisions" below is
 > binding: follow it rather than re-deciding.
 
@@ -388,12 +389,15 @@ sources/jev/
   `dir` rotated +90°, length 0.66, and points to the player's **right**: facing N, `dir = (0,-1)`
   and `plane = (0.66, 0)`, i.e. east (`set_ns` in `check_map.c`). The unit right vector is
   `(-dy, dx)`.
-- **Strafing is slower than walking.** `move_player` moves forward and back along `dir` (length
-  1) but strafes along `plane` (length 0.66), so the speeds are 1.2 and 1.2 × 0.66 = **0.792
-  cells/s** [calc]. Measured through the bridge: 1.20 and 0.79. It is how the game plays, not a
-  bridge fault, and spec 002 does not change the game. A diagonal step is the vector sum, so
-  its direction is not exactly the wanted vector `w`. The controller replans every
-  observation, so this does not matter, but it is not a mistake to chase.
+- **Strafing was slower than walking, and was fixed on the base.** Until 2026-10-05,
+  `move_player` moved forward and back along `dir` (length 1) but strafed along `plane`
+  (length 0.66, it sets the field of view), so strafing ran at 1.2 × 0.66 = **0.792 cells/s**
+  [calc]; measured through the bridge: 1.20 and 0.79. The owner had it fixed in the game itself,
+  on `feature/jev-agent` (`ad4244a`): strafing now goes along the unit vector `(-dy, dx)`, and
+  the bridge measures 1.20 for forward, back and both strafes. This branch carries it by a
+  merge. A diagonal step is still the vector sum of the two, 1.7 cells/s [calc], not normalised: the
+  controller replans every observation, so its direction not being exactly the wanted vector
+  `w` does not matter.
 - A positive angle, which is what the right-arrow key produces through `rotate_right`, turns
   **right**, clockwise on screen: east `(1,0)` becomes `(cos a, sin a)`, toward south.
 - For `v = target - player`:

@@ -1,5 +1,15 @@
-# Tasks 002 — Jev plays cub3D_bonus (v0.6: the checklist)
+# Tasks 002 — Jev plays cub3D_bonus (v0.7: the checklist)
 
+> **Changes since v0.6 (2026-10-05, a game defect found by T3c):**
+> - Strafing was a third slower than walking (0.79 against 1.2 cells/s: the game strafed along
+>   `plane`, which is 0.66 long). The owner asked for it fixed, in the game and on the base
+>   branch: `ad4244a` on `feature/jev-agent`, with a test in `tests/check.sh`.
+> - **The base moves from `0ac5649` to `ad4244a`.** AC1 still means "objects identical to the
+>   base", now the fixed one. This branch took the fix by a merge (`e5f8ad4`).
+> - `check_isolation.sh` accepts `ISOLATION_BASE=<ref>`, to check against a base that is not
+>   pushed yet. Without it, it compares with `origin/feature/jev-agent` as before.
+> - `check_bridge.py` expects 1.2 cells/s for the strafes again.
+>
 > **Changes since v0.5 (2026-10-05, the owner's decisions 5-8 in `spec.md`):**
 > - The C bridge folder is `sources/jev/` (it was `sources/agent/`), so `agent/` is the only
 >   folder named agent.
@@ -62,7 +72,8 @@
 >   `specs/` or `CLAUDE.md`.
 >
 > Paths are relative to the repo root. "The container" is `kube-dev` (see `START_HERE.md`,
-> "Environment"). "The base" is `origin/feature/jev-agent` (`0ac5649`). "Linux" is the owner's
+> "Environment"). "The base" is `origin/feature/jev-agent` (`ad4244a`: `0ac5649`, where spec
+> 001 was completed, plus the strafing fix). "Linux" is the owner's
 > machine; its one-time setup is in `START_HERE.md`, section 2b.
 
 ## Phase 1 — Setup
@@ -264,10 +275,13 @@
     pulse, `Q` and closing stdin both exit with code 0 in 0.00-0.01 s, 355 observations in 4 s
     on a terminal. valgrind on both ways out: 0 bytes in use at exit, 0 errors.
     `check_isolation.sh`: ALL PASSED, 71 objects identical, 101 files OK. Findings:
-    - **strafing is 0.79 cells/s, not 1.2.** The game strafes along `plane` (length 0.66), so
-      1.2 × 0.66 = 0.792 [calc], and the measured 0.79 agrees. My first expectation was wrong.
-      It is how the game plays (see `plan.md`, "Conventions"), and it is outside this spec to
-      change: reported, not fixed;
+    - **strafing was 0.79 cells/s, not 1.2.** The game strafed along `plane` (length 0.66), so
+      1.2 × 0.66 = 0.792 [calc], and the measured 0.79 agreed. My first expectation was wrong.
+      It was the game's own defect, outside this spec's paths, so it was reported first. The
+      owner then asked for it fixed on the base: `ad4244a` (`tests/check.sh` gained an A and D
+      probe that failed before the fix with 1.60 and 1.59 cells in 2 s, against 2.4, and
+      passes after with 2.42 and 2.43). Merged here as `e5f8ad4`; through the bridge, strafing
+      now measures 1.20 cells/s and `check_bridge.py` expects 1.2 again (21 of 21 PASS);
     - the fire-pulse check was timing-dependent: the first observation read was sometimes
       already after the shot. It now reads 0.2 s first so the weapon is seen ready;
     - the rate check on `minimal` measured 64.5 once, with 5.7 s of game time in 6 s of wall

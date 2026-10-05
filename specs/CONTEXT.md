@@ -21,7 +21,8 @@
 > 2026-10-03 (still `jev-1.13`). Spec 002's tasks were re-checked against the code on
 > 2026-10-05, and the owner added decisions 5-8 the same day (`tasks.md` v0.6).
 > - Spec 001 was built on branch `feature/game-ready` and merged into the local `main`. On
->   GitHub it lives on `feature/jev-agent` (`0ac5649`), "the base".
+>   GitHub it lives on `feature/jev-agent` (`0ac5649`), "the base", which gained one fix on
+>   2026-10-05 (`ad4244a`, strafing speed; see the end of this file).
 > - Spec 002 is implemented on `feature/jev-agentv1`, created from the base.
 >
 > Facts are dated. Re-verify anything external (model ids, prices, versions) before relying
@@ -266,5 +267,9 @@ the way:
 - 136 bytes definitely lost on the texture-failure path;
 - build outputs that were not in `.gitignore`.
 
+One more was found later, by spec 002's bridge checks, and fixed on the base on 2026-10-05
+(`ad4244a`): strafing went along `plane`, which is 0.66 long, so A and D were a third slower
+than W and S (0.79 against 1.2 cells/s). Details: research, "Observed defects", item 11.
+
 Details: research, "Observed defects", R8-R10, and `001-game-ready/tasks.md`. Spec 002 must
-not touch the deliverable.
+not touch the deliverable; a defect it finds in it is fixed on the base branch, as above.
