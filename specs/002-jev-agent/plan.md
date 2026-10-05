@@ -306,6 +306,8 @@ sources/jev/
 
 - **`agent_main.c`**:
   - with `argc != 3`, print `Error` and `Usage: ./cub3D_agent <map.cub> <seed>`, then return 1;
+  - a seed that is not 1 to 9 digits also prints `Error` and returns 1, before the map is
+    opened: `ft_atoi` reads `abc` as 0 silently and does not detect overflow;
   - then `check_file`, `parsing` and `init_game`, exactly as in `sources/main.c:15-33`;
   - **then** `data.seed = (unsigned int)ft_atoi(argv[2])`. `init_mod_state` has just seeded
     from the clock. Enemies spawn at the first `update_sim`, after this override, so the same

@@ -150,27 +150,43 @@
 
 ## Phase 2 — C bridge (`sources/jev/`, `agent/Makefile`)
 
-- [ ] **T3a** — Skeleton that builds and runs like the bonus.
+- [x] **T3a** — Skeleton that builds and runs like the bonus.
   - **Read:**
     - `plan.md`: "Build", "C bridge";
     - `sources/main.c`, `sources/mlx_loop_and_hook/mlx.c`, `sources/render/game_loop.c`;
     - `includes/cub3d.h` (the prototypes).
   - **Do:**
-    - `agent/Makefile` and `agent/.gitignore`;
-    - `sources/jev/agent.h`, `agent_main.c` (`<map> <seed>`, overriding the seed after
-      `init_game`), `agent_loop.c` (no key or mouse hooks), `agent_frame.c` (the copied frame).
-      No I/O yet.
+    - `agent/Makefile`, and `agent/.gitignore` with only `cub3D_agent` and `obj/` (`runs/` is
+      not ignored: FR15). T4a adds the Python entries when there is Python to ignore;
+    - `sources/jev/agent_main.c` (`<map> <seed>`, overriding the seed after `init_game`),
+      `agent_loop.c` (no key or mouse hooks), `agent_frame.c` (the copied frame). No I/O yet;
+    - the seed must be 1 to 9 digits, or `Error` and exit 1: `ft_atoi` reads `abc` as 0
+      without a word and does not detect overflow, so a typo would silently change the
+      experiment;
+    - **no `agent.h` yet:** it would be an empty header (YAGNI). T3b creates it with the first
+      bridge prototypes.
   - **Verify**, in the container, after `dev/dev.sh sync`:
     - `make -s -C agent` builds `agent/cub3D_agent`;
     - `DISPLAY=:99 timeout 5 ./agent/cub3D_agent maps/bonus/subject_map.cub 1; echo $?` prints
-      `124`, meaning it was still alive;
-    - `./agent/cub3D_agent maps/bonus/subject_map.cub` prints `Error` and exits 1;
+      `124`, meaning it was still alive. A hung process also gives 124, so take a screenshot
+      too (`xwd`): the screen must hold many colors, where an empty one holds 1;
+    - `./agent/cub3D_agent maps/bonus/subject_map.cub` prints `Error` and exits 1, and so do
+      a seed `abc` and a 10-digit seed;
     - `norminette sources/jev` exits 0;
     - `agent/check_isolation.sh` passes.
   - **Commit:** `agent: C skeleton of cub3D_agent (bonus frame, seed argument)`.
+  - **Done 2026-10-05:** `make -s -C agent` built `agent/cub3D_agent` (139,416 bytes) and
+    `norminette sources/jev` printed OK for all three files. `timeout 5` returned 124. The
+    screenshot after 3 s on seed 1 held 1,224 colors, against 1 on the empty screen, and shows
+    the minimap, the weapon, the health bar and two zombies. No seed, seed `abc` and seed
+    `1234567890` each printed `Error` with exit 1, and so did `maps/bad/wall_hole.cub`
+    (`Map is not closed`) and a missing map. `check_isolation.sh`: ALL PASSED, 71 objects
+    identical, 97 files OK in norminette.
 - [ ] **T3b** — The init line and one obs line per frame (AC2).
   - **Read:** `plan.md`: "Contracts / Game -> agent", "C bridge" (non-blocking, 4096 bytes).
   - **Do:**
+    - `sources/jev/agent.h`, the bridge's prototypes (it includes `cub3d.h`); it is created
+      here, not in T3a, so that it is never an empty header;
     - `agent_io.c` (`agent_init_io`: `O_NONBLOCK` on stdin and stdout, then the init line);
     - `agent_obs.c` (`agent_print_obs`, `drops`);
     - `agent/check_bridge.py`, Python's standard library only. It starts
@@ -248,6 +264,7 @@
     - `agent/.python-version` with `uv python pin 3.12`. This Mac has 3.12, 3.13 and 3.14, so
       without a pin uv picks whichever it finds, and the SDK's support for 3.14 is not
       verified;
+    - the Python entries of `agent/.gitignore`: `.venv/`, `__pycache__/`, `.pytest_cache/`;
     - `src/kube_agent/__init__.py`;
     - `cli.py`, with subcommands that print "not implemented yet";
     - `config.py`;
