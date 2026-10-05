@@ -262,7 +262,8 @@ agent/
     evaluate.py       many episodes, statistics, report.md
     cli.py            kube-agent run | eval | spend | latency | order-check;
                       run and eval take --map (default maps/bonus/subject_map.cub)
-  tests/              pytest; no X, no network; tests/fixtures/ holds obs recorded in T3
+  tests/              pytest; no X, no network; tests/fixtures/ holds obs recorded in T4b and
+                      T4c, each in the commit of the test that first uses it
   runs/               every run's logs, committed (see "Logs")
 sources/jev/
   agent.h             prototypes of the bridge (includes cub3d.h)

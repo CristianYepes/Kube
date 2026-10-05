@@ -176,9 +176,12 @@ The checkpoints in `tasks.md` (L1-L5) list the exact commands.
 4. Tick it: `[x]` plus `Done <date>:` and the evidence (numbers).
 5. Commit with the task's message, including the runs it made.
 6. Give the owner a two-line status in Spanish, then take the next task.
-7. **At the end of a phase,** stop. Give the owner the phase's summary and the checkpoint's
-   commands. Wait for the push request and then for the Linux results. Tick the checkpoint
-   with those results in the next commit.
+7. **At the end of a phase,** stop. Give the owner the phase's summary, the checkpoint's
+   commands, and **every open row of the "Linux ledger" in `tasks.md`**, not only the ones
+   due: the owner asked that nothing be forgotten. Wait for the push request and then for the
+   Linux results. Tick the checkpoint and the ledger rows with those results in the next
+   commit. Anything a check cannot settle off the owner's machine goes into the ledger the
+   moment it is found.
 
 ## 7. When to stop and ask the owner (🛑)
 

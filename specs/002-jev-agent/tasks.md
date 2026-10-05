@@ -1,4 +1,16 @@
-# Tasks 002 — Jev plays cub3D_bonus (v0.7: the checklist)
+# Tasks 002 — Jev plays cub3D_bonus (v0.8: the checklist)
+
+> **Changes since v0.7 (2026-10-05, the owner's rule: everything that needs Linux is written
+> down, in the phases, so that nothing is forgotten):**
+> - **A "Linux ledger"** (below) lists every check that only the owner's Linux can settle,
+>   with its command, what to report, and the machine-dependent ways it may fail.
+> - **L1 and L2 are both due.** Phase 1 was not stopped at its checkpoint (T3 started
+>   without L1), which the protocol forbids. Run L1 first, then L2.
+> - **T3e is now the regression only.** The fixtures were moved to the tasks that first use
+>   them, as the owner's YAGNI rule says ("fixtures live in the commit of the test that uses
+>   them"): `idle_seed7.jsonl` to T4b and `moves_seed7.jsonl` to T4c.
+> - `--local` of `check_isolation.sh` was rehearsed in a fresh copy inside the container (a
+>   Linux, though not the owner's machine): it passes.
 
 > **Changes since v0.6 (2026-10-05, a game defect found by T3c):**
 > - Strafing was a third slower than walking (0.79 against 1.2 cells/s: the game strafed along
@@ -76,6 +88,30 @@
 > 001 was completed, plus the strafing fix). "Linux" is the owner's
 > machine; its one-time setup is in `START_HERE.md`, section 2b.
 
+## Linux ledger: what only the owner's machine can settle
+
+Nothing in this ledger counts as verified until the owner pastes the output and a row says
+so. At the end of every phase the summary lists the rows due at that checkpoint, each with its
+command. A row leaves the ledger only when the owner reports that it passed. **Do not drop a
+row because it is awkward: move it to a later checkpoint and say why.**
+
+What a container on the Mac cannot show: the owner's hardware speed, distribution and
+compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
+
+| # | What | State today | Due |
+|---|---|---|---|
+| 1 | The one-time setup of `START_HERE.md` 2b: the `apt` packages, `uv` 0.8.24, `norminette==3.3.60` | written from the Mac's image, never run on a fresh machine | L1 |
+| 2 | `make && make bonus` from scratch | rehearsed in a clean container copy (Ubuntu 22.04 aarch64): the MiniLibX was cloned at the pinned `f07d00f` and both binaries built | L1 |
+| 3 | `bash tests/check.sh`: `ALL PASSED`, 10 sections | passes in the container; machine-dependent, see L1 | L1 |
+| 4 | `agent/check_isolation.sh --local` | rehearsed in the container: PASS, 71 identical objects. Never run on the owner's machine | L1, L2 |
+| 5 | `make -C agent` with the owner's compiler under `-Werror` | builds with the container's gcc | L2 |
+| 6 | `python3 agent/check_bridge.py`: 24 checks | 24 of 24 in the container; machine-dependent, see L2 | L2 |
+| 7 | `uname -m`: x86_64 or aarch64 | unknown | L1 |
+| 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | does not exist yet | L3 |
+| 9 | Seeing the game on the real display (`DISPLAY=:0`) | not verified; optional | L3 |
+| 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |
+| 11 | The final x86_64 check of AC1 and one episode | pending | L5 |
+
 ## Phase 1 — Setup
 
 - [x] **T0** — Owner decisions. **Done 2026-09-29:** `spec.md`, "Decisions": map
@@ -143,12 +179,13 @@
     The last row is why part 1 also lists untracked files: nothing else sees that file.
     `--local` is **not** run yet: the Mac cannot build the X11 MiniLibX, so it is first run for
     real at L1.
-- [ ] 🔑 **L1** — Linux checkpoint, phase 1 (the owner, on Linux; see "How to use").
+- [ ] 🔑 **L1** — Linux checkpoint, phase 1 (the owner, on Linux; see "How to use"). **Due
+  now, together with L2: run this one first.** Ledger rows 1, 2, 3, 4 and 7.
   - The first time, set up the machine (`START_HERE.md`, 2b, "On a Linux machine"). Then, from
     the repo root, after `git pull --ff-only`:
 
     ```bash
-    uname -m                                     # write it down: x86_64 or aarch64
+    uname -m; cc --version | head -1; python3 --version; head -2 /etc/os-release
     Xvfb :99 -screen 0 1280x720x24 & export DISPLAY=:99
     make && make bonus
     bash tests/check.sh                          # last line: ALL PASSED
@@ -157,6 +194,20 @@
 
     The virtual display `:99` keeps the checks off the real screen: `check.sh` moves the
     mouse.
+  - **Report back** (paste the text; do not summarise it): the first line of output (the
+    `uname`, compiler, Python and distribution lines), any command that failed during the
+    setup, the last lines of `make` and `make bonus`, all of `check.sh`'s output, and all of
+    `check_isolation.sh`'s.
+  - **Ways it can fail because of the machine and not the code**, so they are not read as
+    bugs:
+    - `fps vs baseline (AC7)` expects `cub3D_bonus` on `minimal` at 75 fps ±15%. That 75 was
+      measured on the Mac's container (the container gives 69-77). A faster or slower
+      machine can fail it. If it is the only failure, report the printed number: the baseline
+      then needs recording on that machine, which is a decision, not a fix;
+    - the MiniLibX prints one warning, `mlx_new_image.c: ignoring return value of 'write'`.
+      It is the library's own and does not stop the build;
+    - `valgrind` and `norminette` must be installed (setup 2b). A missing one fails with
+      "command not found".
   - **Done when:** every line passed. The tick records `uname -m` and each last line.
 
 ## Phase 2 — C bridge (`sources/jev/`, `agent/Makefile`)
@@ -325,22 +376,57 @@
     differ, and the check now enforces it. The comment of `probe_maps()` in `tests/check.sh`
     still calls the corridor fast and test_map slow; it belongs to the base branch and was left
     alone.
-- [ ] **T3e** — Fixtures and the regression.
-  - **Do:** record `agent/tests/fixtures/idle_seed7.jsonl` (5 s, stdin open and silent) and
-    `agent/tests/fixtures/moves_seed7.jsonl` (the T3c sequence). Keep each under 500 KB: cut
-    lines if needed, but keep line 1.
+- [x] **T3e** — The regression of phase 2 (it was "Fixtures and the regression").
+  - **Do:** nothing new is written. The two fixtures this task used to record moved to the
+    tasks that first use them, in the commit of the test that uses them (the owner's YAGNI
+    rule): `idle_seed7.jsonl` to T4b and `moves_seed7.jsonl` to T4c.
   - **Verify:** `agent/check_isolation.sh` passes, `check_bridge.py` passes, and
-    `dev/dev.sh check` prints `ALL PASSED`.
-  - **Commit:** `agent: record observation fixtures for the Python tests`.
-- [ ] 🔑 **L2** — Linux checkpoint, phase 2. On Linux, after `git pull --ff-only`, with
-  `DISPLAY=:99` as in L1:
+    `dev/dev.sh check` prints `ALL PASSED`. Also rehearse the Linux commands of L1 and L2 in a
+    clean copy of the repository inside the container (it is a Linux): `tar` the tree with its
+    `.git` and without build outputs into a new folder, then run `make && make bonus`,
+    `agent/check_isolation.sh --local`, `make -C agent` and `python3 agent/check_bridge.py`
+    there. It cannot stand in for the owner's machine (ledger), but it finds what is wrong in
+    the commands themselves.
+  - **Commit:** `agent: phase 2 regression, Linux ledger and fixtures moved to T4 (tasks v0.8)`.
+  - **Done 2026-10-05:**
+    - `dev/dev.sh check`: ALL PASSED, 10 of 10 sections (strafing probes 2.42-2.44 cells, the
+      `minimal` rate 76 fps);
+    - `check_bridge.py`: 24 of 24 PASS;
+    - `check_isolation.sh`: ALL PASSED against the pushed base `ad4244a` (71 identical
+      objects, 101 files OK);
+    - the rehearsal, in a fresh copy of the repository (`.git` included, 2.5 MB) in the
+      container, Linux aarch64: `make` cloned the MiniLibX at the pinned `f07d00f` and built
+      both binaries; **`check_isolation.sh --local` passed on its first real run** (71
+      identical objects, 101 files OK); `make -C agent` built the 144,760-byte binary; and
+      `check_bridge.py` gave 24 of 24 (rate on `minimal` 73.8-77.7, the maps at 72 and 98
+      observations per second).
+    - Not rehearsed: `tests/check.sh` in the copy (the same suite passed through
+      `dev/dev.sh check`), and everything in the ledger that depends on the owner's machine.
+- [ ] 🔑 **L2** — Linux checkpoint, phase 2. **Due now, after L1.** Ledger rows 4, 5 and 6.
+  On Linux, after `git pull --ff-only`, with `DISPLAY=:99` as in L1:
 
   ```bash
   make -C agent
-  python3 agent/check_bridge.py                # every check PASS
+  python3 agent/check_bridge.py                # 24 checks, ALL PASSED
   agent/check_isolation.sh --local             # PASS on all three parts
   ```
 
+  - **Report back** (paste the text): the output of `make -C agent` (it should print nothing
+    but the compile lines) and all of `check_bridge.py`'s output, which prints its numbers.
+  - **Ways it can fail because of the machine and not the code:**
+    - `no commands: 75 observations per second on minimal.cub (+-10%, best of 3)` compares
+      with the 75 measured on the Mac's container (the container gives 73-78 there). The
+      check takes the best of three stretches, so a passing stall of the machine does not
+      fail it, but a machine that is slower or faster by more than 10% does. Report the three
+      numbers it prints;
+    - `2 s of forward moves 2.4 cells on two maps with different frame rates` also fails if
+      the two maps happen to run at frame rates under 10% apart on your machine (here they
+      were 72-87 and 90-100). It then says so in its message: that is a reason to pick other
+      maps, not a bug;
+    - `-Werror` turns every compiler warning into an error, and a newer compiler than the
+      container's gcc 11.4 may add some. Report the message;
+    - the checks need `python3` 3.10 or newer (tested on 3.10.12), the `pty` module (standard
+      on Linux) and `DISPLAY` pointing at a running X server.
   - **Done when:** every line passed. The tick records each check's numbers.
 
 ## Phase 3 — Python agent and baselines (`agent/`, runs on the host)
@@ -367,14 +453,25 @@
     - runner `docker` (`docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent
       <map> <seed>`) or `local` (`./agent/cub3D_agent <map> <seed>`, cwd = repo root, the
       host's `DISPLAY`);
-    - parse `init` and `obs` lines; `send(command_line)`; `close()` sends `Q`, then waits.
-  - **Verify:** pytest with a fake child process: a tiny Python script that prints a fixture
-    and echoes stdin to a file. Lines parse, commands arrive in order, and `close()` ends the
-    child.
+    - parse `init` and `obs` lines; `send(command_line)`; `close()` sends `Q`, then waits;
+    - **record the first fixture, in this commit:** `agent/tests/fixtures/idle_seed7.jsonl`,
+      5 s of `subject_map` with seed 7 and stdin open and silent. Record it inside the
+      container to a file, so a full pipe cannot drop lines, then copy it out:
+      `docker exec -e DISPLAY=:99 -w /kube kube-dev bash -c 'sleep 5 | ./agent/cub3D_agent
+      maps/bonus/subject_map.cub 7 > /tmp/idle_seed7.jsonl'` and `docker cp`. The input ends
+      after 5 s, so the game exits on its own. Check that line 1 is the init line, that
+      `drops` is 0 everywhere and that the file is under 500 KB (about 190 KB [calc]).
+  - **Verify:** pytest with a fake child process: a tiny Python script that prints that
+    fixture and echoes stdin to a file. Lines parse, commands arrive in order, and `close()`
+    ends the child.
   - **Commit:** `agent: game bridge over stdin/stdout (docker and local runners)`.
 - [ ] **T4c** — `features.py` (AC6).
   - **Read:** `plan.md`: "Conventions", "Semantic features".
-  - **Do:** obs + map + short history -> the semantic state dict.
+  - **Do:** obs + map + short history -> the semantic state dict. **Record the second
+    fixture, in this commit:** `agent/tests/fixtures/moves_seed7.jsonl`, the T3c sequence
+    (the `script_moves` of `check_bridge.py`, with seed 7), written from `game.lines` of a
+    `Game` in the container with a one-off `python3 -c` that imports `check_bridge`. Keep it
+    under 500 KB: cut lines if needed, but keep line 1.
   - **Verify** with pytest:
     - the worked example (the enemy at (5.5, 4.5) is `left`);
     - every band boundary (0.99 / 1.0, 2.49 / 2.5, 5.99 / 6.0, and health 29 / 30, 59 / 60);
@@ -425,7 +522,8 @@
     - AC14: `git status --porcelain agent/runs` lists the 10 new folders;
     - append the numbers to the research as **R11** ("Baselines on dev seeds 1-5").
   - **Commit** (with the 10 runs): `agent: episode runner and first baselines (dev seeds 1-5)`.
-- [ ] 🔑 **L3** — Linux checkpoint, phase 3. On Linux, after `git pull --ff-only`, with
+- [ ] 🔑 **L3** — Linux checkpoint, phase 3. Ledger rows 8 and 9. First re-run what L1 and
+  L2 settled, if anything changed since. On Linux, after `git pull --ff-only`, with
   `DISPLAY=:99` as in L1:
 
   ```bash
@@ -437,6 +535,9 @@
 
   - The run must write its three files and print its summary line. This is AC13's first
     check.
+  - **Report back** (paste the text): the output of `uv sync` (which Python it picked, and
+    whether `typesafe-sdk` 0.7.2 installed), the `pytest` summary, and the run's summary line.
+    Machine-dependent: the `uv` download of Python 3.12 needs the network.
   - To watch it play instead, use the real display: `DISPLAY=:0 uv run kube-agent run
     --runner local --policy scripted --seed 2`. Not verified yet; L3 is where we find out.
   - **Done when:** pytest is green and the run's `result.json` exists. The tick records the
@@ -500,9 +601,10 @@
       scripted's by at most 5 (**ASSUMPTION**: a margin for noise). A loop blocked by each
       call would add one stall per decision, about 120 in 60 s [calc].
   - **Commit** (with both runs): `agent: Jev tactic policy in the game loop`.
-- [ ] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). On Linux,
-  after `git pull --ff-only` (the ledger must include the Mac's runs), with `DISPLAY=:99` as
-  in L1:
+- [ ] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). Ledger row
+  10: first create the key file on Linux (`START_HERE.md` 2b, step 3, the `read -s` variant:
+  never paste the key into the chat). On Linux, after `git pull --ff-only` (the spend ledger
+  must include the Mac's runs), with `DISPLAY=:99` as in L1:
 
   ```bash
   make -C agent
@@ -579,8 +681,9 @@
   - **Verify:** `agent/check_isolation.sh` passes, `check_bridge.py` passes in the container,
     `dev/dev.sh check` prints `ALL PASSED`, and `cd agent && uv run pytest -q` is green.
   - **Commit:** `specs: spec 002 complete`, with `CONTEXT.md` "Status" updated.
-- [ ] 🔑 **L5** — Linux checkpoint, the final one. On Linux, after `git pull --ff-only`, with
-  `DISPLAY=:99` as in L1:
+- [ ] 🔑 **L5** — Linux checkpoint, the final one. Ledger rows 7 and 11, and **every row that
+  is still open**: nothing may remain in the ledger when the spec is closed. On Linux, after
+  `git pull --ff-only`, with `DISPLAY=:99` as in L1:
 
   ```bash
   uname -m
