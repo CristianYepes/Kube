@@ -106,7 +106,7 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 | 4 | `agent/check_isolation.sh --local` | rehearsed in the container: PASS, 71 identical objects. Never run on the owner's machine | L1, L2 |
 | 5 | `make -C agent` with the owner's compiler under `-Werror` | builds with the container's gcc | L2 |
 | 6 | `python3 agent/check_bridge.py`: 24 checks | 24 of 24 in the container; machine-dependent, see L2 | L2 |
-| 7 | `uname -m`: x86_64 or aarch64 | unknown | L1 |
+| 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **the owner's Linux is aarch64** (UTM, Ubuntu 22.04.5, gcc 11.4.0, Python 3.10.12, checked 2026-10-06): the same architecture as the Mac's container, so L1 and L2 cannot settle this row. **It stays open for L5** | L5 |
 | 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | does not exist yet | L3 |
 | 9 | Seeing the game on the real display (`DISPLAY=:0`) | not verified; optional | L3 |
 | 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |

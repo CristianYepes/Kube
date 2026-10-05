@@ -50,11 +50,16 @@ The repo carries everything **except the API key**, which must never be in it.
    with no Docker. On Ubuntu or Debian:
 
    ```bash
-   sudo apt install build-essential git curl libx11-dev libxext-dev libbsd-dev zlib1g-dev xvfb xdotool valgrind
+   sudo apt install -y build-essential git curl libx11-dev libxext-dev libbsd-dev
+   sudo apt install -y zlib1g-dev xvfb xdotool valgrind
    curl -LsSf https://astral.sh/uv/0.8.24/install.sh | sh     # the Mac's uv version
    uv tool install norminette==3.3.60                         # the container's version
    ```
 
+   - The apt line is split in two on purpose. On 2026-10-06 the single long line was cut in
+     two when the owner pasted it into a terminal: the second half ran as a command
+     (`zlib1g-dev: command not found`) and four packages were never installed. **Keep every
+     command short enough to paste in one piece.**
    - The packages are the image's (`dev/Dockerfile`), minus the screenshot tools.
    - The `uv` installer URL with a version is the official form (docs.astral.sh, checked
      2026-10-05, and this URL answered 200).
