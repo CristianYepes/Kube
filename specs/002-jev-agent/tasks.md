@@ -182,30 +182,54 @@
     `1234567890` each printed `Error` with exit 1, and so did `maps/bad/wall_hole.cub`
     (`Map is not closed`) and a missing map. `check_isolation.sh`: ALL PASSED, 71 objects
     identical, 97 files OK in norminette.
-- [ ] **T3b** — The init line and one obs line per frame (AC2).
+- [x] **T3b** — The init line and one obs line per frame (AC2).
   - **Read:** `plan.md`: "Contracts / Game -> agent", "C bridge" (non-blocking, 4096 bytes).
   - **Do:**
     - `sources/jev/agent.h`, the bridge's prototypes (it includes `cub3d.h`); it is created
       here, not in T3a, so that it is never an empty header;
-    - `agent_io.c` (`agent_init_io`: `O_NONBLOCK` on stdin and stdout, then the init line);
+    - `agent_io.c` (`agent_init_io`: the init line, then `O_NONBLOCK` on stdout unless it is a
+      terminal; stdin gets the flag in T3c, when it is first read; and `agent_fail`);
     - `agent_obs.c` (`agent_print_obs`, `drops`);
+    - the two call sites: `agent_init_io` in `agent_main.c` and `agent_print_obs` in
+      `agent_frame.c`;
     - `agent/check_bridge.py`, Python's standard library only. It starts
       `./agent/cub3D_agent` itself, with stdin held open and stdout read as it comes. It
-      prints PASS or FAIL per check and exits 1 on any failure. Its first checks, on
-      `subject_map`, seed 1, over 10 s:
-      - line 1 has `type == "init"` and a map of `height` rows of `width` characters;
-      - there are at least 40 obs lines per second of `t`;
-      - every line is valid JSON with exactly the contract's fields;
-      - `drops == 0`.
+      prints PASS or FAIL per check and exits 1 on any failure. Its checks, on `subject_map`,
+      seed 1:
+      - the init line matches the map file, which the script reads itself (the start cell is
+        floor in the init map);
+      - the first observation matches the start, with 3 grunts on floor cells;
+      - every line is valid JSON with exactly the contract's fields, in order and with their
+        types, and some enemy rows were seen;
+      - at least 40 obs lines per second of `t`, over a 10 s run;
+      - `drops == 0` and no frame number missing, with a reader that keeps up;
+      - **a stalled reader** (nothing read for 5 s, so the pipe fills): the game is not
+        blocked, no line is cut, and `drops` equals the number of missing frame numbers;
+      - stderr is empty.
   - **Verify:** `docker exec -e DISPLAY=:99 -w /kube kube-dev python3 agent/check_bridge.py`
-    passes. See it fail once: rename one obs field in `agent_obs.c` and rebuild; the field
-    check FAILs. Then revert.
+    passes. See it fail twice, restoring each file from a copy afterwards:
+    - rename one obs field in `agent_obs.c`: the field checks FAIL;
+    - drop `O_NONBLOCK` in `agent_io.c`: the stalled-reader check FAILs.
   - **Commit:** `agent: print the init line and one observation per frame`.
+  - **Done 2026-10-05:** `norminette sources/jev` OK on all 6 files and a clean build. Final
+    run on the restored tree, 8 of 8 PASS: 803 observations and 2,409 enemy rows checked,
+    80.9 observations per second of `t` over 9.9 s, and the stalled reader kept 394 lines and
+    dropped 245 while the game reached 7.9 s. The rate varied between 66.6 and 80.9 across the
+    runs of the day, always over the 40 needed. The longest line seen was 559 bytes, against
+    the 4,096 limit. `check_isolation.sh`: ALL PASSED, 100 files OK in norminette. Two
+    findings:
+    - the first run failed on the init check, and it was my check that was wrong: the game
+      turns the player's start cell into floor (`set_player_at`), so the init map has `0`
+      where the file has `N`. The expectation was fixed from the code, not from the output;
+    - the two deliberate breaks failed the right checks: renaming `weapon_ready` failed the
+      two field checks and nothing else; keeping stdout blocking failed only the stalled
+      reader, with 0 dropped and game time stuck at 4.8 s instead of 7.9 s.
 - [ ] **T3c** — Commands, fire, `Q` and EOF (AC3).
   - **Read:** `plan.md`: "Agent -> game", "C bridge / Commands";
     `sources/movement/input_bonus.c` (what Up does); `sources/movement/player.c`.
-  - **Do:** `agent_read_commands` in `agent_io.c`. Add these checks to `check_bridge.py`,
-    which writes timed lines to the game's stdin.
+  - **Do:** `agent_read_commands`, which also sets `O_NONBLOCK` on stdin (not on a terminal).
+    `agent_io.c` holds 3 functions of the norm's 5, so put it in a new file if it does not
+    fit. Add these checks to `check_bridge.py`, which writes timed lines to the game's stdin.
     - They use `maps/bonus/subject_map.cub`, seed 1: the player starts at (26.5, 11.5) facing
       north, with 5 free cells ahead (rows 6-10 of column 26).
     - Each step is measured between obs lines by their `t`:

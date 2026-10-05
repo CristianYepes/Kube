@@ -10,12 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3d.h"
+#include "agent.h"
 
 /*
 ** Replaces sources/main.c in cub3D_agent. It mirrors main() at the base
-** (0ac5649), plus a second argument: the seed that fixes where the zombies
-** spawn. ft_atoi does not detect overflow, so the seed has at most 9 digits.
+** (0ac5649), plus a second argument, the seed that fixes where the zombies
+** spawn, and agent_init_io() before the loop. ft_atoi does not detect
+** overflow, so the seed has at most 9 digits.
 */
 
 static int	is_seed(const char *s)
@@ -49,6 +50,7 @@ int	main(int argc, char *argv[])
 		return (FAILURE);
 	}
 	data.seed = (unsigned int)ft_atoi(argv[2]);
+	agent_init_io(&data);
 	loop(&data);
 	return (SUCCESS);
 }

@@ -10,11 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "cub3d.h"
+#include "agent.h"
 
 /*
 ** Replaces sources/render/game_loop.c in cub3D_agent. It is the bonus frame
-** at the base (0ac5649), unchanged.
+** at the base (0ac5649) plus one call: once the frame is shown,
+** agent_print_obs() prints its state for the Python agent.
 */
 
 static void	tick_clock(t_data *data)
@@ -53,5 +54,6 @@ int	game_loop(t_data *data)
 	if (data->player.minimap)
 		display_minimap(data);
 	mlx_put_image_to_window(data->mlx, data->win, data->img.img, 0, 0);
+	agent_print_obs(data);
 	return (0);
 }

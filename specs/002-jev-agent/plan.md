@@ -90,12 +90,17 @@ deliverable.
 
 ### Game -> agent (stdout, one JSON object per line)
 
-First line, once:
+First line, once. The map holds the terrain only: the game turns spaces into walls, pads
+short rows with walls, and turns the player's start cell into floor (`set_player_at`), so
+the example below has `0` where the file has `N`. The first observation says where the
+player starts:
 ```json
-{"type":"init","map":["1111","1N01","1111"],"width":4,"height":3,"seed":42}
+{"type":"init","map":["1111","1001","1111"],"width":4,"height":3,"seed":42}
 ```
-Then every frame (`t` = seconds since start; angles and positions are raw here, and the
-Python side turns them into words):
+Then every frame. Angles and positions are raw here, and the Python side turns them into
+words. `frame` counts from 1. **`t` is the game's own clock**, `anim_clock`: the sum of the
+frames' `dt`, each at most 0.05 s. It is the clock the simulation runs on (the player and the
+zombies move by the same `dt`), and it lags real time only when a frame takes over 50 ms:
 ```json
 {"type":"obs","frame":812,"t":10.84,"dt":0.013,"state":0,"wave":1,"hp":90,
  "weapon_ready":1,"player":{"x":26.5,"y":11.5,"dx":0.0,"dy":-1.0},
@@ -318,8 +323,10 @@ sources/jev/
       first obs with enemies prints the exact spawn positions;
     - later positions depend on `dt`, and later waves on where the player is, so neither is
       bit-exact;
-  - then `agent_init_io(&data)`, which sets stdin and stdout to `O_NONBLOCK` with `fcntl` and
-    prints the init line;
+  - then `agent_init_io(&data)`, which prints the init line and then sets stdout to
+    `O_NONBLOCK` with `fcntl`. The line goes out first, while stdout still blocks, so a long
+    map is never cut. stdin gets the same flag in T3c, when it is first read. A terminal is
+    left alone (`isatty`): the flag would stay on it after the game exits;
   - then `loop(&data)`.
 - **`agent_loop.c`**: `loop()` is `sources/mlx_loop_and_hook/mlx.c:17-27` without the key and
   mouse hooks. It keeps hook 17 (`close_window`), `gettimeofday(&data->last_time, NULL)`,
@@ -348,7 +355,13 @@ sources/jev/
   - keep every line under 4096 bytes. On Linux a pipe write of at most `PIPE_BUF` (4096)
     bytes is atomic: all of it or `EAGAIN`. So a full pipe drops the frame's line (`drops++`)
     and never writes half a line;
-  - floats use `%.3f`, and fields come in the contract's order.
+  - floats use `%.3f`, and fields come in the contract's order;
+  - an error other than `EAGAIN`, a half-written line, or a line that would not fit ends the
+    run with `Error`, the operation and the reason, exit 1 (`agent_fail`): nothing is cut
+    silently;
+  - the counters (`frame`, `drops`) live in a `static t_obs_counts` inside
+    `agent_print_obs`: norminette accepts a `static` variable in a function, and notes a
+    file-scope one (`GLOBAL_VAR_DETECTED`).
 - **Norm:** every file in `sources/jev/` passes `norminette`. Run it; do not guess the rules
   (25 lines per function, 5 functions per file, 4 parameters, 5 variables, 80 columns, ...).
 - **State that `t_data` cannot hold** (the frame counter, the start time, `drops`, the stdin
