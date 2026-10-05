@@ -70,12 +70,18 @@
 - [x] **T0** — Owner decisions. **Done 2026-09-29:** `spec.md`, "Decisions": map
   `subject_map`, dev seeds 1-20 and test seeds 101-120, 180 s cap, $1 total, the key from
   `~/jev/libros/.env`. Decisions 5-8 were added on 2026-10-05.
-- [ ] **T1** — The environment works on this branch (no code).
+- [x] **T1** — The environment works on this branch (no code).
   - **Read:** `START_HERE.md` ("Environment").
   - **Do:** `colima start` if it is not running, then `dev/dev.sh up`, then `dev/dev.sh check`.
   - **Verify:** the last line is `ALL PASSED` (10 sections).
   - **Done when:** it passes. Commit: none; tick it in T2's commit.
-- [ ] **T2** — Isolation guard `agent/check_isolation.sh` (AC1).
+  - **Done 2026-10-05:** Colima was off and `colima start` brought it up; `dev/dev.sh up` reused
+    the existing `kube-dev` image. `dev/dev.sh check` ended with `ALL PASSED` in 2 min 31 s,
+    all 10 sections PASS. Measured: W for 2 s moved 2.43-2.44 cells in both binaries and maps
+    (expected 2.4), Left for 1 s turned 1.82-1.83 rad (expected 1.8), and `cub3D_bonus` on
+    `minimal` ran at 69 fps against the 75 baseline. That is 8% under, inside the check's 15%
+    band; the VM had just started.
+- [x] **T2** — Isolation guard `agent/check_isolation.sh` (AC1).
   - **Read:** `spec.md` AC1; `plan.md`, "Layout"; `dev/dev.sh` (how the tree is copied into
     the container).
   - **Do:** a bash script that:
@@ -112,6 +118,20 @@
 
     After the last revert it passes again. A part never seen failing proves nothing.
   - **Commit:** `agent: add the isolation guard for spec 002 (AC1)`.
+  - **Done 2026-10-05:** on a clean tree the guard prints PASS on all three parts in about 7 s
+    (base `0ac5649`; 71 objects in the base and 71 in this tree; 94 files OK in norminette).
+    Each part was then seen failing, and every edit was reverted (`git diff --quiet` confirmed
+    the files were identical to HEAD afterwards):
+
+    | Edit | paths | objects | norm |
+    |---|---|---|---|
+    | `0.08` to `0.09` in `shotgun.c` | FAIL | FAIL (only `obj_bonus/render/shotgun.o` differs) | PASS |
+    | trailing space on line 17 of `raycasting.c` | FAIL | PASS | FAIL (`SPC_BEFORE_NL`) |
+    | untracked `includes/probe.h` | FAIL | PASS | PASS (95 files OK) |
+
+    The last row is why part 1 also lists untracked files: nothing else sees that file.
+    `--local` is **not** run yet: the Mac cannot build the X11 MiniLibX, so it is first run for
+    real at L1.
 - [ ] 🔑 **L1** — Linux checkpoint, phase 1 (the owner, on Linux; see "How to use").
   - The first time, set up the machine (`START_HERE.md`, 2b, "On a Linux machine"). Then, from
     the repo root, after `git pull --ff-only`:
