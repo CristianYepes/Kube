@@ -18,9 +18,11 @@
 > ```
 >
 > Written 2026-09-28 from `main@34f4aff`; the "Jev in two minutes" facts were re-verified on
-> 2026-10-03 (still `jev-1.13`).
-> - Spec 001 is built on branch `feature/game-ready` and then merged into `main`.
-> - Spec 002 gets its own branch, `feature/jev-agent`, created from that `main`.
+> 2026-10-03 (still `jev-1.13`). Spec 002's tasks were re-checked against the code on
+> 2026-10-05 (`tasks.md` v0.5).
+> - Spec 001 was built on branch `feature/game-ready` and merged into the local `main`. On
+>   GitHub it lives on `feature/jev-agent` (`0ac5649`), "the base".
+> - Spec 002 is implemented on `feature/jev-agentv1`, created from the base.
 >
 > Facts are dated. Re-verify anything external (model ids, prices, versions) before relying
 > on it.
@@ -121,10 +123,11 @@ that a non-AI bot could play Doom better. If our rule policy beats Jev, the repo
 - **Doors** (`D`, toggled with `E`) block zombies and line of sight. Door tactics are out of
   scope for v1.
 - **Randomness** is an LCG seeded from the clock, so runs are not reproducible yet (the agent
-  build adds a seed).
-- **Important:** the player moves and turns **per frame**, while zombies move per real time.
-  The frame rate was measured at 44-105 fps depending on the map, so player speed varies up
-  to 2.4x. **Spec 001 fixes this in the game itself**, and spec 002 relies on it.
+  build adds a seed). Only wave spawns draw from it (`waves.c`).
+- **Fixed by spec 001:** the player used to move and turn **per frame**, while zombies move
+  per real time. The frame rate was measured at 44-105 fps depending on the map, so player
+  speed varied up to 2.4x. Spec 001 made player movement time-based (1.2 cells/s,
+  1.8 rad/s), and spec 002 relies on it.
 - Full table with file references: research R4.
 
 ## The design in one picture (detail in 002-jev-agent/plan.md)

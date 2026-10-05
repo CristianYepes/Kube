@@ -2,7 +2,8 @@
 
 > For the model (or person) that implements this spec. It is self-contained: everything
 > decided and verified so far is in `specs/`, so nothing needs to be rediscovered. Written
-> 2026-09-29; updated 2026-10-03 (T8 option-order check, new Jev rate limits).
+> 2026-09-29; updated 2026-10-03 (T8 option-order check, new Jev rate limits) and 2026-10-05
+> (every task re-checked against the code: `tasks.md` v0.5).
 
 ## 1. The mission in five lines
 
@@ -53,7 +54,7 @@ The repo carries everything **except the API key**, which must never be in it.
 
    ```bash
    mkdir -p ~/jev/libros && printf 'OPENROUTER_API_KEY=%s\n' "$(pbpaste | tr -d '[:space:]')" > ~/jev/libros/.env && chmod 600 ~/jev/libros/.env && pbcopy < /dev/null
-   grep -q '^OPENROUTER_API_KEY=sk-or-' ~/jev/libros/.env && echo "key file OK"
+   grep -qE '^OPENROUTER_API_KEY=sk-or-v1-[0-9a-f]{64}$' ~/jev/libros/.env && echo "key file OK"
    ```
 
    On Linux:
@@ -117,6 +118,10 @@ docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent maps/bonus/s
 dev/dev.sh down                               # remove the container
 ```
 
+From T3c on, `cub3D_agent` quits on EOF. A run "with no input" keeps stdin open without
+writing to it. `sleep 10 | ./agent/cub3D_agent ...` does that, and it ends the run cleanly
+after 10 s.
+
 The Python agent runs on the Mac, from `agent/`, with `uv` (0.8.24 is installed):
 
 ```bash
@@ -130,7 +135,8 @@ new shell, so load it in the same call that needs it. Never `echo` it.
 ## 6. Workflow
 
 1. Take the first unticked task in `tasks.md` and read its **Read** list.
-2. Implement only that task.
+2. Implement only that task. Write its tests first and see them fail; a check never seen
+   failing proves nothing.
 3. Run its **Verify**. If it fails, find out why; do not loosen the check to make it pass.
 4. Tick it: `[x]` plus `Done <date>:` and the evidence (numbers).
 5. Commit with the task's message.
@@ -185,6 +191,15 @@ new shell, so load it in the same call that needs it. Never `echo` it.
    different questions are not mutually coherent. Hence: words, not numbers, in the state, and
    one question. It also leans toward the first option of a Choice, so T8 checks the order of
    the tactics before the config is frozen.
+10. **Two traps found by reading the code on 2026-10-05:**
+    - **EOF on stdin quits `cub3D_agent`,** so a run whose stdin is closed or `/dev/null`
+      ends at once. `docker exec` without `-i` is expected to be such a case (not checked
+      yet). Keep stdin open (section 5).
+    - **A held fire never shows `weapon_ready == 1`.** The weapon refires in the same frame
+      it becomes ready, before the obs line is printed.
+
+    Never run `cub3D_agent` with a terminal as stdin, either: it sets `O_NONBLOCK`, which
+    would stay on the terminal.
 
 ## 10. The owner's working Jev client (from `~/jev/libros/src/libros/jev.py`, inlined for sessions without `~/jev`)
 

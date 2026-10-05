@@ -8,7 +8,7 @@
 ## Tech context
 
 - **Game side (C):** a third binary, `cub3D_agent`, built by its own `agent/Makefile` from the
-  deliverable's sources plus `sources/agent/*.c`, with `-D BONUS -D AGENT`. It uses the same
+  deliverable's sources plus `sources/agent/*.c`, with `-D BONUS`. It uses the same
   MiniLibX and libft. Norm-compliant, because it lives in the same tree.
 - **Agent side (Python 3.12, uv):** `agent/` package with `typesafe-sdk==0.7.2` (MIT, R2) and
   pytest. It runs **on the Mac host**, so the key never enters the container (FR13). It talks
@@ -93,9 +93,10 @@ Python side turns them into words):
  "weapon_ready":1,"player":{"x":26.5,"y":11.5,"dx":0.0,"dy":-1.0},
  "drops":0,"enemies":[{"x":24.3,"y":9.8,"type":0,"hp":2,"ai":1,"los":1}]}
 ```
-`state` is `G_PLAY`/`G_OVER`/`G_WIN` (0/1/2). `type` and `ai` use the header's enemy
-constants. `los` is the game's own `has_los()`, so line of sight is not reimplemented in
-Python.
+`state` is `G_PLAY`/`G_OVER`/`G_WIN` (0/1/2). `hp` is `player_hp`. `weapon_ready` is 1
+when `weapon.state == W_IDLE`. `type` and `ai` use the header's enemy constants. `los` is
+the game's own `has_los()`, so line of sight is not reimplemented in Python. `drops` counts
+the lines dropped so far.
 
 ### Agent -> game (stdin, one line per change)
 
@@ -105,6 +106,11 @@ Q
 ```
 Each field is `0` or `1`. The last `C` line stays in force until the next one. `Q` exits
 cleanly through `exit_game`. Parsing uses `ft_split` and `ft_atoi`, with no JSON in C.
+
+**EOF on stdin also exits**, so a run "with no input" must keep stdin open without writing
+to it: the bridge, or `sleep <s> | ./agent/cub3D_agent ...`, which also ends the run cleanly
+after `<s>` seconds. Never run it with a terminal as stdin: `O_NONBLOCK` would stay set on the
+terminal after the game exits.
 
 ### Semantic state sent to Jev (built in Python; target < 1,500 characters)
 ```json
@@ -126,15 +132,19 @@ Bands are defined in code: distance `touching` (< 1.0), `close` (< 2.5), `medium
   "instructions":"Pick the tactic for the next half second of a zombie-survival shooter. Read `threats`, `player` and `space` in the state. The code aims and fires by itself; you only pick what the body does.",
   "criteria":{
    "ENGAGE":{"what":"Stand and shoot the nearest threat.","when":"a threat is in view and not touching, and health is not low","not_for":"several threats close at once"},
-   "KITE":{"what":"Walk backwards while facing and shooting the nearest threat.","when":"threats are close and there is open space behind","not_for":"being cornered"},
-   "RETREAT":{"what":"Turn away and run toward open space.","when":"health is low, or you are being hit by more than one threat","not_for":"a single wounded threat you can finish"},
+   "KITE":{"what":"Step straight back from the nearest threat while facing and shooting it.","when":"threats are close and there is open space behind","not_for":"being cornered"},
+   "RETREAT":{"what":"Move along a path to the open area farthest from every threat, still facing and shooting the nearest one.","when":"health is low, or you are being hit by more than one threat","not_for":"a single wounded threat you can finish"},
    "SEARCH":{"what":"Move toward the remaining threats that are out of view.","when":"no threat is in view but some remain","not_for":"any threat in view"}}}}
 ```
 
+The descriptions say what the controller really does with each tactic, because Jev reads
+them literally. KITE and RETREAT both keep facing the nearest threat: walking backwards is as
+fast as walking forwards (`player.c`), and only a player who faces a threat can shoot it.
+
 ### Controller (code, every observation)
-- **Aim:** turn toward the chosen target's bearing, with a dead zone of about the hitscan
-  half-width (`perp < 0.5`, R4). **Fire** when the target is in front, `perp < 0.5`, within
-  10 cells, `los=1` and the weapon is ready. This mirrors `combat.c`.
+- **Aim:** turn toward the chosen target, with a dead zone measured like the hitscan, in
+  cells off the aim line (`perp`, R4), not in degrees. **Fire** when the target is in front,
+  `perp < 0.5`, within 10 cells, `los=1` and the weapon is ready. This mirrors `combat.c`.
 - **Move:**
   - ENGAGE: hold still.
   - KITE: back, plus strafe to avoid walls.
@@ -146,7 +156,11 @@ Bands are defined in code: distance `touching` (< 1.0), `close` (< 2.5), `medium
   - KITE if something is close.
   - ENGAGE if something is in view.
   - Otherwise SEARCH.
+  - It decides on Jev's schedule (every 0.5 s and on the same events), so the comparison
+    differs only in who chooses, not in how often.
 - **Idle policy:** sends nothing.
+- **Initial tactic:** ENGAGE, until the policy's first choice is applied. Wave-1 zombies
+  spawn with line of sight to the player whenever such a cell exists (`utils.c`).
 
 ### Jev policy
 - Decide every 0.5 s, or at once when a new wave starts or health drops a band, with at most
@@ -157,22 +171,28 @@ Bands are defined in code: distance `touching` (< 1.0), `close` (< 2.5), `medium
   tactic has `p_max >= 0.70` [calc]. Check against the docs' own example: 0.85 over 3 options
   gives 0.775, and the docs print 0.78. `probabilities` is also returned, so a threshold on
   `p_max` is an equivalent alternative if it reads better in the logs.
-- Retries: the SDK's `RetryPolicy`, plus one attempt timeout of 1.5 s. A late answer is
-  discarded if a newer one has already been applied.
+- Retries: the SDK's `RetryPolicy`, plus one attempt timeout of 1.5 s. When every retry
+  fails, the row records the error, the tactic stays, and the next decision goes out on
+  schedule.
+- **Stale answers:** with one request in flight, answers cannot overtake each other. An
+  answer is stale when an event (new wave, health band drop) happened after its state was
+  sent. It is logged with `applied: false`, and a new request goes out at once.
 - Budget: cumulative `usage.cost` per run; stop calling at the cap and fall back to the
-  scripted rules.
+  scripted rules. An answer that arrives after that switch is discarded.
 
 ### Logs (JSONL, one file per episode, under `agent/runs/`, gitignored)
 - `episode.jsonl`: per-second summaries.
 - `decisions.jsonl`: `t`, the state sent, `answers`, `confidence`, `model`, `input_tokens`,
-  `cost`, `latency_ms`, `applied`.
-- `result.json`: outcome, survival seconds, wave reached, kills, damage taken, and the config
-  sha256.
+  `cost`, `latency_ms`, `applied`, and `error` (null unless every retry failed).
+- `result.json`: outcome, survival seconds, wave reached, kills, damage taken, drops,
+  `stalls` (gaps above 100 ms between observations handled by the controller, host monotonic
+  clock; AC8), and the config sha256.
 
-## Implementation decisions (v0.3, verified 2026-09-29)
+## Implementation decisions (v0.4, verified 2026-09-29; corrected 2026-10-05)
 
-Every fact below was checked in the code or with a command on 2026-09-29. Where a detail is
-left open, the tasks say how to verify it before relying on it.
+Every fact below was checked in the code or with a command on 2026-09-29, and re-read against
+the code on 2026-10-05. Where a detail is left open, the tasks say how to verify it before
+relying on it.
 
 ### Layout (only these paths may change: `agent/`, `sources/agent/`, `specs/` and the root `CLAUDE.md`; AC1)
 
@@ -182,6 +202,8 @@ agent/
   .gitignore          cub3D_agent, obj/, runs/, .venv/, __pycache__/, .pytest_cache/
   pyproject.toml      uv project "kube-agent", requires-python >=3.12,
                       deps: typesafe-sdk==0.7.2; dev: pytest; script: kube-agent = kube_agent.cli:main
+  .python-version     3.12 (uv python pin 3.12), so every machine uses the same interpreter
+  uv.lock             committed: pins every dependency, pytest included
   src/kube_agent/
     config.py         constants, the question, config_sha256()
     bridge.py         start the game (docker | local), read init/obs lines, send C/Q lines
@@ -191,7 +213,7 @@ agent/
     jev_client.py     SDK wrapper: pinned model, cost, request id, budget, decision rows
     episode.py        one episode: the loop, the logs, result.json
     evaluate.py       many episodes, statistics, report.md
-    cli.py            kube-agent run | eval | spend | latency
+    cli.py            kube-agent run | eval | spend | latency | order-check
   tests/              pytest; no X, no network; tests/fixtures/ holds obs recorded in T3
   runs/               logs, gitignored
 sources/agent/
@@ -220,7 +242,8 @@ sources/agent/
   - It picks up `sources/agent/*.c` by itself.
   - It cannot drift from the deliverable's list, because the bonus build compiles every `.c`
     under `sources/` (checked on 2026-09-28).
-- Flags: `-Wall -Wextra -Werror -D BONUS -D AGENT -I../includes -I../libft -I../minilibx-linux`.
+- Flags: `-Wall -Wextra -Werror -D BONUS -I../includes -I../libft -I../minilibx-linux`. No
+  `-D AGENT`: no file reads it, and the deliverable must never test for it.
 - Objects go to `obj/`; the link line is `../libft/libft.a ../minilibx-linux/libmlx.a -lXext
   -lX11 -lm`, producing `cub3D_agent`.
 - **Run it from the repo root.** The maps name textures relative to the working directory
@@ -240,8 +263,13 @@ sources/agent/
   - then `check_file`, `parsing` and `init_game`, exactly as in `sources/main.c:15-33`;
   - **then** `data.seed = (unsigned int)ft_atoi(argv[2])`. `init_mod_state` has just seeded
     from the clock. Enemies spawn at the first `update_sim`, after this override, so the same
-    seed gives the same spawns (AC5). Later positions depend on `dt` and are not bit-exact;
-    only spawns are;
+    seed gives the same wave-1 spawns (AC5):
+    - the spawn depends only on the seed, the map and the player's position, and an idle
+      player has not moved yet;
+    - on its first update an enemy only switches from IDLE to CHASE (`enemy_ai.c`), so the
+      first obs with enemies prints the exact spawn positions;
+    - later positions depend on `dt`, and later waves on where the player is, so neither is
+      bit-exact;
   - then `agent_init_io(&data)`, which sets stdin and stdout to `O_NONBLOCK` with `fcntl` and
     prints the init line;
   - then `loop(&data)`.
@@ -259,6 +287,9 @@ sources/agent/
   - While `g == 1`, every frame does `data->fire = 1; fire_shotgun(data);`. That is what the Up
     key does in `sources/movement/input_bonus.c` (`key_press_bonus`). `try_fire` enforces the
     0.6 s cooldown.
+  - So a held fire refires as soon as the weapon is ready. `update_sim` runs `tick_weapon`
+    and then `try_fire` in the same frame, before the obs line is printed, so `weapon_ready`
+    reads 0 for as long as fire is held. To see it come back to 1, release fire.
   - `Q`, or EOF on stdin, calls `exit_game(data)`: a clean exit that frees everything. EOF
     matters, because a killed Python side must not leave the game running.
   - Malformed lines are ignored.
@@ -272,6 +303,11 @@ sources/agent/
   - floats use `%.3f`, and fields come in the contract's order.
 - **Norm:** every file in `sources/agent/` passes `norminette`. Run it; do not guess the rules
   (25 lines per function, 5 functions per file, 4 parameters, 5 variables, 80 columns, ...).
+- **State that `t_data` cannot hold** (the frame counter, the start time, `drops`, the stdin
+  buffer): `includes/` may not change, so these are `static` variables in `sources/agent/`.
+- **Names to avoid:** `tests/check.sh` (`check_dead_code`) fails if `BREAK`, `CONTINUE`,
+  `DEATH_TIME`, `E_DEAD`, `render_weapon`, `anim_timer` or `frame_idx` appears as a word
+  anywhere under `sources/`, `sources/agent/` included.
 
 ### Conventions (verified in the code; write the worked example as a unit test)
 
@@ -318,18 +354,28 @@ sources/agent/
   `player + 1.0 * (dir | -dir | right_u | -right_u)` is walkable. **`cornered`:** at most one
   is open.
 - **`remaining`** is the number of enemies; **`in_view`** counts the enemies in view;
-  **`close_count`** counts enemies nearer than 2.5.
+  **`close_count`** counts enemies nearer than 2.5. **`nearest`** is `null` when no enemy
+  remains.
 - **`wave`:** `"<w> of 3"`. **`boss_present`:** there is a type 2.
 - **No numbers with decimals anywhere in the state** (AC6).
 
 ### Controller (exact)
 
 - **Target:** the nearest enemy with `los`, or the nearest enemy if none has it.
-- **Turn:** if |bearing| > 0.05 rad, turn right when bearing > 0 and left otherwise. SEARCH
-  aims at the next path cell instead of the enemy.
+- **Turn** while the target is behind (`dot <= 0`) or off the aim line (`|cross| >= 0.25`):
+  right when `cross > 0`, left otherwise (right when `cross == 0`). SEARCH aims at the next
+  path cell instead of the enemy.
+  - The dead zone is in cells, like the hitscan, so it narrows with distance. An angular dead
+    zone (the 0.05 rad of v0.3) can stop the aim `10 · sin 0.05 = 0.50` cells off the line at
+    10 cells. With the 0.45 fire margin, a target beyond about 9 cells could then never be shot
+    [calc].
+  - At 10 cells, 0.25 cells is about 0.025 rad each side. One frame of turning is
+    `1.8 / fps` rad: 0.0225 at 80 fps and 0.04 at 45 fps [calc], under the 0.05 rad width of
+    the zone, so the aim settles instead of swinging across it.
 - **Fire** when the target has `los`, `0 < dot < 10`, `|cross| < 0.45` (a margin under the
   game's 0.5) and `weapon_ready == 1`.
-- **Movement:** take the desired world vector `w` of the tactic, then:
+- **Movement:** take the desired world vector `w` of the tactic. If it is not zero, normalise
+  it to a unit vector, then:
   - forward if `w·dir > 0.3`, back if `< -0.3`;
   - strafe right if `w·right_u > 0.3`, strafe left if `< -0.3`.
 
@@ -339,9 +385,10 @@ sources/agent/
     RETREAT's `w` instead.
   - **RETREAT:** BFS (4 neighbours) from the player's cell over walkable cells, up to depth 8.
     Pick the cell that maximises the minimum euclidean distance to any enemy; on ties, the one
-    with fewer steps. `w` = centre of the first step's cell - player position.
+    with fewer steps. `w` = centre of the first step's cell - player position, or `0` when
+    the best cell is the player's own.
   - **SEARCH:** BFS to the nearest enemy's cell. `w` = centre of the first step's cell - player
-    position.
+    position, or `0` when that enemy is in the player's cell.
 - **Stuck:** if `w != 0` and the player moved less than 0.05 cells over the last 0.5 s, add a
   strafe toward an open side for 0.5 s.
 - Send a `C` line only when it differs from the last one sent.
@@ -394,9 +441,13 @@ sources/agent/
 - Every Jev call appends a row with its `cost` to `agent/runs/<run>/decisions.jsonl`.
 - `kube-agent spend` sums every row under `agent/runs/` and prints the total and what is left
   of $1.00.
-- **`run` and `eval` with the Jev policy refuse to start once the total reaches $1.00.** They
-  stop calling Jev (falling back to the scripted rules) when the run's cap is reached:
-  `cap = min(--budget-usd, remaining)`. Defaults: `run` 0.05, `eval` 0.50.
+- **Every command that calls Jev refuses to start once the total reaches $1.00:** `run` and
+  `eval` with the Jev policy, `latency` and `order-check`. They stop calling Jev when the
+  run's cap is reached: `cap = min(--budget-usd, remaining)`. `run` and `eval` then fall back
+  to the scripted rules. Defaults: `run` 0.05, `eval` 0.50.
+- **The ledger is local.** It lives in `agent/runs/` on one machine, so do not delete
+  `agent/runs/` before T10, and make every paid call from the same machine. If paid runs ever
+  happen on two machines, add both ledgers and cross-check the OpenRouter account's usage.
 - Estimate [calc]: at most 2 calls/s × 180 s × about 1,300 tokens × $0.042/M, so at most
   about $0.02 per episode. 40 Jev episodes cost at most about $0.80. `spend` is the real
   number.
@@ -424,6 +475,10 @@ sources/agent/
 - **Jev latency is unknown** (R2). If p95 > 500 ms, tactics lag behind the fight. Measure it
   in T6 before tuning. If it is too slow, decide on events only instead of every 0.5 s.
 - **The scripted policy may beat Jev.** That is a valid result (R3). The report says so plainly.
+- **A stall in the Python loop is invisible in the game's own clock.** The game never waits,
+  and the pipe buffers what it writes meanwhile. A Linux pipe holds 64 KiB, about 2.7 s of
+  obs lines of ~300 bytes at 80 per second [calc]. So AC8 times the observations the
+  controller handles on the host, not the game's `t`.
 - **Option order bias.** The `jev-1.13` jaggedness page (reviewed 2026-10-02) says a Choice
   leans toward its first option, and ENGAGE is listed first. If that bias is real here, Jev
   could look better or worse than it is because of a list order. T8 measures it on logged

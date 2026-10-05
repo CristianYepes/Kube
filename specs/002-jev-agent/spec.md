@@ -1,4 +1,7 @@
-# Spec 002 — Jev plays cub3D_bonus (v0.3)
+# Spec 002 — Jev plays cub3D_bonus (v0.4)
+
+> v0.4 (2026-10-05): FR5, AC1, AC4, AC5, AC8 and AC12 corrected after checking them against
+> the code; see "Changes since v0.4" in `tasks.md`.
 
 > WHAT and WHY only. HOW lives in plan.md; facts in ../research-2026-09-28.md (wins on conflict).
 >
@@ -43,7 +46,8 @@ its uncertainty, plus the measured Jev cost and latency per episode.
   frame rate, so that runs compare across maps and machines. **Provided by spec 001 (FR1);**
   the agent build inherits it and only re-checks it.
 - **FR5 — Reproducibility.** An episode SHALL be fully defined by map, seed, policy and
-  maximum duration. The same seed SHALL spawn the same enemies in the same places.
+  maximum duration. The same seed SHALL spawn the first wave's enemies in the same places.
+  Later waves spawn where the player can see, so they repeat only if the player's path does.
 - **FR6 — Code acts, Jev decides.** Aiming, firing, movement and pathing SHALL be done by code.
   Jev SHALL only choose a tactic from a closed set, given a state written in words. The state
   contains no raw coordinates or angles.
@@ -71,8 +75,9 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 - **AC1 (FR1)** — Building `make` and `make bonus` on this spec's working tree and on the
   base gives identical `obj/*.o` and `obj_bonus/*.o` (sha256).
   `git diff --stat <base> -- . ':(exclude)agent' ':(exclude)sources/agent' ':(exclude)specs' ':(exclude)CLAUDE.md'`
-  is empty: every change is under those three directories or is the root `CLAUDE.md` (the
-  handoff for Claude sessions, which no build reads).
+  is empty, and so is the same path set in `git ls-files --others --exclude-standard`: every
+  change, committed or not, and every new file is under those three directories or is the root
+  `CLAUDE.md` (the handoff for Claude sessions, which no build reads).
   `norminette sources includes libft` exits 0.
 - **AC2 (FR2)** — A 10 s headless run prints one observation per frame (>= 40/s on
   `subject_map`). Every line parses as JSON with the documented fields.
@@ -80,16 +85,23 @@ its uncertainty, plus the measured Jev cost and latency per episode.
   fire") changes the observed position, heading and weapon state as expected. With no input at
   all, the frame rate matches the no-agent build within 10%.
 - **AC4 (FR4)** — Spec 001's movement check, re-run on `cub3D_agent` through the bridge:
-  holding "forward" for 2 s moves the player the same distance within 10% on `minimal` and
-  `test_map`, although their frame rates differ (74-78 vs 44-56 fps).
-- **AC5 (FR5)** — Two runs with the same seed and the idle policy log identical enemy spawn
-  positions.
+  holding "forward" for 2 s moves the player 2.4 cells within 10% on the two maps of
+  `tests/check.sh` `probe_maps()`: a short corridor (fast to render) and `test_map` facing east
+  (slow; 44-56 fps before spec 001).
+- **AC5 (FR5)** — Two idle runs with the same seed print identical enemies (x, y, type, hp)
+  in their first observation that has enemies. A run with another seed prints different ones,
+  which shows the comparison can fail.
 - **AC6 (FR6)** — Every state sent to Jev in a recorded episode is under 2,000 characters and
   contains no floating-point coordinates. Checked by a test over the decision log.
 - **AC7 (FR7)** — A unit test: an answer below the threshold leaves the tactic unchanged.
 - **AC8 (FR8)** — A unit test with a fake transport: 429, then 529, then success. The request
-  is retried, and the controller loop keeps ticking meanwhile. In a real episode, no frame
-  gap exceeds 100 ms more often than in the idle policy.
+  is retried, and the controller loop keeps ticking meanwhile. When every retry fails, the
+  episode goes on with the current tactic. In a real episode, the agent's loop stalls about as
+  often as with the scripted policy on the same seed and duration (the margin is set in
+  `tasks.md`, T7). A stall is a gap above 100 ms between observations handled by the
+  controller, timed with the host's monotonic clock.
+  - The game's own `t` cannot show such a stall: the game never waits, and the pipe buffers
+    the lines it writes meanwhile.
 - **AC9 (FR9)** — After a real episode, every decision row has `model`, `input_tokens`,
   `cost`, `latency_ms` and `confidence`. The answering model is `typesafe/jev-1.13-20260917`,
   or a warning was printed.
@@ -98,8 +110,11 @@ its uncertainty, plus the measured Jev cost and latency per episode.
 - **AC11 (FR11/FR12)** — The evaluation report lists, for each policy on the test seeds:
   n, wins, survival-time median and quartiles, waves cleared, and Jev $/episode and
   latency p50/p95. The config hash printed on the report matches the frozen one.
-- **AC12 (FR13)** — `grep` for the key prefix over logs, docs, the image
-  (`docker history`, `docker run ... env`) and the working tree returns nothing.
+- **AC12 (FR13)** — A search for the shape of a real OpenRouter key,
+  `sk-or-v1-[0-9a-f]{64}`, finds nothing in the working tree (logs included), the git
+  history, the image (`docker history --no-trunc`) or the container's environment.
+  - It searches for the full shape, not the bare `sk-or-` prefix, because these docs mention
+    the prefix on purpose.
 - **AC13 (FR14)** — The same `run` and `eval` commands work with `--runner docker` (Mac) and
   `--runner local` (Linux).
 
