@@ -43,22 +43,31 @@ void	agent_fail(t_data *data, char *what, char *why)
 }
 
 /*
-** The init line goes out while stdout is still blocking, so a long map is not
-** cut. Then stdout turns non-blocking: a slow reader costs observation lines
-** (counted as drops) and never stalls the game. A terminal is left alone,
-** because the flag would stay on it after the game exits.
+** Non-blocking: a slow reader of stdout costs observation lines (counted as
+** drops) and a silent writer to stdin costs nothing, so neither stalls the
+** game. A terminal is left alone, because the flag would stay on it after the
+** game exits.
 */
-void	agent_init_io(t_data *data)
+static void	set_nonblocking(t_data *data, int fd, char *name)
 {
 	int	flags;
 
+	if (isatty(fd))
+		return ;
+	flags = fcntl(fd, F_GETFL);
+	if (flags == -1 || fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+		agent_fail(data, name, strerror(errno));
+}
+
+/*
+** The init line goes out while stdout is still blocking, so a long map is not
+** cut. Only then do stdout and stdin turn non-blocking.
+*/
+void	agent_init_io(t_data *data)
+{
 	print_init(data);
 	if (fflush(stdout) == EOF || ferror(stdout))
 		agent_fail(data, "stdout", strerror(errno));
-	if (isatty(STDOUT_FILENO))
-		return ;
-	flags = fcntl(STDOUT_FILENO, F_GETFL);
-	if (flags == -1
-		|| fcntl(STDOUT_FILENO, F_SETFL, flags | O_NONBLOCK) == -1)
-		agent_fail(data, "stdout", strerror(errno));
+	set_nonblocking(data, STDOUT_FILENO, "stdout");
+	set_nonblocking(data, STDIN_FILENO, "stdin");
 }

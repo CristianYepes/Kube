@@ -224,12 +224,13 @@
     - the two deliberate breaks failed the right checks: renaming `weapon_ready` failed the
       two field checks and nothing else; keeping stdout blocking failed only the stalled
       reader, with 0 dropped and game time stuck at 4.8 s instead of 7.9 s.
-- [ ] **T3c** — Commands, fire, `Q` and EOF (AC3).
+- [x] **T3c** — Commands, fire, `Q` and EOF (AC3).
   - **Read:** `plan.md`: "Agent -> game", "C bridge / Commands";
     `sources/movement/input_bonus.c` (what Up does); `sources/movement/player.c`.
-  - **Do:** `agent_read_commands`, which also sets `O_NONBLOCK` on stdin (not on a terminal).
-    `agent_io.c` holds 3 functions of the norm's 5, so put it in a new file if it does not
-    fit. Add these checks to `check_bridge.py`, which writes timed lines to the game's stdin.
+  - **Do:** `agent_read_commands`, in the new file `sources/jev/agent_cmd.c` (`agent_io.c` was
+    kept for the setup: `set_nonblocking` now serves stdout and stdin, not on a terminal).
+    Add these checks to `check_bridge.py`, which writes timed lines to the game's stdin.
+    Write them first and see them fail against the T3b binary.
     - They use `maps/bonus/subject_map.cub`, seed 1: the player starts at (26.5, 11.5) facing
       north, with 5 free cells ahead (rows 6-10 of column 26).
     - Each step is measured between obs lines by their `t`:
@@ -245,8 +246,33 @@
       - closing stdin exits with code 0 within 1 s;
       - with no input, the obs rate on `maps/good/minimal.cub` is 75 ± 10% (the 001
         baseline). "No input" means stdin is open and silent: EOF would quit at once.
-  - **Verify:** `check_bridge.py` passes, with the T3b checks and these.
+    - Also checked: malformed lines (7 kinds) are ignored whole and each leaves a warning on
+      stderr; back and both strafes move the right way; a command cut in two writes still
+      works; and a terminal (a pty) as stdin and stdout leaves the game running.
+  - **Verify:** `check_bridge.py` passes, with the T3b checks and these. Seen failing first
+    against the T3b binary (11 of the 12 new checks; the rate check does not need commands),
+    then three deliberate breaks of `agent_cmd.c`, each restored from a copy:
+    - strafe left and right swapped: only the two strafe checks FAIL;
+    - the half-received line thrown away every frame: the forward command (sent in two
+      writes) FAILs;
+    - the held fire made one-shot: only the held-fire check FAILs;
+    - the terminal guard removed: the terminal check FAILs with 0 observations.
   - **Commit:** `agent: apply C/Q commands from stdin; exit on EOF`.
+  - **Done 2026-10-05:** `norminette sources/jev` OK on all 7 files, a clean build, and
+    `check_bridge.py`: 21 of 21 PASS, three times in a row on the last fixes. Measured:
+    forward 1.20 cells/s, back 1.20, turns 1.80 rad/s, the weapon 0.61 s not ready after a
+    pulse, `Q` and closing stdin both exit with code 0 in 0.00-0.01 s, 355 observations in 4 s
+    on a terminal. valgrind on both ways out: 0 bytes in use at exit, 0 errors.
+    `check_isolation.sh`: ALL PASSED, 71 objects identical, 101 files OK. Findings:
+    - **strafing is 0.79 cells/s, not 1.2.** The game strafes along `plane` (length 0.66), so
+      1.2 × 0.66 = 0.792 [calc], and the measured 0.79 agrees. My first expectation was wrong.
+      It is how the game plays (see `plan.md`, "Conventions"), and it is outside this spec to
+      change: reported, not fixed;
+    - the fire-pulse check was timing-dependent: the first observation read was sometimes
+      already after the shot. It now reads 0.2 s first so the weapon is seen ready;
+    - the rate check on `minimal` measured 64.5 once, with 5.7 s of game time in 6 s of wall
+      time (a stall of the VM; the other values of the day were 73-77). It now takes the best
+      of three stretches of 3 s, since noise only slows a run down.
 - [ ] **T3d** — Fair timing and the seed (AC4, AC5).
   - **Do:** no game code is expected: spec 001 made movement time-based, and T3a set the
     seed. Add these checks to `check_bridge.py`:

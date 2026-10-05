@@ -118,12 +118,16 @@ C <forward> <back> <strafe_left> <strafe_right> <turn_left> <turn_right> <fire>
 Q
 ```
 Each field is `0` or `1`. The last `C` line stays in force until the next one. `Q` exits
-cleanly through `exit_game`. Parsing uses `ft_split` and `ft_atoi`, with no JSON in C.
+cleanly through `exit_game`. There is no JSON in C, and no `ft_split`: a move line has a fixed
+shape (`C`, then seven flags, each after one space: 15 characters), checked character by
+character, so a line with 8 flags, a `2`, a lowercase `c` or a double space is rejected
+whole, and nothing is allocated.
 
 **EOF on stdin also exits**, so a run "with no input" must keep stdin open without writing
 to it: the bridge, or `sleep <s> | ./agent/cub3D_agent ...`, which also ends the run cleanly
-after `<s>` seconds. Never run it with a terminal as stdin: `O_NONBLOCK` would stay set on the
-terminal after the game exits.
+after `<s>` seconds. A terminal on stdin or stdout is left alone (no `O_NONBLOCK`, and stdin
+is not read: the read would wait for a key and freeze the game), so `./agent/cub3D_agent
+<map> <seed>` typed in a terminal just runs without commands.
 
 ### Semantic state sent to Jev (built in Python; target < 1,500 characters)
 ```json
@@ -264,8 +268,9 @@ sources/jev/
   agent_main.c        replaces sources/main.c
   agent_loop.c        replaces sources/mlx_loop_and_hook/mlx.c
   agent_frame.c       replaces sources/render/game_loop.c
-  agent_io.c          stdin commands; the init line
+  agent_io.c          the init line, the non-blocking setup of stdout and stdin, agent_fail
   agent_obs.c         the obs line (a separate file because of the norm's 5 functions per file)
+  agent_cmd.c         reads stdin and applies the commands (the norm's 5 functions per file)
 ```
 
 **Never edit** the top-level `Makefile`, `.gitignore`, `dev/`, `tests/`, `includes/`, `libft/`,
@@ -345,11 +350,17 @@ sources/jev/
   - So a held fire refires as soon as the weapon is ready. `update_sim` runs `tick_weapon`
     and then `try_fire` in the same frame, before the obs line is printed, so `weapon_ready`
     reads 0 for as long as fire is held. To see it come back to 1, release fire.
-  - `Q`, or EOF on stdin, calls `exit_game(data)`: a clean exit that frees everything. EOF
-    matters, because a killed Python side must not leave the game running.
-  - Malformed lines are ignored.
-- **Reading stdin:** `read` into a static buffer (`EAGAIN` means nothing new), split on `\n`,
-  apply each complete line in order.
+  - `Q`, or EOF on stdin, calls `exit_game(data)`: a clean exit that frees everything
+    (valgrind: 0 bytes in use at exit, 0 errors, for both ways out). EOF matters, because a
+    killed Python side must not leave the game running.
+  - A malformed line is ignored whole and leaves `Error`, the line and `ignored: not a
+    command` on stderr, so a bug on the writer's side is seen and nothing is half-applied.
+- **Reading stdin:** `agent_read_commands` runs first in every frame. One `read` of at most
+  `CMD_READ` (1024) bytes per frame (`EAGAIN` or `EINTR` means nothing new), fed byte by byte
+  into a line buffer of `CMD_MAX` (256). The line ends at `\n` and is applied; a longer line
+  keeps only its start and is dropped whole at its end. A line cut between two reads is put
+  back together. The reader's memory (the line, whether fire is held) is a `static
+  t_cmd_reader` inside `agent_read_commands`.
 - **Writing obs:**
   - `snprintf` the whole line into a buffer, then one `write(STDOUT_FILENO, ...)`;
   - keep every line under 4096 bytes. On Linux a pipe write of at most `PIPE_BUF` (4096)
@@ -377,6 +388,12 @@ sources/jev/
   `dir` rotated +90°, length 0.66, and points to the player's **right**: facing N, `dir = (0,-1)`
   and `plane = (0.66, 0)`, i.e. east (`set_ns` in `check_map.c`). The unit right vector is
   `(-dy, dx)`.
+- **Strafing is slower than walking.** `move_player` moves forward and back along `dir` (length
+  1) but strafes along `plane` (length 0.66), so the speeds are 1.2 and 1.2 × 0.66 = **0.792
+  cells/s** [calc]. Measured through the bridge: 1.20 and 0.79. It is how the game plays, not a
+  bridge fault, and spec 002 does not change the game. A diagonal step is the vector sum, so
+  its direction is not exactly the wanted vector `w`. The controller replans every
+  observation, so this does not matter, but it is not a mistake to chase.
 - A positive angle, which is what the right-arrow key produces through `rotate_right`, turns
   **right**, clockwise on screen: east `(1,0)` becomes `(cos a, sin a)`, toward south.
 - For `v = target - player`:

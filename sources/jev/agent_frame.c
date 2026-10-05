@@ -14,8 +14,9 @@
 
 /*
 ** Replaces sources/render/game_loop.c in cub3D_agent. It is the bonus frame
-** at the base (0ac5649) plus one call: once the frame is shown,
-** agent_print_obs() prints its state for the Python agent.
+** at the base (0ac5649) plus two calls: agent_read_commands() first, so the
+** keys the Python agent asked for are in place before the player moves, and
+** agent_print_obs() once the frame is shown, to print its state.
 */
 
 static void	tick_clock(t_data *data)
@@ -35,6 +36,7 @@ static void	tick_clock(t_data *data)
 
 int	game_loop(t_data *data)
 {
+	agent_read_commands(data);
 	tick_clock(data);
 	if (data->game_state == G_PLAY)
 	{

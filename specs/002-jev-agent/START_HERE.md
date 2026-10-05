@@ -237,8 +237,8 @@ The checkpoints in `tasks.md` (L1-L5) list the exact commands.
     - **A held fire never shows `weapon_ready == 1`.** The weapon refires in the same frame
       it becomes ready, before the obs line is printed.
 
-    Never run `cub3D_agent` with a terminal as stdin, either: it sets `O_NONBLOCK`, which
-    would stay on the terminal.
+    A terminal on stdin or stdout is safe: `cub3D_agent` leaves it alone (no `O_NONBLOCK`) and
+    does not read commands from it, so a hand-typed run just plays without a driver.
 
 ## 10. The owner's working Jev client (from `~/jev/libros/src/libros/jev.py`, inlined for sessions without `~/jev`)
 
