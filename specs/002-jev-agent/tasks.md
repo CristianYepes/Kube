@@ -805,10 +805,11 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - **AC14 and git:** while `agent/runs/` is itself new, `git status --porcelain agent/runs`
       prints one line, `?? agent/runs/`. Each folder is listed once the directory is tracked,
       as from the next run on, and `-uall` lists them from the start;
-    - **one stray folder:** `20261006T165137Z-idle-s1-darwin` is the failed run from the leaking
-      break (Docker was off: `outcome: error`, no decisions, $0). It is not one of the 10, so
-      it is **left out of the commit** and kept on disk until the owner decides, because
-      `plan.md` says never to delete a run;
+    - **one stray folder, deleted at the owner's request:** `20261006T165137Z-idle-s1-darwin`
+      was the failed run from the leaking break (Docker was off: `outcome: error`, no
+      decisions, 671 bytes, $0). It was never committed. `plan.md` says never to delete a run
+      because a run's cost would leave the spend ledger; this one had no cost, and the owner
+      asked for it to go. `agent/runs/` now holds exactly the 10 runs, all tracked;
     - **not checked:** the `local` runner (L3, on the owner's Linux), and anything with Jev.
 - [ ] 🔑 **L3** — Linux checkpoint, phase 3. Ledger rows 8 and 9. First re-run what L1 and
   L2 settled, if anything changed since. On Linux, after `git pull --ff-only`, with
