@@ -435,7 +435,11 @@ sources/jev/
 - **`in_view`:** `los == 1` and |bearing| <= 0.583.
 - **Health:** `high` from 60, `medium` from 30, `low` below 30. The HUD bar changes colour at
   the same values (`hud.c`).
-- **`being_hit`:** hp is lower than it was 1.0 s ago.
+- **`being_hit`:** hp is lower than it was 1.0 s ago: the comparison is with the newest sample
+  at least 1.0 s old, and with no such sample (the first second of an episode) it is false.
+  The history is fed on every observation, because the scripted policy and the controller need
+  it too, not only the states sent to Jev.
+- **`weapon`:** `ready` when `weapon_ready` is 1, `reloading` otherwise.
 - **`kind`:** type 0 `grunt`, 1 `runner`, 2 `boss`. **`wounded`:** hp below its spawn hp
   (grunt 2, runner 1, boss 8; `waves.c`).
 - **`open_directions`:** ahead, back, right or left is open when the cell at

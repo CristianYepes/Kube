@@ -592,7 +592,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       the game's own message (`Error | maps/does_not_exist.cub: No such file or directory`);
     - **not checked here:** the `local` runner, which needs a Linux with the game built: it is
       ledger row 8, L3 (`--runner local`, once T5c exists).
-- [ ] **T4c** — `features.py` (AC6).
+- [x] **T4c** — `features.py` (AC6). **Done 2026-10-06, see the note at the end of this task.**
   - **Read:** `plan.md`: "Conventions", "Semantic features".
   - **Do:** obs + map + short history -> the semantic state dict. **Record the second
     fixture, in this commit:** `agent/tests/fixtures/moves_seed7.jsonl`, the T3c sequence
@@ -610,6 +610,44 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - **AC6:** over every obs of both fixtures, the state is under 2,000 characters and holds
       no float.
   - **Commit:** `agent: semantic state from observations`.
+  - **Done 2026-10-06:**
+    - **the fixture** `moves_seed7.jsonl` was recorded in the container with the T3c
+      `script_moves` and seed 7: 345 obs, line 1 the init line, frames 1 to 345 consecutive,
+      `drops` 0, 3.7 s of game time, 115 KB. The player walks forward (y from 11.50 to 10.36)
+      and loses hp (100 to 90) when the zombies arrive, so `being_hit` has real data;
+    - **the code:** `features.py` holds pure functions (`relative`, `distance_band`,
+      `health_band`, `direction_name`, `in_view`, `open_directions`, `semantic_state`) and
+      `HpHistory`, which the episode loop must feed on every observation. 64 tests in
+      `test_features.py`, 94 in the suite;
+    - **all the checks of the Verify list**, plus the edges the plan leaves implicit: the two
+      sides of every band edge, both signs of every sector edge (22.4 / 22.6 degrees and so on),
+      `in_view` at 0.58 and 0.59 rad on both sides and with `los` 0, `open_directions` from the
+      four headings on a lopsided map and with the map's edge (a wrapped negative index), the
+      closed and open door, `close_count` at 2.49 and 2.5, an unknown enemy type (a
+      `ValueError` naming it), and a hand calculation on the first recorded obs (the nearest
+      grunt is `ahead`, `medium`, at -21.3 degrees, 1.2 degrees from the sector edge);
+    - **being_hit against a brute force:** over the 345 recorded obs, the deque-based history
+      agrees with a reading that scans every earlier obs; it is false for the first 100 and
+      true in some of the rest;
+    - **AC6:** over the 464 + 345 recorded states, the longest is **388 characters** (the limit
+      is 2,000 and the plan's target 1,500) and none holds a float or a decimal. Caveat: both
+      recordings are wave 1, so they hold only grunts and the bands `touching`, `close` and
+      `medium`; runners, the boss, the `far` band and the wave strings are covered by the
+      hand-made tests only;
+    - **30 deliberate breaks**, each caught by the test meant for it: every band and health
+      edge, the field of view too wide and too narrow, left and right swapped, the sign of
+      `relative`, two sector edges, the right vector, the missing bounds check, closed doors
+      made walkable, the hit window edge, a history that never forgets and one that forgets too
+      much, `<` turned into `<=` in `being_hit`, `wounded` and `close_count`, the weapon flag
+      inverted, `in_view` counting everything, the boss type, the wave total, the unchecked enemy
+      type, `nearest` taken as the farthest, the `cornered` threshold, a hard-coded tactic, a
+      float leaking into the state and a state past 2,000 characters. `features.py` was
+      restored identical (`cmp`);
+    - **a mistake of mine on the way, caught before the code existed:** the first draft of the
+      heading test ended in `... or True` and an assertion joined with `or`, which could not
+      fail. It was replaced by four headings on a lopsided map, each result worked out by hand;
+    - **decision recorded in `plan.md`:** `weapon` is `ready` or `reloading`, and `being_hit` is
+      false in an episode's first second, when no sample is a full second old.
 - [ ] **T5a** — `controller.py`.
   - **Read:** `plan.md`, "Controller (exact)".
   - **Verify** with pytest:
