@@ -255,8 +255,9 @@ ledger between the Mac and Linux. **Never delete a run:** its cost would leave t
   `docker`) and `--max-seconds` (default 180, of game time).
 - **Same seed, same enemies, not the same episode.** The seed fixes where the enemies spawn,
   but the game runs on real time, so two runs of one policy and seed can differ: three runs of
-  the scripted policy on seed 1 took 14.1, 16.1 and 14.1 s to win. Evaluate over many seeds; do
-  not expect a replay.
+  the scripted policy on seed 1 took 14.1, 16.1 and 14.1 s to win on the Mac, and three on seed 2
+  took 11.4, 15.0 and 16.4 s on the owner's Linux (with 0, 10 and 0 damage). Evaluate over many
+  seeds; do not expect a replay.
 - **Size** [calc]: about 1 KB per decision row and 2 decisions per second, so about 360 KB per
   180 s episode. 60-80 Jev episodes come to about 20-30 MB in git. If that ever matters,
   compress old runs with `gzip`; never delete them.

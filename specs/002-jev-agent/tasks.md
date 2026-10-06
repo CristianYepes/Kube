@@ -118,8 +118,8 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 | 5 | `make -C agent` with the owner's compiler under `-Werror` | **DONE 2026-10-06**: gcc 11.4.0, exit 0, a binary of 144,760 bytes (the same as in the container) | L2 |
 | 6 | `python3 agent/check_bridge.py`: 24 checks | **DONE 2026-10-06**: 24 of 24 | L2 |
 | 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **CLOSED 2026-10-06, not done: no longer needed.** The owner's Linux is aarch64 (UTM, Ubuntu 22.04.5), the same architecture as the Mac's container, and the game is no longer handed in at 42, whose machines are x86_64 | (L5) |
-| 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | **built in T4a-T5c, not run on Linux yet.** On the Mac: 234 tests pass, and the docker runner played 10 episodes (R11). The `local` runner has never run anywhere | L3 |
-| 9 | Seeing the game on the real display (`DISPLAY=:0`) | not verified; optional | L3 |
+| 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | **DONE 2026-10-06** on the owner's Linux: CPython 3.12.11, 19 packages with `typesafe-sdk` 0.7.2, **234 tests passed in 3.87 s**, and the `local` runner played 4 episodes (see L3) | L3 |
+| 9 | Seeing the game on the real display (`DISPLAY=:0`) | **DONE 2026-10-06**: the owner saw the game window on the real desktop, it ran smoothly, and 3 episodes ran that way and won | L3 |
 | 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |
 | 11 | The final x86_64 check of AC1 and one episode | **CLOSED 2026-10-06, not done: no longer needed** (see row 7) | (L5) |
 
@@ -811,7 +811,8 @@ What does not change: the tests, the honest measurement, and the agent itself.
       because a run's cost would leave the spend ledger; this one had no cost, and the owner
       asked for it to go. `agent/runs/` now holds exactly the 10 runs, all tracked;
     - **not checked:** the `local` runner (L3, on the owner's Linux), and anything with Jev.
-- [ ] 🔑 **L3** — Linux checkpoint, phase 3. Ledger rows 8 and 9. First re-run what L1 and
+- [x] 🔑 **L3** — Linux checkpoint, phase 3. **Done 2026-10-06, see the note at the end of
+  this checkpoint.** Ledger rows 8 and 9. First re-run what L1 and
   L2 settled, if anything changed since. On Linux, after `git pull --ff-only`, with
   `DISPLAY=:99` as in L1:
 
@@ -845,6 +846,30 @@ What does not change: the tests, the honest measurement, and the agent itself.
     --runner local --policy scripted --seed 2`. Not verified yet; L3 is where we find out.
   - **Done when:** pytest is green and the run's `result.json` exists. The tick records the
     test count and the run's summary line.
+  - **Done 2026-10-06**, on the owner's machine (UTM, aarch64, Ubuntu 22.04.5), from commit
+    `3711261`. Nothing failed, and the owner ran every step:
+    - `make -C agent` linked without a warning and gave a binary of **144,760 bytes**, the
+      same as in L2 and in the Mac's container;
+    - `uv sync`: **CPython 3.12.11** (the Mac has 3.12.7; the `3.12` pin allows both) and the
+      same 19 packages as `uv.lock`, with `typesafe-sdk==0.7.2` and `pytest==9.1.1`;
+    - `uv run pytest -q`: **234 passed in 3.87 s** (4-5 s on the Mac);
+    - **the first run of the `local` runner anywhere**, on the virtual screen `:99`:
+      `scripted s1: win after 14.0 s (wave 3, 8 kills), 29 decisions, 29 applied, spend
+      $0.0000`. Its `result.json` says `machine: linux` and `runner: local`, 0 damage, 0
+      drops and **0 stalls**, and has **the same `map_sha256` and `config_sha256` as the Mac's
+      runs**. The owner committed and pushed it from the Linux (`3a79306`); checked from the
+      Mac: 3 files, 29 decision rows matching the result, longest state 387 characters, no
+      float (AC6 on this machine's log);
+    - **row 9, the real display:** three episodes of `scripted` on seed 2 with
+      `DISPLAY=:0`. The owner **saw the game window** on the desktop and it **ran
+      smoothly**. All three won with 8 kills and 0 stalls: 11.36 s with no damage, 15.04 s
+      **with 10 damage**, and 16.44 s with no damage (pushed as `50dd885`);
+    - **what the four Linux episodes add to R11:** four wins in four; the same seed 2 took
+      11.4, 15.0 and 16.4 s (a spread of 45% of the shortest [calc]), which backs "same seed,
+      not the same episode"; and `scripted` is **not untouchable**: one of the four took 10
+      damage, where the five Mac runs took none;
+    - **ledger:** rows 8 and 9 are closed. Row 10 (L4) is the only one still open, and rows 7
+      and 11 stay closed as not needed.
 
 ## Phase 4 — Jev in the loop
 

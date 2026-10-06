@@ -237,8 +237,9 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
 - **Spec 002 (Jev agent): in progress.** On 2026-10-06 phases 1 and 2 are done (T0 to T3e: the
   C bridge and its 24 checks) and L1 and L2 passed on the owner's Linux. phase 3 is built (T4a to T5c: the Python package, the bridge, the semantic state, the
   controller, the policies and the episode runner, with the first ten runs in `agent/runs/`).
-  **Next: the checkpoint L3 on the owner's Linux.** R11 (in the research): the scripted rules won
-  all 5 dev seeds with no damage.
+  The checkpoint **L3 passed on the owner's Linux** (234 tests, the `local` runner, and the game
+  seen on the real display). **Next: phase 4, T6**, after the owner decides what to do about R11:
+  the scripted rules won 9 of 9 episodes, so on `subject_map` a win cannot tell them from Jev.
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.
@@ -252,7 +253,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from L3.
+    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T6.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;
