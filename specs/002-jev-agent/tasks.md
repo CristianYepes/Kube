@@ -979,8 +979,10 @@ What does not change: the tests, the honest measurement, and the agent itself.
       test's environment (shown to fail without it, with `--noconftest`), and the CLI tests
       cannot reach the real client. **30 deliberate breaks**, each caught by the test meant for
       it (two first showed as "not caught" only because I mistyped the test name I expected);
-    - **what the 50 identical requests showed**, besides the speed: they got **20 different
-      probability vectors** (always `KITE`, but 0.51 to 0.62), the documented confidence formula
+    - **what the 50 identical requests showed**, besides the speed: they got **12 different
+      probability vectors** and 14 confidence values (always `KITE`, but 0.51 to 0.62; the
+      commit message says 20, which was a miscount of mine: it counted (confidence, vector)
+      combinations and one vector twice for a float-noise spelling), the documented confidence formula
       holds within the API's rounding, and the confidence was **0.35 to 0.49**, so a threshold of
       0.6 would have applied **none** of the 50 answers (0.4 would have applied 31, 0.3 all 50);
     - **mistakes of mine, caught:** `QUESTIONS` was a second name for the question and went stale
