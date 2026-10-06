@@ -32,20 +32,22 @@
 - **Done (2026-10-06): T0 to T3e, that is phases 1 and 2.** The C bridge `cub3D_agent`
   (`sources/jev/`), its 24 checks in `agent/check_bridge.py`, and **L1 and L2 passed on the
   owner's Linux** (UTM, aarch64, Ubuntu 22.04.5).
-- **Phase 3 has started: T4a, T4b, T4c and T5a are done.** T4a is the Python package skeleton
-  (`agent/pyproject.toml`, `uv.lock`, `src/kube_agent/` with `cli.py` and `config.py`). T4b is
-  `bridge.py`, the pipe to the game, with its first fixture. T4c is `features.py`, the
-  semantic state, with the second fixture. T5a is `controller.py`: aim, fire, move and the
-  search, whatever the tactic; 167 tests in all.
-- **Next: T5b**, then T5c. Phase 3 ends with checkpoint L3 on the owner's Linux: stop there
-  and list every open row of the Linux ledger in `tasks.md`.
+- **Phase 3 has started: T4a, T4b, T4c, T5a and T5b are done.** T4a is the Python package
+  skeleton (`agent/pyproject.toml`, `uv.lock`, `src/kube_agent/` with `cli.py` and
+  `config.py`). T4b is `bridge.py`, the pipe to the game, with its first fixture. T4c is
+  `features.py`, the semantic state, with the second fixture. T5a is `controller.py`: aim,
+  fire, move and the search, whatever the tactic. T5b is `policies.py`: the idle policy, the
+  four scripted rules and the decision schedule; 194 tests in all.
+- **Next: T5c**, the episode runner and `kube-agent run`, which needs the container (Colima).
+  Phase 3 ends with checkpoint L3 on the owner's Linux: stop there and list every open row of
+  the Linux ledger in `tasks.md`.
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T5b on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T5c on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

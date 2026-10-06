@@ -697,12 +697,51 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - **decisions where `plan.md` was silent** are written in its "Controller (exact)": the
       initial `C` state, the stuck strafe's side and replacement, and SEARCH's goal;
     - **not checked:** how the controller plays a whole episode, which needs T5b and T5c.
-- [ ] **T5b** — `policies.py`: idle and scripted.
+- [x] **T5b** — `policies.py`: idle and scripted. **Done 2026-10-06, see the note at the end of this task.**
   - **Verify:** pytest on the scripted rules in `plan.md` ("Controller (code, every
     observation)", "Scripted policy"), one case per rule. The scripted policy decides on Jev's
     schedule (every 0.5 s and on events), not on every obs. The initial tactic is ENGAGE.
     Idle never sends a command.
   - **Commit:** `agent: idle and scripted policies`.
+  - **Done 2026-10-06:**
+    - **the code:** `policies.py` holds `DecisionSchedule` (when a decision is due),
+      `scripted_tactic` (the four rules as a pure function), `IdlePolicy` and `ScriptedPolicy`.
+      A policy gets every observation through `step(obs)`, answers with a decision row
+      (`t`, `state`, `tactic`, `applied`: the fields `plan.md` "Logs" gives for every policy)
+      when it decided on that observation, and `None` otherwise; its `tactic` is the one in
+      force. Idle's `tactic` is `None`, which tells the episode to send the game nothing. 27
+      tests in `test_policies.py`, 194 in the suite;
+    - **one case per rule**, plus the precedence between them: low health with something close
+      is RETREAT even when it is behind the player (health 29) and KITE at 30; something close
+      beats something in view; low health with nothing close is ENGAGE, not RETREAT; and a
+      hidden enemy or none at all is SEARCH;
+    - **the schedule:** the first observation decides; then every 0.5 s since the last decision
+      (`>=`: exactly 0.5 s counts); a late decision moves the next one with it; a new wave and a
+      health band drop each decide at once and only once; a rising band is not an event, but a
+      later drop is; and a decision made for an event restarts the 0.5 s. Over 100
+      observations 10 ms apart (one second) it decides twice, at 0.0 and at 0.5;
+    - **over both recordings:** every decision row is under 2,000 characters with no float in
+      its state, and the number of rows is every 0.5 s plus a few events (AC6 on the decision
+      rows, the way T5c's logs will be checked). On the recordings the policy plays ENGAGE while
+      the three zombies approach and KITE once they are close, with `being_hit` true when hp
+      drops. Both players there are idle, so that says nothing about how well the policy plays;
+    - **19 deliberate breaks**, each caught by the test meant for it: the interval both ways and
+      a strict `>`, the first observation not deciding, a new wave and a health drop ignored, a
+      rise counted as a drop, an event not restarting the timer, rule 1 removed or on the wrong
+      band, "close" needing two enemies, ENGAGE on any enemy left, the default turned into
+      ENGAGE, the initial tactic, the history fed only at decisions, the row showing the new
+      tactic, not applied, a zero time, and idle with a tactic. `policies.py` was restored
+      identical (`cmp`);
+    - **two slips of mine, caught:** a float trap in my own test (`1.2 - 0.7` is not exactly 0.5,
+      so I used 0.75 and 1.25), and a gap that the first run of breaks found: an event decision
+      that did not restart the timer passed all 193 tests, and now has its own test. Three of
+      those breaks first showed "not caught" only because I had mistyped the test name I
+      expected; I reran them with the right name and the right test failed;
+    - **a correction in `plan.md`:** I had written that the scripted policy and the controller
+      need `being_hit`. They do not (the controller never reads it and the rules do not use
+      it). The history is fed on every observation because a state is built only at a decision
+      and a drop between two decisions must still count; there is a test for that case;
+    - **not checked:** the policies in a whole episode, which is T5c.
 - [ ] **T5c** — `episode.py` and `kube-agent run` (AC14).
   - **Read:** `plan.md`: "Logs", "Runtime expectations".
   - **Do:**

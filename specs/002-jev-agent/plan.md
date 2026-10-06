@@ -180,7 +180,12 @@ fast as walking forwards (`player.c`), and only a player who faces a threat can 
   - ENGAGE if something is in view.
   - Otherwise SEARCH.
   - It decides on Jev's schedule (every 0.5 s and on the same events), so the comparison
-    differs only in who chooses, not in how often.
+    differs only in who chooses, not in how often. Decided in T5b: "something is close" is a
+    non-zero `close_count` (an enemy under 2.5 cells, in view or not), "in view" a non-zero
+    `in_view`, and "health is low" the band `low`. The 0.5 s is game time, so a scripted
+    episode on a seed is reproducible; the events are a new wave and health dropping a band,
+    each seen against the previous observation, and a decision made for an event restarts the
+    0.5 s. `DecisionSchedule` holds this and Jev's policy will reuse it.
 - **Idle policy:** sends nothing.
 - **Initial tactic:** ENGAGE, until the policy's first choice is applied. Wave-1 zombies
   spawn with line of sight to the player whenever such a cell exists (`utils.c`).
@@ -437,8 +442,9 @@ sources/jev/
   the same values (`hud.c`).
 - **`being_hit`:** hp is lower than it was 1.0 s ago: the comparison is with the newest sample
   at least 1.0 s old, and with no such sample (the first second of an episode) it is false.
-  The history is fed on every observation, because the scripted policy and the controller need
-  it too, not only the states sent to Jev.
+  The history is fed on every observation, although a state is built only at a decision (every
+  0.5 s and on events): the comparison needs the newest sample a second old, and a drop that
+  happened between two decisions must still count. The controller does not use `being_hit`.
 - **`weapon`:** `ready` when `weapon_ready` is 1, `reloading` otherwise.
 - **`kind`:** type 0 `grunt`, 1 `runner`, 2 `boss`. **`wounded`:** hp below its spawn hp
   (grunt 2, runner 1, boss 8; `waves.c`).
