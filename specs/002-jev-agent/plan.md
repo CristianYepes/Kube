@@ -484,6 +484,18 @@ sources/jev/
 - **Stuck:** if `w != 0` and the player moved less than 0.05 cells over the last 0.5 s, add a
   strafe toward an open side for 0.5 s.
 - Send a `C` line only when it differs from the last one sent.
+- **Decided in T5a, where the text above is silent:**
+  - the game starts with no key held, so the "last line sent" starts as `C 0 0 0 0 0 0 0` and a
+    first all-zero line is not sent;
+  - the stuck strafe goes **right** if the right is open (a walkable cell 1.0 away), else left,
+    else nothing. It **replaces** a strafe the path asked for, because both keys at once cancel
+    out. With less than 0.5 s of history the player is not stuck; the strafe lasts 0.5 s;
+  - RETREAT keeps facing the threat, and SEARCH's turn aims at the next path cell, as
+    above. SEARCH's goal is the nearest enemy overall, not the target (which prefers line of
+    sight); with no path, or the enemy in the player's own cell, it holds still and aims at the
+    target;
+  - a closed door `D` is a wall for the search. The bridge has no "use" flag, so the agent
+    cannot open one.
 
 ### SDK facts (`typesafe-sdk` 0.7.2, introspected 2026-09-29; 0.7.2 only added an http2 extra)
 

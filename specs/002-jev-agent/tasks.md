@@ -648,7 +648,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       fail. It was replaced by four headings on a lopsided map, each result worked out by hand;
     - **decision recorded in `plan.md`:** `weapon` is `ready` or `reloading`, and `being_hit` is
       false in an episode's first second, when no sample is a full second old.
-- [ ] **T5a** — `controller.py`.
+- [x] **T5a** — `controller.py`. **Done 2026-10-06, see the note at the end of this task.**
   - **Read:** `plan.md`, "Controller (exact)".
   - **Verify** with pytest:
     - it turns toward the target's side, and does not turn inside the dead zone;
@@ -661,6 +661,42 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - stuck detection;
     - no repeated identical `C` lines.
   - **Commit:** `agent: controller (aim, fire, movement, BFS)`.
+  - **Done 2026-10-06:**
+    - **the code:** `controller.py` has pure functions (`pick_target`, `turn_toward`,
+      `should_fire`, `movement_flags`, `reachable`) and `Controller`, with `decide(obs, tactic)`
+      (the line wanted now) and `command(obs, tactic)` (that line, or `None` if it is the one in
+      force). `features.walkable` became public for it. 73 tests in `test_controller.py`, 167 in
+      the suite; the shared hand-made observations moved to `tests/helpers.py`;
+    - **the v0.3 trap, seen failing as the task asks:** the test with a target 9.5 cells ahead
+      and 0.049 rad off the line (0.466 cells: outside the 0.45 margin, inside the old 0.05 rad)
+      was run against the old angular dead zone, and it failed there, together with 3 other
+      tests. With the dead zone in cells, the player turns and the test passes;
+    - **36 deliberate breaks**, each caught by the test meant for it: the v0.3 rule, the dead
+      zone too wide and too narrow, abreast counted as ahead, the tie turning left, each fire
+      condition (margin, range, `dot == 0`, weapon, line of sight), the target ignoring line of
+      sight, the movement threshold both ways, `w` not normalised, the right vector flipped,
+      RETREAT without its depth limit and preferring more steps or the nearest cell, KITE not
+      probing behind or never falling back, ENGAGE and RETREAT aiming at nothing, SEARCH aiming
+      at the enemy or going for the target, SEARCH failing on the player's own cell, the BFS
+      ignoring its depth, the stuck distance both ways, the stuck window, the stuck side, stuck
+      while holding still, the unsticking strafe added and not replacing, repeated lines sent,
+      the last line never stored, the first all-zero line sent, and an unknown tactic accepted.
+      `controller.py` was restored identical (`cmp`);
+    - **three gaps found in my own tests before the breaks** and closed: abreast with a hair of
+      offset, the controller's use of the depth limit (the BFS test alone did not show it), and
+      that the unsticking strafe replaces the path's strafe;
+    - **on the real recordings** (464 + 345 obs, all four tactics): no exception, 0 invalid
+      lines, and `decide()` takes 0.003-0.043 ms on average and 0.106 ms at most. That is small
+      because of the map, see the next point;
+    - **a finding about the map, measured:** from the start cell (26, 11) the search reaches
+      **21 of the map's 195 walkable cells**, 7 steps at the deepest. The start is a small room
+      whose exit is a closed door `D` at (23, 8), and the bridge has no flag to open it (the
+      game opens doors with a key, `toggle_door`), so that room is the agent's arena. The three
+      wave-1 zombies are inside it. I did not check whether zombies cross closed doors or where
+      waves 2 and 3 spawn;
+    - **decisions where `plan.md` was silent** are written in its "Controller (exact)": the
+      initial `C` state, the stuck strafe's side and replacement, and SEARCH's goal;
+    - **not checked:** how the controller plays a whole episode, which needs T5b and T5c.
 - [ ] **T5b** — `policies.py`: idle and scripted.
   - **Verify:** pytest on the scripted rules in `plan.md` ("Controller (code, every
     observation)", "Scripted policy"), one case per rule. The scripted policy decides on Jev's

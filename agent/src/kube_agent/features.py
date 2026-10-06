@@ -68,7 +68,7 @@ def in_view(enemy: dict, bearing: float) -> bool:
     return enemy["los"] == 1 and abs(bearing) <= FOV_HALF_ANGLE
 
 
-def _walkable(game_map: list[str], x: float, y: float) -> bool:
+def walkable(game_map: list[str], x: float, y: float) -> bool:
     row, col = math.floor(y), math.floor(x)
     # The bounds are explicit: a negative index would wrap around to the far side of the map.
     return 0 <= row < len(game_map) and 0 <= col < len(game_map[row]) and game_map[row][col] not in NOT_WALKABLE
@@ -80,7 +80,7 @@ def open_directions(player: dict, game_map: list[str]) -> list[str]:
     probes = {"ahead": (dx, dy), "back": (-dx, -dy), "right": (-dy, dx), "left": (dy, -dx)}
     return [
         name for name, (vx, vy) in probes.items()
-        if _walkable(game_map, player["x"] + vx, player["y"] + vy)
+        if walkable(game_map, player["x"] + vx, player["y"] + vy)
     ]
 
 
