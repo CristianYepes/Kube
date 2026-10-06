@@ -6,7 +6,14 @@ import pytest
 from helpers import ROOM, enemy_ahead, make_obs
 
 from kube_agent.features import HpHistory, semantic_state
-from kube_agent.policies import DecisionSchedule, IdlePolicy, ScriptedPolicy, scripted_tactic
+from kube_agent.policies import (
+    POLICIES,
+    DecisionSchedule,
+    IdlePolicy,
+    ScriptedPolicy,
+    make_policy,
+    scripted_tactic,
+)
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
@@ -200,3 +207,17 @@ def test_idle_has_no_tactic_and_never_decides():
 
     assert policy.tactic is None  # no tactic means the episode sends the game no command at all
     assert results == [None] * len(results)
+
+
+# --- choosing a policy by name ------------------------------------------------------------------
+
+
+def test_make_policy_builds_the_policy_with_that_name():
+    assert POLICIES == ("idle", "scripted")  # "jev" joins when its policy exists
+    assert isinstance(make_policy("idle", ROOM), IdlePolicy)
+    assert isinstance(make_policy("scripted", ROOM), ScriptedPolicy)
+
+
+def test_make_policy_rejects_a_name_it_does_not_know():
+    with pytest.raises(ValueError, match="policy 'jev'"):
+        make_policy("jev", ROOM)

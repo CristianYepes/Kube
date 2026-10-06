@@ -223,12 +223,27 @@ ledger between the Mac and Linux. **Never delete a run:** its cost would leave t
   - the probes are `latency-<UTC date-time>-<machine>/` and
     `order-check-<UTC date-time>-<machine>/`, each with its `decisions.jsonl`.
 - `result.json`:
-  - what was run: map path and the map file's sha256, seed, policy, machine and config sha256;
-  - how it went: outcome, survival seconds, wave reached, kills, damage taken and drops;
+  - what was run: `run_id`, map path and the map file's sha256, seed, policy, machine, runner,
+    `max_seconds` and config sha256;
+  - how it went: `outcome` (`win`, `lose` or `timeout`; `error` when the episode failed, with an
+    `error` field naming the exception and the game's own message), `survival_seconds` (the game
+    clock at the end, which for a win is the time to win), `wave_reached`, `kills`,
+    `damage_taken` and `drops`;
   - `stalls`: gaps above 100 ms between observations handled by the controller, timed with
     the host's monotonic clock (AC8);
-  - how the game was played: `tactic_seconds` (seconds spent in each tactic) and `switches`
-    (tactic changes).
+  - how the game was played: `tactic_seconds` (seconds of game time spent in each tactic; empty
+    for idle), `switches` (applied tactic changes), `decisions`, `decisions_applied` and
+    `spend_usd` (the sum of the decision rows' `cost`).
+  - **Decided in T5c:** a **kill** is an enemy that dies. Within a wave it is a drop in the
+    enemy count. The game starts the next wave only when none is left (`check_wave_advance`)
+    and on the same frame, so on a wave change every enemy seen on the last frame counted as a
+    kill; without that the last enemy of each wave is missed (6 of 8 measured on a won game).
+    **`damage_taken`** is the hp lost, with hp floored at 0: the game lets hp fall below zero (a
+    recorded idle player ends at -10), and damage cannot exceed the hp there was.
+  - **`config_sha256` today** hashes only the decision cadence (0.5 s). T8 adds the question's
+    text and θ and freezes it in `agent/frozen.json`; a run records the hash it ran with.
+  - A **failed** episode still writes `result.json` (`outcome: error`) and keeps what the other
+    two files held, then `run` exits 1. A folder that already exists is never overwritten.
 - `episode.jsonl`: one row every 0.5 s with `t`, the player's `x` and `y` (2 decimals), `hp`,
   `wave`, enemies left and the current tactic. It is the player's path, for a map of where
   episodes are won or lost.
@@ -236,7 +251,12 @@ ledger between the Mac and Linux. **Never delete a run:** its cost would leave t
   tactic chosen and `applied`. Jev rows add `answers` (the probabilities), `confidence`,
   `model`, `input_tokens`, `cost`, `latency_ms` and `error` (null unless every retry failed).
 - `run` ends by printing one line: outcome, survival, decisions made and applied, and the run's
-  spend.
+  spend. Its options are `--policy` and `--seed` (both required), `--map`, `--runner` (default
+  `docker`) and `--max-seconds` (default 180, of game time).
+- **Same seed, same enemies, not the same episode.** The seed fixes where the enemies spawn,
+  but the game runs on real time, so two runs of one policy and seed can differ: three runs of
+  the scripted policy on seed 1 took 14.1, 16.1 and 14.1 s to win. Evaluate over many seeds; do
+  not expect a replay.
 - **Size** [calc]: about 1 KB per decision row and 2 decisions per second, so about 360 KB per
   180 s episode. 60-80 Jev episodes come to about 20-30 MB in git. If that ever matters,
   compress old runs with `gzip`; never delete them.

@@ -15,6 +15,7 @@ directory to ECHO.cwd. MODE makes it misbehave:
   dies-after-init  prints the init line, says "crashed" on stderr and exits 3
   stubborn         prints the fixture, then ignores Q and the end of input and sleeps
   hang             prints nothing and sleeps
+  ends-early       prints the init line and 19 observations, then exits with code 0
 """
 
 import os
@@ -33,6 +34,10 @@ def say(line):
 
 if mode == "hang":
     time.sleep(60)
+if mode == "ends-early":
+    for line in fixture_lines[:20]:
+        say(line)
+    sys.exit(0)
 if mode == "no-output":
     print("boom", file=sys.stderr, flush=True)
     sys.exit(1)

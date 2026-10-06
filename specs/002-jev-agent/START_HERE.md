@@ -32,22 +32,25 @@
 - **Done (2026-10-06): T0 to T3e, that is phases 1 and 2.** The C bridge `cub3D_agent`
   (`sources/jev/`), its 24 checks in `agent/check_bridge.py`, and **L1 and L2 passed on the
   owner's Linux** (UTM, aarch64, Ubuntu 22.04.5).
-- **Phase 3 has started: T4a, T4b, T4c, T5a and T5b are done.** T4a is the Python package
-  skeleton (`agent/pyproject.toml`, `uv.lock`, `src/kube_agent/` with `cli.py` and
-  `config.py`). T4b is `bridge.py`, the pipe to the game, with its first fixture. T4c is
-  `features.py`, the semantic state, with the second fixture. T5a is `controller.py`: aim,
-  fire, move and the search, whatever the tactic. T5b is `policies.py`: the idle policy, the
-  four scripted rules and the decision schedule; 194 tests in all.
-- **Next: T5c**, the episode runner and `kube-agent run`, which needs the container (Colima).
-  Phase 3 ends with checkpoint L3 on the owner's Linux: stop there and list every open row of
-  the Linux ledger in `tasks.md`.
+- **Phase 3 is built: T4a to T5c are done.** T4a is the Python package skeleton
+  (`agent/pyproject.toml`, `uv.lock`, `src/kube_agent/` with `cli.py` and `config.py`). T4b is
+  `bridge.py`, the pipe to the game, with its first fixture. T4c is `features.py`, the
+  semantic state, with the second fixture. T5a is `controller.py`: aim, fire, move and the
+  search, whatever the tactic. T5b is `policies.py`: the idle policy, the four scripted rules
+  and the decision schedule. T5c is `episode.py` and `kube-agent run`, with the first ten runs
+  in `agent/runs/` (R11); 234 tests in all.
+- **Finding from R11 to know before going on:** the scripted rules **won all 5 dev seeds with
+  no damage**, in 11-14 s, so on `subject_map` a win cannot tell scripted from Jev. The owner
+  has not decided what to do about it (harder maps are already on their list for after v1).
+- **Next: the checkpoint L3**, on the owner's Linux. Stop there and list every open row of the
+  Linux ledger in `tasks.md`. Then phase 4 (T6, Jev in the loop), which costs money.
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T5c on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from L3 on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

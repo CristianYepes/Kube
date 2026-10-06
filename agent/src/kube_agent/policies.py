@@ -5,10 +5,11 @@ on that observation, else None. Its `tactic` is the one in force, and the contro
 into keys. The row is what decisions.jsonl stores for every policy (plan.md, "Logs").
 """
 
+from kube_agent.config import DECISION_INTERVAL
 from kube_agent.features import HpHistory, health_band, semantic_state
 
 INITIAL_TACTIC = "ENGAGE"  # in force until a policy's first decision
-DECISION_INTERVAL = 0.5  # seconds of game time between decisions
+POLICIES = ("idle", "scripted")  # "jev" joins when its policy exists
 HEALTH_RANK = {"low": 0, "medium": 1, "high": 2}
 
 
@@ -76,3 +77,11 @@ class ScriptedPolicy:
         state = semantic_state(obs, self._map, self._history, self.tactic)
         self.tactic = scripted_tactic(state)
         return {"t": obs["t"], "state": state, "tactic": self.tactic, "applied": True}
+
+
+def make_policy(name: str, game_map: list[str]):
+    if name == "idle":
+        return IdlePolicy()
+    if name == "scripted":
+        return ScriptedPolicy(game_map)
+    raise ValueError(f"unknown policy {name!r}: expected one of {POLICIES}")

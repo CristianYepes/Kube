@@ -742,7 +742,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       it). The history is fed on every observation because a state is built only at a decision
       and a drop between two decisions must still count; there is a test for that case;
     - **not checked:** the policies in a whole episode, which is T5c.
-- [ ] **T5c** — `episode.py` and `kube-agent run` (AC14).
+- [x] **T5c** — `episode.py` and `kube-agent run` (AC14). **Done 2026-10-06, see the note at the end of this task.**
   - **Read:** `plan.md`: "Logs", "Runtime expectations".
   - **Do:**
     - one episode ends on `state != 0` (win or lose) or at `--max-seconds` (default 180),
@@ -750,7 +750,9 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - `--map` (default `maps/bonus/subject_map.cub`) and `--runner` (default `docker`);
     - write `agent/runs/<id>/` exactly as `plan.md` "Logs" describes: `result.json`,
       `episode.jsonl`, and `decisions.jsonl` with the scripted policy's decisions too (idle's
-      file is empty). Kills are the enemies that disappear within the same wave;
+      file is empty). Kills are the enemies that die (this said "the enemies that disappear
+      within the same wave" until T5c measured that it misses the last enemy of each wave: see
+      `plan.md` "Logs");
     - `stalls` counts gaps above 100 ms between observations handled by the controller, timed
       with the host's monotonic clock. Unit-test the counter with a fake loop that blocks for
       0.2 s every 0.5 s: it must count them;
@@ -762,6 +764,52 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - AC14: `git status --porcelain agent/runs` lists the 10 new folders;
     - append the numbers to the research as **R11** ("Baselines on dev seeds 1-5").
   - **Commit** (with the 10 runs): `agent: episode runner and first baselines (dev seeds 1-5)`.
+  - **Done 2026-10-06:**
+    - **the code:** `episode.py` has `StallCounter`, `Tally`, `play()` (the loop of one episode)
+      and `run_episode()` (the folder, the three files, `result.json` even when the episode
+      fails, never overwriting a folder); `cli.py` has the real `run` (`--policy` and `--seed`
+      required, `--map`, `--runner`, `--max-seconds`); `config.py` gained `RUNS_DIR`,
+      `DEFAULT_MAX_SECONDS`, `DECISION_INTERVAL` (moved from `policies.py`) and a first
+      `config_sha256()`; `policies.py` gained `make_policy`. 234 tests in the suite against 194
+      before: 40 new (30 for the episode, 6 for the CLI, 2 for config and 2 for policies);
+    - **44 deliberate breaks**, each caught by the test meant for it. Three were missed the
+      first time and are now caught: a failed early end that passed because `close()` raised the
+      error instead of `play()`; position rounding that could not fail because the recorded
+      player is still at (26.5, 11.5); and a wave number going backwards. One more was caught
+      but **leaked**: with `--seed` made optional on purpose, a CLI test started a real episode
+      and left an `error` run folder in `agent/runs/`. An automatic guard now makes any CLI
+      test that reaches `run_episode` fail first, and the same break then creates nothing;
+    - **the stalls counter (AC8)**, as the task asks: with an injected clock, and with a real
+      loop that blocks 0.15 s three times, which it counts. A slow controller (a block every 40
+      calls) shows up in `result.json`'s `stalls`;
+    - **the 10 runs**, through the docker runner and the real CLI, on seeds 1-5 (R11 has the
+      table): `idle` lost all 5 in 6.6-8.2 s (median 7.26 s) with 100 damage; **`scripted` won
+      all 5, in 11.0-14.1 s (median 12.84 s), with 8 kills and 0 damage each**. All 10 exited 0,
+      left no game running in the container, and the 130 decision rows of the scripted runs hold
+      states of at most 392 characters with no float (AC6 on the real log);
+    - **the Verify list:** every run has its three files with the documented fields (checked by
+      a script over the 10 folders); the scripted median survival is longer than idle's (12.84 s
+      against 7.26 s), **but that comparison says little: a scripted episode ends because it
+      won**, so its "survival" is the time to win; AC14: the folders are new in git (see the note
+      below on what `git status --porcelain` prints);
+    - **two counting errors of mine, found by reconciling the first real run** (6 kills in a won
+      game of 8 enemies; 110 damage from 100 hp): kills missed the last enemy of each wave
+      (`check_wave_advance` starts the next wave only when none is left, on the same frame), and
+      damage counted hp below zero. Both fixed with tests that failed first (`6 == 8`), and
+      written into `plan.md` "Logs" as a deviation from this task's earlier text;
+    - **same seed, not the same episode:** three scripted runs on seed 1 took 14.1, 16.1 and
+      14.1 s to win. The game runs on real time, so only the spawn is fixed by the seed;
+    - **stalls on the Mac:** 2 in the 5 idle episodes and 7 in the 5 scripted ones (1, 1, 1, 1
+      and 3), about one per episode. I did not look for their cause. T7's AC8 margin ("about as
+      often as scripted") should start from that baseline and not from zero;
+    - **AC14 and git:** while `agent/runs/` is itself new, `git status --porcelain agent/runs`
+      prints one line, `?? agent/runs/`. Each folder is listed once the directory is tracked,
+      as from the next run on, and `-uall` lists them from the start;
+    - **one stray folder:** `20261006T165137Z-idle-s1-darwin` is the failed run from the leaking
+      break (Docker was off: `outcome: error`, no decisions, $0). It is not one of the 10, so
+      it is **left out of the commit** and kept on disk until the owner decides, because
+      `plan.md` says never to delete a run;
+    - **not checked:** the `local` runner (L3, on the owner's Linux), and anything with Jev.
 - [ ] 🔑 **L3** — Linux checkpoint, phase 3. Ledger rows 8 and 9. First re-run what L1 and
   L2 settled, if anything changed since. On Linux, after `git pull --ff-only`, with
   `DISPLAY=:99` as in L1:
