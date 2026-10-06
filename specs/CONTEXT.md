@@ -235,7 +235,8 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
     - It is merged into the local `main`. On GitHub it lives on `feature/jev-agent`, pushed
       on 2026-09-29. `origin/main` stays at `34f4aff` until the owner decides.
 - **Spec 002 (Jev agent): in progress.** On 2026-10-06 phases 1 and 2 are done (T0 to T3e: the
-  C bridge and its 24 checks) and L1 and L2 passed on the owner's Linux. **Next: T4a.**
+  C bridge and its 24 checks) and L1 and L2 passed on the owner's Linux. T4a is done (the Python
+  package skeleton). **Next: T4b.**
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.
@@ -249,7 +250,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T4a.
+    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T4b.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;

@@ -1,2 +1,5 @@
 cub3D_agent
 obj/
+.venv/
+__pycache__/
+.pytest_cache/

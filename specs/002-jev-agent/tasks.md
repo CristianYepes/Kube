@@ -502,7 +502,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
 
 ## Phase 3 — Python agent and baselines (`agent/`, runs on the host)
 
-- [ ] **T4a** — Package skeleton.
+- [x] **T4a** — Package skeleton. **Done 2026-10-06, see the note at the end of this task.**
   - **Read:** `plan.md`: "Layout", "SDK facts".
   - **Do:**
     - `agent/pyproject.toml`: uv, Python >= 3.12, `typesafe-sdk==0.7.2`, pytest, the
@@ -518,6 +518,26 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - **Verify:** `cd agent && uv sync && uv run python --version && uv run kube-agent --help &&
     uv run pytest -q`. Python reports 3.12.x, and pytest runs 0 tests or a trivial one.
   - **Commit:** `agent: Python package skeleton`.
+  - **Done 2026-10-06:**
+    - the Verify commands ran as written: Python 3.12.7, `kube-agent --help` lists
+      `run`, `eval`, `spend`, `latency` and `order-check`, and pytest passes 10 tests;
+    - the installed `kube-agent run` exits with code 1 and prints
+      `kube-agent run: not implemented yet` on stderr, so a stub cannot pass for a success;
+    - `uv.lock` pins 21 packages, `typesafe-sdk` at 0.7.2 and pytest at 9.1.1, with no absolute
+      path in it (`uv lock --check` passes);
+    - the 10 tests were seen failing first (`No module named 'kube_agent.cli'`), and 7
+      deliberate breaks were each caught: exit code, message, a dropped subcommand, an optional
+      subcommand, a dropped `--map`, a wrong map default and a wrong map path;
+    - **a trap in that method:** my first pass of breaks gave 3 wrong counts and a final
+      `3 failed` after a restore that `cmp` said was identical. Python's `.pyc` cache is
+      invalidated by the source's mtime in seconds and its size, and `subject_map` and
+      `no_such_map` have the same length. Deleting `__pycache__` brought back `10 passed`.
+      The breaks were rerun with `PYTHONDONTWRITEBYTECODE=1` and the counts then matched what
+      each break should hit. Do the same for any later break that keeps a file's size;
+    - `config.py` holds only `DEFAULT_MAP`, the one constant in use. The question and the
+      config hash arrive with the tasks that use them;
+    - not checked here: `uv sync` on the owner's Linux, whose Python is 3.10.12 and so needs
+      uv to fetch 3.12 (ledger row 8, L3).
 - [ ] **T4b** — `bridge.py`.
   - **Do:**
     - an asyncio subprocess;
