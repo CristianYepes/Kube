@@ -32,9 +32,10 @@
 - **Done (2026-10-06): T0 to T3e, that is phases 1 and 2.** The C bridge `cub3D_agent`
   (`sources/jev/`), its 24 checks in `agent/check_bridge.py`, and **L1 and L2 passed on the
   owner's Linux** (UTM, aarch64, Ubuntu 22.04.5).
-- **Phase 3 has started: T4a is done** (the Python package skeleton: `agent/pyproject.toml`,
-  `uv.lock`, `src/kube_agent/` with `cli.py` and `config.py`, 10 tests).
-- **Next: T4b**, then T4c to T5c. Phase 3 ends with checkpoint L3 on the owner's Linux: stop
+- **Phase 3 has started: T4a and T4b are done.** T4a is the Python package skeleton
+  (`agent/pyproject.toml`, `uv.lock`, `src/kube_agent/` with `cli.py` and `config.py`). T4b is
+  `bridge.py`, the pipe to the game, with its first fixture; 30 tests in all.
+- **Next: T4c**, then T5a to T5c. Phase 3 ends with checkpoint L3 on the owner's Linux: stop
   there and list every open row of the Linux ledger in `tasks.md`.
 - **Already in the repo:**
   - the game;
@@ -42,7 +43,7 @@
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T4b on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T4c on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

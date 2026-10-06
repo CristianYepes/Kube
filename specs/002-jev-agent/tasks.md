@@ -538,7 +538,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       config hash arrive with the tasks that use them;
     - not checked here: `uv sync` on the owner's Linux, whose Python is 3.10.12 and so needs
       uv to fetch 3.12 (ledger row 8, L3).
-- [ ] **T4b** — `bridge.py`.
+- [x] **T4b** — `bridge.py`. **Done 2026-10-06, see the note at the end of this task.**
   - **Do:**
     - an asyncio subprocess;
     - runner `docker` (`docker exec -i -e DISPLAY=:99 -w /kube kube-dev ./agent/cub3D_agent
@@ -556,6 +556,42 @@ What does not change: the tests, the honest measurement, and the agent itself.
     fixture and echoes stdin to a file. Lines parse, commands arrive in order, and `close()`
     ends the child.
   - **Commit:** `agent: game bridge over stdin/stdout (docker and local runners)`.
+  - **Done 2026-10-06:**
+    - **the fixture** `idle_seed7.jsonl` was recorded in the container as written above: the
+      game exited with code 0, and a script checked that line 1 is the init line (33 x 14,
+      seed 7), the other 464 lines are obs with consecutive frames 1 to 464, `drops` is 0 in
+      all of them, the longest line is 559 bytes, and the file is **155 KB** (the estimate
+      said about 190 KB). The first enemy is at (26.41, 7.35), as in the seed note of L2;
+    - **the tests:** 30 in the suite (19 new for the bridge and one for `REPO_ROOT`, on top of
+      T4a's 10), the final suite run five times in a row with 30 passed each time, about 1 s.
+      The bridge ones use `tests/fake_game.py`, a stand-in
+      that prints the fixture and echoes stdin to a file, with modes that misbehave (no output,
+      garbage, not an init line, a list instead of an object, an unknown line type, a crash
+      after init, ignoring `Q`, never printing init). They cover: init parsed, 464 obs in
+      order, commands in order with `Q` last, a clean exit, `close()` with 155 KB unread, the
+      working directory, each failure message (it names the command and the game's last stderr
+      lines), the game terminated after a failed start or a timeout, a newline refused, and
+      the two runners' commands;
+    - **18 deliberate breaks**, each caught by the test meant for it (no newline, no `Q`, no
+      draining, no cwd, ignored exit code, unchecked init and obs types, ignored start timeout,
+      uncaught bad JSON and non-object, stderr left out, no terminate on a close timeout or a
+      failed start, no newline guard, unwrapped send error, a wrong docker display, a wrong
+      local command, an accepted unknown runner), and `bridge.py` restored identical (`cmp`).
+      Without draining, 6 tests fail and not only the one aimed at it: the fake blocks on its
+      write and never sees `Q`, so the drain is needed everywhere;
+    - **two mistakes of mine on the way, both caught:** a test read to the end of the output,
+      but a live game keeps stdout open until `Q` (the 20 s guard stopped it, and it now reads
+      by count); and my first run of breaks never ran, because zsh does not split a variable
+      into words, so its "restored, identical" line proved nothing;
+    - **against the real game through the docker runner** (a one-off script, not a test):
+      init after 0.13 s and equal to the recorded one; the first obs equal to the recorded one
+      (same seed, same player and enemies); `C 1 0 0 0 0 0 0` moved the player 1.211 cells in
+      1.009 game seconds, 1.20 cells/s; 119 obs with `drops` 0; `close()` took 0.02 s with exit
+      code 0; no game left in the container (`pgrep` found one while it ran, as the control, and
+      none afterwards); a map that does not exist raised `BridgeError` naming the command and
+      the game's own message (`Error | maps/does_not_exist.cub: No such file or directory`);
+    - **not checked here:** the `local` runner, which needs a Linux with the game built: it is
+      ledger row 8, L3 (`--runner local`, once T5c exists).
 - [ ] **T4c** — `features.py` (AC6).
   - **Read:** `plan.md`: "Conventions", "Semantic features".
   - **Do:** obs + map + short history -> the semantic state dict. **Record the second
