@@ -54,6 +54,7 @@ class JevResult:
     model: str | None  # the versioned model that answered
     input_tokens: int
     cost: float  # dollars charged for this call
+    cost_source: str | None  # "usage.cost" (OpenRouter's own figure) or "price_per_token" (an estimate); None if no answer
     latency_ms: int  # the whole call, retries included
     request_id: str | None  # the x-typesafe-request-id header, which OpenRouter does not send
     error: str | None  # None unless the call failed or was not made
@@ -141,7 +142,7 @@ class JevClient:
         http = response.raw_http_response
         raw = http.json()
         input_tokens = response.usage.input_tokens
-        cost = _cost(raw.get("usage"), input_tokens)
+        cost, cost_source = _cost(raw.get("usage"), input_tokens)
         self.spent += cost
         self._warn_if_unexpected(response.model)
         if self.exhausted:
@@ -151,6 +152,7 @@ class JevClient:
             model=response.model,
             input_tokens=input_tokens,
             cost=cost,
+            cost_source=cost_source,
             latency_ms=_milliseconds_since(started),
             # SystemOneResponse.request_id raises when the header is missing, and OpenRouter omits it
             request_id=http.headers.get("x-typesafe-request-id"),
@@ -163,6 +165,7 @@ class JevClient:
             model=None,
             input_tokens=0,
             cost=0.0,
+            cost_source=None,
             latency_ms=0 if started is None else _milliseconds_since(started),
             request_id=None,
             error=self._clean(message),
@@ -190,13 +193,13 @@ class JevClient:
             logger.warning("%s; no more calls to Jev in this run", self._cap_summary())
 
 
-def _cost(usage: Any, input_tokens: int) -> float:
-    """OpenRouter sends usage.cost, and the SDK drops it, so it is read from the raw JSON. Without
-    a usable one the price per input token stands in."""
+def _cost(usage: Any, input_tokens: int) -> tuple[float, str]:
+    """(dollars, where they come from). OpenRouter sends usage.cost and the SDK drops it, so it is
+    read from the raw JSON. Without a usable one, the price per input token stands in."""
     cost = usage.get("cost") if isinstance(usage, dict) else None
     if isinstance(cost, (int, float)) and not isinstance(cost, bool) and math.isfinite(cost) and cost >= 0:
-        return float(cost)
-    return input_tokens * INPUT_USD_PER_MTOK / 1_000_000
+        return float(cost), "usage.cost"
+    return input_tokens * INPUT_USD_PER_MTOK / 1_000_000, "price_per_token"
 
 
 def _milliseconds_since(started: float) -> int:

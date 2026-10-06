@@ -193,7 +193,9 @@ fast as walking forwards (`player.c`), and only a player who faces a threat can 
 ### Jev policy
 - Decide every 0.5 s, or at once when a new wave starts or health drops a band, with at most
   one request in flight.
-- Apply the answer only if `confidence >= θ`; θ starts at 0.6 and is tuned in T8. For a Choice
+- Apply the answer only if `confidence >= θ`; θ starts at 0.6 and is tuned in T8 (**R12: in the one
+  state measured, the confidence was 0.35-0.49, so 0.6 would have applied none of 50 answers; the
+  starting value is the owner's call before T7**). For a Choice
   with n options TypeSafe publishes the formula (docs, read 2026-10-03):
   `confidence = (p_max - 1/n) / (1 - 1/n)`. With our four tactics, θ = 0.6 means the chosen
   tactic has `p_max >= 0.70` [calc]. Check against the docs' own example: 0.85 over 3 options
@@ -612,9 +614,10 @@ sources/jev/
     flight (about $0.00006);
   - the key is read from the environment and never from a file, and a missing one is reported
     by the name of its variable.
-- Estimate [calc]: at most 2 calls/s × 180 s × about 1,300 tokens × $0.042/M, so at most
-  about $0.02 per episode. 40 Jev episodes cost at most about $0.80. `spend` is the real
-  number.
+- Estimate [calc]: at most 2 calls/s × 180 s × the tokens per call × $0.042/M. **Measured in
+  T6b (R12): 743 tokens and $0.0000312 per call,** so at most about $0.011 per 180 s episode, about
+  $0.0008 for a 13 s game, and about $0.45 for 40 full-length episodes (the first estimate, with
+  about 1,300 tokens, was $0.02 and $0.80). `spend` is the real number.
 
 ### Runtime expectations
 
@@ -638,8 +641,13 @@ sources/jev/
   - for Jev: cost per episode and latency p50/p95.
 
 ## Risks & mitigations
-- **Jev latency is unknown** (R2). If p95 > 500 ms, tactics lag behind the fight. Measure it
-  in T6 before tuning. If it is too slow, decide on events only instead of every 0.5 s.
+- **Jev latency** (R2, measured in T6b: R12). If p95 > 500 ms, tactics lag behind the fight. If it
+  is too slow, decide on events only instead of every 0.5 s. **Measured 2026-10-06 through
+  OpenRouter: p50 309 ms and p95 514 ms over 50 calls** (95% interval of the p95: 402-812 ms
+  [calc]). That crosses the 500 ms line by 14 ms, and the rule is **not applied yet**: it is the
+  owner's decision (`tasks.md`, T6b), because events only would leave a handful of decisions in a
+  game of about 13 s and weaken both players, and the cadence is already one of T8's three
+  tunables.
 - **The scripted policy may beat Jev.** That is a valid result (R3). The report says so plainly.
 - **A stall in the Python loop is invisible in the game's own clock.** The game never waits,
   and the pipe buffers what it writes meanwhile. A Linux pipe holds 64 KiB, about 2.7 s of

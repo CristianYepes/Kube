@@ -33,3 +33,15 @@ def make_obs(enemies=(), hp=100, weapon_ready=1, wave=1, t=0.0, **player_fields)
         "weapon_ready": weapon_ready, "player": player(**player_fields), "drops": 0,
         "enemies": list(enemies),
     }
+
+
+def floats_in(value):
+    """Every float in a nested dict/list: a state sent to Jev must hold none (AC6)."""
+    if isinstance(value, float):
+        yield value
+    elif isinstance(value, dict):
+        for inner in value.values():
+            yield from floats_in(inner)
+    elif isinstance(value, list):
+        for inner in value:
+            yield from floats_in(inner)

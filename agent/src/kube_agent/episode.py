@@ -97,7 +97,7 @@ def _episode_row(obs: dict, tactic: str | None) -> dict:
     }
 
 
-def _write_line(file, row: dict) -> None:
+def write_row(file, row: dict) -> None:
     file.write(json.dumps(row) + "\n")
     file.flush()  # an episode that dies half way still leaves what it did
 
@@ -117,7 +117,7 @@ async def play(game, policy, controller, episode_file, decisions_file, max_secon
             tactic = policy.tactic
             tally.observe(obs, tactic)
             if obs["t"] >= next_row_at:
-                _write_line(episode_file, _episode_row(obs, tactic))
+                write_row(episode_file, _episode_row(obs, tactic))
                 next_row_at, last_row_t = obs["t"] + ROW_INTERVAL, obs["t"]
             last = obs
             if obs["state"] != 0:
@@ -131,7 +131,7 @@ async def play(game, policy, controller, episode_file, decisions_file, max_secon
 
             decision = policy.step(obs)
             if decision:
-                _write_line(decisions_file, decision)
+                write_row(decisions_file, decision)
                 tally.decision(decision)
             if policy.tactic is not None:
                 line = controller.command(obs, policy.tactic)
@@ -142,7 +142,7 @@ async def play(game, policy, controller, episode_file, decisions_file, max_secon
         where = f"t={last['t']}" if last else "the first observation"
         raise BridgeError(f"the game's output ended at {where}, before the episode did")
     if last_row_t != last["t"]:  # the path ends where the episode ended
-        _write_line(episode_file, _episode_row(last, policy.tactic))
+        write_row(episode_file, _episode_row(last, policy.tactic))
     return {
         "outcome": outcome,
         "survival_seconds": round(tally.survival, 2),

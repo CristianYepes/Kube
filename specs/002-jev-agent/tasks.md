@@ -941,7 +941,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - **not checked:** any real call, the real `usage.cost` field (it is in the `libros`
       notes, not seen again here), cancellation over a real network, and the tests on Linux
       (they will run at L4).
-- [ ] **T6b** — The first real calls, and Jev's latency (the unknown in R2).
+- [x] **T6b** — The first real calls, and Jev's latency (the unknown in R2). **Done 2026-10-06, see the note at the end of this task.**
   - **Do:** `kube-agent latency --n 50` sends one state recorded from a fixture 50 times,
     sequentially.
   - `git pull --ff-only`, then check `kube-agent spend` first. This costs about $0.003.
@@ -954,7 +954,57 @@ What does not change: the tests, the honest measurement, and the agent itself.
     p95 > 500 ms, switch the policy to event-only decisions (`plan.md`, "Risks") before T7,
     and note it.
   - **Commit** (with the run): `agent: measured Jev latency and cost (R12)`.
+  - **Done 2026-10-06** (the owner said "lánzalo"; nothing was spent before that):
+    - **before spending:** `kube-agent spend` said `$0.000000`; the key file was checked without
+      printing it (mode 600, the shape of an OpenRouter key); the estimate was about $0.0027
+      [calc] against a cap of $0.01 for the probe. After the run, the key's value is in **no file
+      of the repository and not in its git history** (0 files, 0 lines);
+    - **the run:** `kube-agent latency --n 50` made **50 calls, 50 answered, 0 errors**, answered
+      on every one by `typesafe/jev-1.13-20260917`, the expected model, so the 🛑 did not
+      trigger. Every row has `model`, `input_tokens`, `cost` and `latency_ms`. It cost
+      **$0.00156**, and `kube-agent spend` now says `$0.001560 of $1.00 (paid calls: 50,
+      decisions files read: 15)`. The numbers, the analysis and the limits are **R12**:
+      **p50 309 ms, p95 514 ms**, 743 input tokens and $0.0000312 per call;
+    - **the item T6 left unchecked is checked:** OpenRouter does send `usage.cost` (50 of 50), and
+      it equals 743 tokens x $0.042 per Mtok exactly. Rows now carry `cost_source` (`usage.cost` or
+      `price_per_token`) so the ledger can be audited;
+    - **the code:** `probes.py` (`fixture_state`, `run_latency`, `summarize_latency`,
+      `describe_latency`, nearest-rank percentiles) and `kube-agent latency --n --budget-usd`
+      (default $0.01). The probe stops by itself after the call that brings a model other than
+      the expected one (exit 2, "STOP, tell the owner"), after 3 errors in a row, or at its cap,
+      and every call made has its row. The question of `plan.md` is now `config.TACTIC_QUESTION`,
+      and **`config_sha256` hashes it without sorting keys**, so the same options in another
+      order are another config (the order matters to Jev). 37 new tests, 325 in the suite;
+    - **a guard against paying by accident:** `tests/conftest.py` removes the key from every
+      test's environment (shown to fail without it, with `--noconftest`), and the CLI tests
+      cannot reach the real client. **30 deliberate breaks**, each caught by the test meant for
+      it (two first showed as "not caught" only because I mistyped the test name I expected);
+    - **what the 50 identical requests showed**, besides the speed: they got **20 different
+      probability vectors** (always `KITE`, but 0.51 to 0.62), the documented confidence formula
+      holds within the API's rounding, and the confidence was **0.35 to 0.49**, so a threshold of
+      0.6 would have applied **none** of the 50 answers (0.4 would have applied 31, 0.3 all 50);
+    - **mistakes of mine, caught:** `QUESTIONS` was a second name for the question and went stale
+      when the question was replaced (a test caught it; it is now a function), a test assertion
+      that could pass by accident, and a command line of `=====` that zsh rejected;
+    - 🛑 **The 500 ms rule was NOT applied, and the owner has to decide.** The task says that if
+      p95 is above 500 ms the policy switches to event-only decisions. p95 is 514 ms, above it by
+      14 ms, but a p95 from 50 values has a 95% interval of 402-812 ms [calc], and 8% of the calls
+      were over 500 ms. Event-only is not a small switch: the only events defined are a new wave
+      and a health band drop, which in a game of about 13 s are a handful of decisions, so it
+      would weaken the scripted policy too (it runs on Jev's schedule) and change the
+      experiment. My recommendation is **to keep 0.5 s plus events, one request in flight**, log
+      the latency of every decision in T7's real episodes, and let T8 lengthen the cadence if the
+      p95 in the loop or the share of stale answers is bad. The alternative is to follow the rule
+      literally, which needs the owner to say which events count;
+    - **the second decision before T7: the starting θ.** `plan.md` starts at 0.6, which in the
+      state measured would ignore Jev entirely. I would start at **0.3** (apply when `p_max` is
+      0.475 or more) and let T8 tune it on development seeds, which is what T8 is for; it is one
+      state, and its descriptions of `ENGAGE` and `KITE` overlap;
+    - **not checked:** other states (these are the same request 50 times), the cause of the
+      variation, two requests at once, other networks, and Linux (L4).
 - [ ] **T7** — The Jev policy in the loop (AC6, AC7, AC8, AC9).
+  - 🛑 **Blocked until the owner decides two things** (see the T6b note): whether to keep the 0.5 s
+    cadence or switch to event-only decisions (p95 514 ms, R12), and the starting θ.
   - **Do:**
     - decide every 0.5 s or on an event (new wave, health band drop), with at most one request
       in flight;

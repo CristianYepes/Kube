@@ -2,13 +2,15 @@ import json
 
 import pytest
 
-from kube_agent import cli
+from kube_agent import cli, jev_client
 from kube_agent.bridge import BridgeError
 from kube_agent.cli import build_parser, main
-from kube_agent.config import DEFAULT_MAP
+from kube_agent.config import DEFAULT_MAP, LATENCY_PROBE_BUDGET_USD
+from kube_agent.jev_client import BudgetExhausted, KeyMissing
+from kube_agent.probes import describe_latency
 
 SUBCOMMANDS = ["run", "eval", "spend", "latency", "order-check"]
-STUBS = ["eval", "latency", "order-check"]  # `run` is real since T5c and `spend` since T6
+STUBS = ["eval", "order-check"]  # `run` is real since T5c, `spend` since T6 and `latency` since T6b
 
 
 @pytest.fixture(autouse=True)
@@ -23,6 +25,20 @@ def no_episode_by_accident(monkeypatch):
         raise AssertionError("a CLI test reached run_episode: it would start a real episode")
 
     monkeypatch.setattr(cli, "run_episode", refuse)
+
+
+class FakeJev:
+    """Stands in for JevClient in the CLI tests: from_environment never reaches the real one."""
+
+    @classmethod
+    def from_environment(cls, **kwargs):
+        raise AssertionError("a CLI test reached the real JevClient.from_environment: it could spend money")
+
+
+@pytest.fixture(autouse=True)
+def no_spending_by_accident(monkeypatch):
+    """A CLI test that reaches the real client could make a paid call if a key were in the environment."""
+    monkeypatch.setattr(cli, "JevClient", FakeJev)
 
 
 def test_help_lists_every_subcommand(capsys):
@@ -150,3 +166,116 @@ def test_spend_stops_on_a_row_it_cannot_read(monkeypatch, tmp_path, capsys):
 
     assert main(["spend"]) == 1
     assert "decisions.jsonl:1" in capsys.readouterr().err
+
+
+# --- latency (T6b) ------------------------------------------------------------------------------
+
+LATENCY_RESULT = {
+    "kind": "latency", "run_id": "latency-20261006T093000Z-darwin", "calls_requested": 50, "calls_made": 50,
+    "ok": 50, "errors": 0, "models": {"typesafe/jev-1.13-20260917": 50},
+    "latency_ms": {"p50": 120, "p95": 210, "min": 90, "max": 300, "mean": 135.5},
+    "input_tokens_per_call": 1300.0, "cost_per_call_usd": 0.000055, "cost_sources": {"usage.cost": 50},
+    "spend_usd": 0.00275, "stopped": None,
+}
+
+
+class AsyncNothing:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *exception_info):
+        return None
+
+
+def fake_probe(monkeypatch, result, calls=None):
+    class Client(AsyncNothing):
+        @classmethod
+        def from_environment(cls, **kwargs):
+            (calls if calls is not None else []).append(("from_environment", kwargs))
+            return cls()
+
+    async def run_latency(client, state, questions, n):
+        (calls if calls is not None else []).append(("run_latency", n, sorted(questions)))
+        return result
+
+    monkeypatch.setattr(cli, "JevClient", Client)
+    monkeypatch.setattr(cli, "run_latency", run_latency)
+
+
+def test_latency_defaults_are_50_calls_and_a_small_cap():
+    args = build_parser().parse_args(["latency"])
+
+    assert (args.n, args.budget_usd) == (50, LATENCY_PROBE_BUDGET_USD)
+    assert LATENCY_PROBE_BUDGET_USD == 0.01  # three times the estimate for 50 calls
+
+
+@pytest.mark.parametrize("n", ["0", "-3", "x"])
+def test_latency_needs_a_positive_number_of_calls(n, capsys):
+    with pytest.raises(SystemExit) as exit_info:
+        main(["latency", "--n", n])
+
+    assert exit_info.value.code == 2
+
+
+def test_latency_prints_one_summary_line_and_exits_0(monkeypatch, capsys):
+    calls = []
+    fake_probe(monkeypatch, LATENCY_RESULT, calls)
+
+    code = main(["latency", "--n", "50", "--budget-usd", "0.02"])
+
+    assert code == 0
+    assert calls == [("from_environment", {"cap_usd": 0.02}), ("run_latency", 50, ["tactic"])]
+    assert capsys.readouterr().out == describe_latency(LATENCY_RESULT) + "\n"
+
+
+def test_the_summary_line_has_the_numbers_r12_needs():
+    assert describe_latency(LATENCY_RESULT) == (
+        "latency: 50 calls (50 ok, 0 errors) | p50 120 ms, p95 210 ms, max 300 ms | "
+        "1300 input tokens and $0.000055 per call | $0.002750 in all | cost from usage.cost | "
+        "model typesafe/jev-1.13-20260917 | [latency-20261006T093000Z-darwin]")
+
+
+def test_the_summary_line_when_no_call_was_answered():
+    result = {**LATENCY_RESULT, "ok": 0, "errors": 3, "calls_made": 3, "latency_ms": None, "models": {},
+              "cost_per_call_usd": None, "input_tokens_per_call": None, "cost_sources": {}, "spend_usd": 0.0}
+
+    assert describe_latency(result) == (
+        "latency: 3 calls (0 ok, 3 errors) | no call was answered | $0.000000 in all | [latency-20261006T093000Z-darwin]")
+
+
+@pytest.mark.parametrize("error", [KeyMissing("OPENROUTER_API_KEY is not set"), BudgetExhausted("the $1.00 total budget is spent")])
+def test_latency_refuses_to_start_without_a_key_or_a_budget(monkeypatch, capsys, error):
+    class Client:
+        @classmethod
+        def from_environment(cls, **kwargs):
+            raise error
+
+    monkeypatch.setattr(cli, "JevClient", Client)
+
+    assert main(["latency"]) == 1
+    assert str(error) in capsys.readouterr().err
+
+
+def test_an_unusable_key_is_reported_without_showing_it(monkeypatch, capsys):
+    secret = "sk-or-v1-has a space-" + "ab12" * 8  # not printable ASCII without whitespace: the SDK refuses it
+    monkeypatch.setattr(cli, "JevClient", jev_client.JevClient)
+    monkeypatch.setenv("OPENROUTER_API_KEY", secret)
+
+    assert main(["latency"]) == 1
+    error = capsys.readouterr().err
+    assert "kube-agent latency:" in error and secret not in error and "ab12ab12" not in error
+
+
+def test_a_model_that_is_not_the_expected_one_exits_2_and_says_to_tell_the_owner(monkeypatch, capsys):
+    stopped = "unexpected model: 'typesafe/jev-9' answered and 'typesafe/jev-1.13-20260917' was expected"
+    fake_probe(monkeypatch, {**LATENCY_RESULT, "calls_made": 1, "ok": 1, "stopped": stopped})
+
+    assert main(["latency"]) == 2
+    assert "STOP" in capsys.readouterr().err
+
+
+def test_any_other_early_stop_exits_1_with_the_reason(monkeypatch, capsys):
+    fake_probe(monkeypatch, {**LATENCY_RESULT, "stopped": "budget cap reached: $0.010020 spent of the $0.010000 cap"})
+
+    assert main(["latency"]) == 1
+    assert "stopped early: budget cap reached" in capsys.readouterr().err

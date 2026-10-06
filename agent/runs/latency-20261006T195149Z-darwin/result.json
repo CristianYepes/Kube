@@ -1,0 +1,30 @@
+{
+  "kind": "latency",
+  "run_id": "latency-20261006T195149Z-darwin",
+  "machine": "darwin",
+  "config_sha256": "bbbf2003f3048a5ecbdec5d47b0eff88b6bccba8c75ce3910be347c21057f51c",
+  "pinned_model": "typesafe/jev-1.13",
+  "expected_model": "typesafe/jev-1.13-20260917",
+  "cap_usd": 0.01,
+  "calls_requested": 50,
+  "calls_made": 50,
+  "ok": 50,
+  "errors": 0,
+  "models": {
+    "typesafe/jev-1.13-20260917": 50
+  },
+  "latency_ms": {
+    "p50": 309,
+    "p95": 514,
+    "min": 267,
+    "max": 812,
+    "mean": 343.2
+  },
+  "input_tokens_per_call": 743.0,
+  "cost_per_call_usd": 3.1206e-05,
+  "cost_sources": {
+    "usage.cost": 50
+  },
+  "spend_usd": 0.0015603,
+  "stopped": null
+}

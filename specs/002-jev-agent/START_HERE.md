@@ -45,19 +45,22 @@
 - **Phase 3's checkpoint L3 passed on the owner's Linux** (2026-10-06): 234 tests in 3.87 s, the
   `local` runner played 4 episodes, and the owner saw the game on the real display. Ledger
   rows 8 and 9 are closed; only row 10 (L4, the key on Linux and one paid run) is open.
-- **Phase 4 has started: T6 is done** (`jev_client.py`, `ledger.py` and `kube-agent spend`, with
-  no real call). The owner chose to measure Jev on the current map first and to look at a harder
-  map afterwards.
-- **Next: T6b, the first real calls, which costs money** (about $0.003 [calc]; the whole spec has
-  $1). **Ask the owner for the OK before the first paid call.** Before it: `git pull --ff-only`,
-  `kube-agent spend`, and load the key into that one command as `START_HERE.md` shows.
+- **Phase 4: T6 and T6b are done.** T6 is the Jev client and the spend ledger. T6b made the first
+  50 paid calls ($0.00156 of the $1.00): Jev answered with the expected model, p50 309 ms and
+  p95 514 ms, 743 tokens and $0.0000312 per call (R12). The owner chose to measure Jev on the
+  current map first and to look at a harder map afterwards.
+- **Next: T7, but it is blocked on two decisions of the owner** (see the T6b note in
+  `tasks.md`): keep the 0.5 s cadence or switch to event-only decisions (p95 514 ms is 14 ms
+  over the 500 ms line, and the estimate is weak), and the starting θ (0.6 would have applied
+  0 of 50 answers in the one state measured). **Ask for both before writing T7.** Ask for the OK
+  before any further paid call.
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T6b on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T7 on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 
