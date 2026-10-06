@@ -873,7 +873,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
 
 ## Phase 4 — Jev in the loop
 
-- [ ] **T6** — `jev_client.py` and `kube-agent spend` (AC8, AC10).
+- [x] **T6** — `jev_client.py` and `kube-agent spend` (AC8, AC10). **Done 2026-10-06, see the note at the end of this task.**
   - **Read:** `plan.md`: "SDK facts", "Key", "Budget ledger", "Jev policy";
     `~/jev/libros/src/libros/jev.py` (the owner's working client: `_request_id`, `_coste`,
     `cargar_clave`); **`typesafe_sdk/_core/retry.py`** in the installed package (what
@@ -894,6 +894,53 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - a ledger whose rows add up to $1.00 makes the client refuse to start;
     - a missing request-id header does not raise.
   - **Commit:** `agent: Jev client with pinned model, cost, retries and budget cap`.
+  - **Done 2026-10-06:**
+    - **what `RetryPolicy.timeout` means** (the task asked for it here; read in `retry.py` and
+      tested): it is the total budget for one SDK call, the first attempt and the waits
+      included, applied with tenacity's `stop_before_delay`. It is checked **between** attempts
+      and never interrupts one in flight, and it stops a retry whose wait would reach the
+      budget. So a `Retry-After: 30` against a 3 s budget makes one request and returns in 0.00
+      s. The client's own `timeout` is a different thing: an `httpx2.Timeout` that applies one
+      number to connect, read, write and pool each (the transport sees four 1.5s), not to the
+      attempt as a whole. The only hard bound on a call is `asyncio.timeout`, which I added.
+      Both are in `plan.md` "SDK facts";
+    - **today's facts were checked first, at the owner's request** (public pages, no key, no
+      spend; R2 has the details): the docs, the skill and the SDK are as the context says, the
+      only model is `jev-1.13.0`, OpenRouter's `typesafe/jev-1.13` still has the one endpoint
+      `TypeSafe | typesafe/jev-1.13-20260917` at $0.042 per Mtok, nothing newer exists, and
+      `typesafe-sdk` 0.7.2 is still the latest. **A real call cannot be checked without
+      paying**, so that the answering model is the expected one is T6b's job;
+    - **the code:** `jev_client.py` (`JevClient`, `JevResult`, `KeyMissing`) and `ledger.py`
+      (`read_ledger`, `require_budget`), `config.TOTAL_BUDGET_USD`, and `kube-agent spend`. A
+      call returns a `JevResult` (`answers`, `model`, `input_tokens`, `cost`, `latency_ms`,
+      `request_id`, `error`; `to_row()` is plain JSON) and **never raises for an API failure**;
+      a cancellation does pass through, because the policy cancels a stale request. 56 new
+      tests (19 ledger, 33 client, 4 `spend`), 289 in the suite, none touching the network;
+    - **the Verify list:** 429, then 529, then 200 is retried in 3 requests while a ticker keeps
+      ticking through the waits; when every attempt fails nothing is raised and the row has an
+      `error`; a cap of $0.0001 lets two $0.00006 calls through and refuses the third, says why
+      in the row and once in the log, and a cap of 0 makes no call; a ledger of ten $0.10 rows
+      refuses to start; a missing request id does not raise;
+    - **three more facts found while testing**, none in the task text: an API error's text
+      includes the body the server sent, so it can repeat the key (the client replaces the key
+      with `[key]`, tested with a server that echoes it); a cost of `NaN` or `Infinity` falls
+      back to the price per token; and the per-phase timeout reaches the transport as four
+      equal numbers;
+    - **41 deliberate breaks**, each caught by the test meant for it: 12 in the ledger, 26 in
+      the client (the model, the URL, the warnings, each way of reading a cost, the request id,
+      the three failure paths, the key scrub, the cap, the key and ledger at start, the latency
+      and the retry settings) and 3 in `spend`. One looked uncaught: replacing `fsum` with
+      `sum`, because since Python 3.12 the built-in `sum` is compensated and gives 1.0 for ten
+      0.1s. A naive `+` loop (0.9999999999999999) is caught by 3 tests;
+    - **my slips, caught:** a test ended in a tautology that only used an import, the response
+      JSON was parsed twice, and four branches had no test (the error text cut, the timeout
+      reaching the transport, the default retry settings and a non-finite cost);
+    - **the real ledger** (`kube-agent spend`): `$0.000000 of $1.00 used, $1.000000 left
+      (paid calls: 0, decisions files read: 14)`, and a `find` agrees on the 14 files and finds
+      no `cost` key in them;
+    - **not checked:** any real call, the real `usage.cost` field (it is in the `libros`
+      notes, not seen again here), cancellation over a real network, and the tests on Linux
+      (they will run at L4).
 - [ ] **T6b** — The first real calls, and Jev's latency (the unknown in R2).
   - **Do:** `kube-agent latency --n 50` sends one state recorded from a fixture 50 times,
     sequentially.

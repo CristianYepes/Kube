@@ -11,6 +11,7 @@ RUNS_DIR = REPO_ROOT / "agent" / "runs"  # committed, never ignored (FR15)
 
 DEFAULT_MAP = "maps/bonus/subject_map.cub"
 DEFAULT_MAX_SECONDS = 180.0  # of game time per episode
+TOTAL_BUDGET_USD = 1.00  # for every Jev call of the whole spec (spec.md, Decision 3)
 
 DECISION_INTERVAL = 0.5  # seconds of game time between decisions; one of the three things T8 may tune
 

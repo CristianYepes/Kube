@@ -45,17 +45,19 @@
 - **Phase 3's checkpoint L3 passed on the owner's Linux** (2026-10-06): 234 tests in 3.87 s, the
   `local` runner played 4 episodes, and the owner saw the game on the real display. Ledger
   rows 8 and 9 are closed; only row 10 (L4, the key on Linux and one paid run) is open.
-- **Next: phase 4, T6** (`jev_client.py` and `kube-agent spend`), which is where money starts
-  to be spent (the whole spec has $1). **Before it, the owner decides what to do about R11:**
-  the scripted rules won 9 of 9 episodes (5 on the Mac, 4 on Linux), so on `subject_map` a win
-  cannot tell scripted from Jev. Harder maps are already on the owner's list for after v1.
+- **Phase 4 has started: T6 is done** (`jev_client.py`, `ledger.py` and `kube-agent spend`, with
+  no real call). The owner chose to measure Jev on the current map first and to look at a harder
+  map afterwards.
+- **Next: T6b, the first real calls, which costs money** (about $0.003 [calc]; the whole spec has
+  $1). **Ask the owner for the OK before the first paid call.** Before it: `git pull --ff-only`,
+  `kube-agent spend`, and load the key into that one command as `START_HERE.md` shows.
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T6 on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T6b on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

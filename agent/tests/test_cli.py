@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from kube_agent import cli
@@ -6,7 +8,7 @@ from kube_agent.cli import build_parser, main
 from kube_agent.config import DEFAULT_MAP
 
 SUBCOMMANDS = ["run", "eval", "spend", "latency", "order-check"]
-STUBS = ["eval", "spend", "latency", "order-check"]  # `run` is real since T5c
+STUBS = ["eval", "latency", "order-check"]  # `run` is real since T5c and `spend` since T6
 
 
 @pytest.fixture(autouse=True)
@@ -103,3 +105,48 @@ def test_run_reports_a_failed_episode_and_exits_1(monkeypatch, capsys, error):
 
     assert main(["run", "--policy", "idle", "--seed", "3"]) == 1
     assert str(error) in capsys.readouterr().err
+
+
+# --- spend (T6) ---------------------------------------------------------------------------------
+
+
+def write_decisions(folder, costs):
+    folder.mkdir(parents=True)
+    (folder / "decisions.jsonl").write_text("".join(json.dumps({"cost": cost}) + "\n" for cost in costs))
+
+
+def test_spend_prints_the_total_and_what_is_left(monkeypatch, tmp_path, capsys):
+    write_decisions(tmp_path / "run-a", [0.000054, 0.000054])
+    write_decisions(tmp_path / "latency-b", [0.000042])
+    monkeypatch.setattr(cli, "RUNS_DIR", tmp_path)
+
+    code = main(["spend"])
+
+    assert code == 0
+    assert capsys.readouterr().out == (
+        "spend: $0.000150 of $1.00 used, $0.999850 left (paid calls: 3, decisions files read: 2)\n")
+
+
+def test_spend_on_an_empty_ledger_says_everything_is_left(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(cli, "RUNS_DIR", tmp_path)
+
+    assert main(["spend"]) == 0
+    assert capsys.readouterr().out == (
+        "spend: $0.000000 of $1.00 used, $1.000000 left (paid calls: 0, decisions files read: 0)\n")
+
+
+def test_spend_says_so_when_the_budget_is_spent(monkeypatch, tmp_path, capsys):
+    write_decisions(tmp_path / "run-a", [1.0])
+    monkeypatch.setattr(cli, "RUNS_DIR", tmp_path)
+
+    assert main(["spend"]) == 0
+    assert "the budget is spent: no more calls to Jev" in capsys.readouterr().out
+
+
+def test_spend_stops_on_a_row_it_cannot_read(monkeypatch, tmp_path, capsys):
+    (tmp_path / "run-a").mkdir()
+    (tmp_path / "run-a" / "decisions.jsonl").write_text("this is not json\n")
+    monkeypatch.setattr(cli, "RUNS_DIR", tmp_path)
+
+    assert main(["spend"]) == 1
+    assert "decisions.jsonl:1" in capsys.readouterr().err

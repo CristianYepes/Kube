@@ -199,9 +199,11 @@ fast as walking forwards (`player.c`), and only a player who faces a threat can 
   tactic has `p_max >= 0.70` [calc]. Check against the docs' own example: 0.85 over 3 options
   gives 0.775, and the docs print 0.78. `probabilities` is also returned, so a threshold on
   `p_max` is an equivalent alternative if it reads better in the logs.
-- Retries: the SDK's `RetryPolicy`, plus one attempt timeout of 1.5 s. When every retry
-  fails, the row records the error, the tactic stays, and the next decision goes out on
-  schedule.
+- Retries: the SDK's `RetryPolicy` inside a budget of time (see "SDK facts" for what each
+  timeout does and does not bound). When every retry fails, the row records the error, the
+  tactic stays, and the next decision goes out on schedule. An API failure never reaches the
+  policy as an exception: `JevClient.ask` returns a `JevResult` whose `error` says what
+  happened, and only a cancellation (a stale request) is passed on.
 - **Stale answers:** with one request in flight, answers cannot overtake each other. An
   answer is stale when an event (new wave, health band drop) happened after its state was
   sent. It is logged with `applied: false`, and a new request goes out at once.
@@ -288,7 +290,9 @@ agent/
     features.py       obs -> semantic state (pure functions)
     controller.py     tactic + obs + map -> C line (aim, fire, movement, BFS)
     policies.py       idle, scripted, jev
-    jev_client.py     SDK wrapper: pinned model, cost, request id, budget, decision rows
+    jev_client.py     SDK wrapper: pinned model, cost, request id, retries bounded in time, the
+                      budget cap; JevResult.to_row() is the Jev part of a decisions.jsonl row
+    ledger.py         the spend ledger: the sum of every decisions.jsonl cost, and the $1.00 refusal
     episode.py        one episode: the loop, the logs, result.json
     evaluate.py       many episodes, statistics, report.md
     cli.py            kube-agent run | eval | spend | latency | order-check;
@@ -541,10 +545,23 @@ sources/jev/
 - **Retries:** `RetryPolicy(max_retries=2, backoff_initial=0.5, backoff_max=5.0,
   backoff_jitter=0.25, http_statuses={408, 429, 500..599}, respect_retry_after=True,
   timeout=30.0, ...)`. The defaults already retry 429 and 529.
-  - **Before relying on it, read `typesafe_sdk/_core/retry.py`** to learn whether
-    `RetryPolicy.timeout` is the total across attempts.
+  - **What `RetryPolicy.timeout` is (read in `retry.py` 2026-10-06, and tested):** the total
+    budget in seconds for one SDK call, the first attempt and the waits included. It is built
+    with tenacity's `stop_before_delay`: before each retry it stops if the time since the start
+    plus the coming wait would reach the budget, and it re-raises the last error. It is checked
+    **between** attempts, so it never interrupts an attempt in flight. A `Retry-After` longer
+    than the budget therefore ends the retrying at once: against a 3 s budget, a 429 with
+    `Retry-After: 30` made one request and returned in 0.00 s.
+  - **The per-attempt timeout is not per attempt.** The client's `timeout` is an
+    `httpx2.Timeout`; one number is applied to connect, read, write and pool **each** (the
+    transport sees all four at 1.5), so it does not cap an attempt as a whole, and it does not
+    apply to a handler that merely waits. The only bound on the whole call is `asyncio.timeout`.
+  - **The text of an API error includes the body the server sent** (`401 bad key sk-or-...`), so
+    it can repeat the key. Anything stored from an error goes through a scrub that replaces the
+    key with `[key]`.
   - Target: at most 1.5 s per attempt and a few seconds in total. A late answer is discarded
-    anyway.
+    anyway. Chosen in T6: 2 retries, backoff 0.2-1.0 s, a 3.0 s budget for the retries and a
+    hard stop of 4.0 s on the whole call, so the budget gives up before the hard stop would.
 - `SystemOneResponse` has `model`, `usage` and `answers`. `usage` only keeps `input_tokens`
   and `output_tokens`, because the model ignores extra fields.
   - **The cost is only in the raw JSON:** `r.raw_http_response.json()["usage"].get("cost")`.
@@ -584,6 +601,17 @@ sources/jev/
   - never delete a run.
 
   Then `spend` sums the paid calls of both machines.
+- **Decided in T6:**
+  - the ledger is every `decisions.jsonl` at any depth under `agent/runs/` and nothing else
+    (`result.json` repeats the same cost as `spend_usd`, so reading it would count it twice);
+  - a row that cannot be read as a cost stops the ledger with the file and the line, because
+    guessing zero would let the budget be exceeded without a sound; a row with no `cost` is a
+    free row;
+  - the ledger is read once, when a run starts, and the run counts its own spending after that:
+    one paid command at a time, and a cap can be passed by at most the cost of the one call in
+    flight (about $0.00006);
+  - the key is read from the environment and never from a file, and a missing one is reported
+    by the name of its variable.
 - Estimate [calc]: at most 2 calls/s × 180 s × about 1,300 tokens × $0.042/M, so at most
   about $0.02 per episode. 40 Jev episodes cost at most about $0.80. `spend` is the real
   number.
