@@ -49,11 +49,12 @@
   50 paid calls ($0.00156 of the $1.00): Jev answered with the expected model, p50 309 ms and
   p95 514 ms, 743 tokens and $0.0000312 per call (R12). The owner chose to measure Jev on the
   current map first and to look at a harder map afterwards.
-- **Next: T7, but it is blocked on two decisions of the owner** (see the T6b note in
-  `tasks.md`): keep the 0.5 s cadence or switch to event-only decisions (p95 514 ms is 14 ms
-  over the 500 ms line, and the estimate is weak), and the starting θ (0.6 would have applied
-  0 of 50 answers in the one state measured). **Ask for both before writing T7.** Ask for the OK
-  before any further paid call.
+- **Decided by the owner on 2026-10-06 (R12):** the cadence stays at 0.5 s plus events with one
+  request in flight (the p95 of 514 ms is 14 ms over the 500 ms line, but a weak estimate), and
+  the starting θ is 0.3 (0.6 would have applied 0 of 50 answers). T8 tunes both on development
+  seeds.
+- **Next: T7**, the Jev policy in the game loop. Build and test it with a fake client first; its
+  real run is paid (about $0.004 [calc]): **ask the owner for the OK before it.**
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;

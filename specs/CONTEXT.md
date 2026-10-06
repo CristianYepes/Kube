@@ -239,9 +239,8 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
   controller, the policies and the episode runner, with the first ten runs in `agent/runs/`).
   The checkpoint **L3 passed on the owner's Linux** (234 tests, the `local` runner, and the game
   seen on the real display). **T6 and T6b are done**: the Jev client, the spend ledger and the first
-  50 paid calls (p50 309 ms, p95 514 ms, $0.00156; R12). **Next: T7**, which is blocked on two
-  decisions of the owner: the cadence (the p95 is just over the 500 ms line) and the starting
-  confidence threshold θ.
+  50 paid calls (p50 309 ms, p95 514 ms, $0.00156; R12). The owner decided to keep the 0.5 s
+  cadence plus events and to start the confidence threshold θ at 0.3. **Next: T7.**
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.

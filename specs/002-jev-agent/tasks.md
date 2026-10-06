@@ -986,25 +986,26 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - **mistakes of mine, caught:** `QUESTIONS` was a second name for the question and went stale
       when the question was replaced (a test caught it; it is now a function), a test assertion
       that could pass by accident, and a command line of `=====` that zsh rejected;
-    - 🛑 **The 500 ms rule was NOT applied, and the owner has to decide.** The task says that if
-      p95 is above 500 ms the policy switches to event-only decisions. p95 is 514 ms, above it by
-      14 ms, but a p95 from 50 values has a 95% interval of 402-812 ms [calc], and 8% of the calls
-      were over 500 ms. Event-only is not a small switch: the only events defined are a new wave
-      and a health band drop, which in a game of about 13 s are a handful of decisions, so it
-      would weaken the scripted policy too (it runs on Jev's schedule) and change the
-      experiment. My recommendation is **to keep 0.5 s plus events, one request in flight**, log
-      the latency of every decision in T7's real episodes, and let T8 lengthen the cadence if the
-      p95 in the loop or the share of stale answers is bad. The alternative is to follow the rule
-      literally, which needs the owner to say which events count;
-    - **the second decision before T7: the starting θ.** `plan.md` starts at 0.6, which in the
-      state measured would ignore Jev entirely. I would start at **0.3** (apply when `p_max` is
-      0.475 or more) and let T8 tune it on development seeds, which is what T8 is for; it is one
-      state, and its descriptions of `ENGAGE` and `KITE` overlap;
+    - **The 500 ms rule was not applied. Decided by the owner, 2026-10-06** (answer: "adelante con
+      tus recomendaciones"). The task says that if p95 is above 500 ms the policy switches to
+      event-only decisions. p95 is 514 ms, above it by 14 ms, but a p95 from 50 values has a 95%
+      interval of 402-812 ms [calc], and 8% of the calls were over 500 ms. Event-only is not a
+      small switch: the only events defined are a new wave and a health band drop, which in a
+      game of about 13 s are a handful of decisions, so it would weaken the scripted policy too
+      (it runs on Jev's schedule) and change the experiment. **Decision: keep 0.5 s plus events,
+      one request in flight,** log the latency of every decision in T7's real episodes, and let
+      T8 lengthen the cadence if the p95 in the loop or the share of stale answers is bad;
+    - **The starting θ is 0.3. Decided by the owner, 2026-10-06.** `plan.md` started at 0.6,
+      which in the state measured would have ignored Jev entirely. With 0.3 an answer is
+      applied when `p_max` is 0.475 or more [calc], and T8 tunes it on development seeds, which
+      is what T8 is for. It rests on one state, and its descriptions of `ENGAGE` and `KITE`
+      overlap;
     - **not checked:** other states (these are the same request 50 times), the cause of the
       variation, two requests at once, other networks, and Linux (L4).
 - [ ] **T7** — The Jev policy in the loop (AC6, AC7, AC8, AC9).
-  - 🛑 **Blocked until the owner decides two things** (see the T6b note): whether to keep the 0.5 s
-    cadence or switch to event-only decisions (p95 514 ms, R12), and the starting θ.
+  - **Decided by the owner, 2026-10-06 (see the T6b note):** the cadence stays at 0.5 s plus
+    events, and θ starts at 0.3. The first real Jev episode is a paid run: **ask for the OK
+    first.**
   - **Do:**
     - decide every 0.5 s or on an event (new wave, health band drop), with at most one request
       in flight;
