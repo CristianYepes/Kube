@@ -1004,7 +1004,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       overlap;
     - **not checked:** other states (these are the same request 50 times), the cause of the
       variation, two requests at once, other networks, and Linux (L4).
-- [ ] **T7** — The Jev policy in the loop (AC6, AC7, AC8, AC9).
+- [x] **T7** — The Jev policy in the loop (AC6, AC7, AC8, AC9). **Done 2026-10-07, see the note at the end of this task.**
   - **Decided by the owner, 2026-10-06 (see the T6b note):** the cadence stays at 0.5 s plus
     events, and θ starts at 0.3. The first real Jev episode is a paid run: **ask for the OK
     first.**
@@ -1029,6 +1029,70 @@ What does not change: the tests, the honest measurement, and the agent itself.
       scripted's by at most 5 (**ASSUMPTION**: a margin for noise). A loop blocked by each
       call would add one stall per decision, about 120 in 60 s [calc].
   - **Commit** (with both runs): `agent: Jev tactic policy in the game loop`.
+  - **Done 2026-10-07** (the owner answered "Sí, lanza las dos"; nothing was spent before that):
+    - **before spending:** `kube-agent spend` said `$0.001560 of $1.00`; the key file was checked
+      without printing it (one line with the shape of an OpenRouter key); the estimate was at
+      most about $0.0047 [calc: 150 calls x $0.0000312] against a cap of $0.02 for the run;
+    - **the key and Docker:** the key was loaded only into the one command, in a subshell.
+      `docker exec` does not forward the client's environment to the container [measured with a
+      dummy variable: 0 matches inside, while `DISPLAY`, passed with `-e`, arrived], so the key
+      never entered the container. The `docker` client process does inherit it, as `uv` and
+      python do, because `GameBridge` does not clean the child's environment (**not changed:
+      see the open point at the end of this note**). After the runs, **0 files of the repository
+      and 0 commits of its history contain a key-shaped string** (control: the same pattern
+      finds the key file), and the run's printed output has none;
+    - **the runs** (seed 1, `--runner docker`, 60 s limit, `subject_map`): Jev **won in 13.6 s**
+      (wave 3, 8 kills, 0 damage, 0 stalls, 28 decisions of which 26 applied, 5 tactic switches,
+      $0.000873) and scripted **won in 14.04 s** (wave 3, 8 kills, 0 damage, 0 stalls, 29
+      decisions, 10 switches). One episode each: **the 0.4 s of difference is inside the
+      run-to-run variation** (the same scripted policy took 14.1, 16.1 and 14.1 s on seed 1,
+      R11), so it says nothing about which is better;
+    - **AC9 passed:** 28 of 28 rows have `model`, `input_tokens`, `cost`, `latency_ms` and
+      `confidence`, and the model is `typesafe/jev-1.13-20260917` in all 28, so no warning
+      applies [measured];
+    - **AC6 passed:** 28 of 28 states are under 2,000 characters (364 to 392) and have no float
+      and no decimal number in their text [measured]. The check was first tried on a state with
+      a float, one of 2,000 characters and one with a decimal inside a string: it caught all
+      three;
+    - **AC8 passed:** stalls 0 for Jev and 0 for scripted, against a limit of scripted + 5
+      [measured]. One request is in flight and `step()` never waits; the median game time
+      between two requests was 0.502 s;
+    - **what happened to the 28 answers:** 26 applied, **2 stale**, **0 below θ**, 0 errors, 0
+      fallbacks. Both stale answers (the states of t = 3.05 s and 8.46 s) were in flight when a
+      wave changed: they are the only two wave changes of the episode (1 to 2 and 2 to 3), and
+      a new request went out at once with the fresh state [measured];
+    - **θ = 0.3 filtered nothing in this episode:** the confidence of the 28 answers went from
+      0.36 to 1.0 (median 0.905, 20 different values), well above the 0.35 to 0.49 of the single
+      state of R12, because real states differ more than that one did. Whether a higher θ helps
+      is for T8, with more episodes. What Jev chose: `ENGAGE` 16, `KITE` 8, `RETREAT` 2,
+      `SEARCH` 2;
+    - **latency in the loop** (the client's own timing of the 28 calls): **p50 318 ms, p95
+      625 ms**, max 760 ms (the first call, which opens the connection), 5 of 28 over 500 ms
+      [measured]. It is close to R12 (p50 309 ms, p95 514 ms), but a p95 from 28 values is weak.
+      The p95 is above 500 ms; the T6b decision says T8 judges it together with the share of
+      stale answers (2 of 28, both at wave changes). Input for T8: nothing was changed;
+    - **cost:** $0.000873 for 28 calls ($0.0000312 each, 743 input tokens, every one from
+      `usage.cost`); R12 estimated about $0.0008 [calc] for a 13 s game. `kube-agent spend` now
+      says `$0.002434 of $1.00 (paid calls: 78, decisions files read: 17)`;
+    - **the code T7 added:** `JevPolicy` (the request runs as an asyncio task and `step()` never
+      waits; one request in flight; an owed decision goes out when the answer returns, with fresh
+      state; an event is noted before the answer is read; the call that reaches the cap is
+      applied and then the scripted rules take over; `aclose()` waits for the request in flight
+      so that its cost reaches the ledger), `DecisionSchedule.last_event`, `run_episode(...,
+      budget_usd, jev_client, environ)`, `kube-agent run --policy jev --budget-usd` (default
+      $0.05), and `CONFIDENCE_THRESHOLD` and `DEFAULT_RUN_BUDGET_USD` in `config.py` (θ is part
+      of `config_sha256`). The decisions are in `plan.md`. 365 tests in the suite (325 after
+      T6b) and **35 deliberate breaks**, each caught by the test meant for it;
+    - **my slip, caught:** an episode test that depended on timing and failed now and then; the
+      fake game got a `paced` mode and it passed 30 runs in 30;
+    - **not checked:** other seeds and the development and test sets (T8, T9), how much a second
+      Jev episode on seed 1 differs, a network failure in the middle of a real episode (only the
+      unit tests with a fake transport cover it), the cadence under a slower p95, and Linux (L4);
+    - **open point for the owner, not done:** the bridge starts the game process with the
+      environment it inherits, so the key is in the environment of the `docker` client (or of the
+      game itself with the `local` runner on Linux). Removing `OPENROUTER_API_KEY` from the
+      child's environment is about 3 lines and one test; it would make "the key never reaches
+      the game or Docker" true by construction instead of by what `docker exec` happens to do.
 - [ ] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). Ledger row
   10: first create the key file on Linux (`START_HERE.md` 2b, step 3, the `read -s` variant:
   never paste the key into the chat). On Linux, after `git pull --ff-only` (the spend ledger

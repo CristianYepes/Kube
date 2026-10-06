@@ -211,6 +211,25 @@ fast as walking forwards (`player.c`), and only a player who faces a threat can 
   sent. It is logged with `applied: false`, and a new request goes out at once.
 - Budget: cumulative `usage.cost` per run; stop calling at the cap and fall back to the
   scripted rules. An answer that arrives after that switch is discarded.
+- **Decided in T7, where the text above is silent:**
+  - a request runs as a task and `step()` only looks at whether it has finished, so the game loop
+    never waits for Jev (AC8); at most one is in flight;
+  - a decision that falls due while one is out is **owed**: it goes out the moment the answer
+    returns, with the state of that moment (so a slow Jev decides back to back and not every
+    0.5 s), and an interval tick is not an event, so an answer that only lived through one is
+    not stale;
+  - the **event is noted before the answer is read**, so an event on the very frame an answer
+    arrives makes it stale; a request sent on the event itself is not;
+  - the call that **reaches the cap is applied** (it was inside the cap when it was sent); the
+    rules decide from the next decision on, and the policy says so once, out loud (FR10). Only an
+    answer that arrives after the switch to the rules was already made is discarded;
+  - one `step()` returns at most one row, so if an answer and a rules decision fall on the same
+    step the answer's row goes first and the decision waits for the next observation;
+  - when the episode ends, the policy **waits for the request still out** (up to the client's
+    hard limit plus a second) and records its row, with `reason: "episode_ended"`: a paid answer
+    must not be missing from the ledger; if it never comes the request is cancelled and a warning
+    says its cost, if any, is not in the ledger;
+  - the starting tactic is ENGAGE, and it changes only when an answer is applied.
 
 ### Logs (JSONL, one folder per episode, under `agent/runs/`, **committed**; FR15)
 
@@ -244,8 +263,13 @@ ledger between the Mac and Linux. **Never delete a run:** its cost would leave t
     kill; without that the last enemy of each wave is missed (6 of 8 measured on a won game).
     **`damage_taken`** is the hp lost, with hp floored at 0: the game lets hp fall below zero (a
     recorded idle player ends at -10), and damage cannot exceed the hp there was.
-  - **`config_sha256` today** hashes only the decision cadence (0.5 s). T8 adds the question's
-    text and θ and freezes it in `agent/frozen.json`; a run records the hash it ran with.
+  - **`config_sha256`** hashes what tuning may change: the decision cadence (0.5 s), the
+    confidence threshold θ and the question (its text and the order of its options). T8 freezes
+    it in `agent/frozen.json`; a run records the hash it ran with. **Runs made before T7 carry
+    older hashes** [measured in the `result.json` files]: the 14 baseline runs of R11 hashed the
+    cadence only (`6678f06f0c2e`), the latency probe of R12 the cadence and the question
+    (`bbbf2003f304`), and the runs of T7 all three (`2d735966627d`). A hash is only comparable
+    with runs of the same code.
   - A **failed** episode still writes `result.json` (`outcome: error`) and keeps what the other
     two files held, then `run` exits 1. A folder that already exists is never overwritten.
 - `episode.jsonl`: one row every 0.5 s with `t`, the player's `x` and `y` (2 decimals), `hp`,
@@ -254,9 +278,22 @@ ledger between the Mac and Linux. **Never delete a run:** its cost would leave t
 - `decisions.jsonl`: one row per decision, for **every policy**, with `t`, the state sent, the
   tactic chosen and `applied`. Jev rows add `answers` (the probabilities), `confidence`,
   `model`, `input_tokens`, `cost`, `latency_ms` and `error` (null unless every retry failed).
+  - **The fields of a Jev row, as T7 writes them:** `t` (the game clock of the state that was
+    sent), `state`, `tactic` (what Jev chose, `null` if the call failed or the answer was
+    malformed), `applied`, `reason`, `confidence`, `source` (`jev`), `answered_at` (the game
+    clock when the answer was read, `null` at the end of the episode), `stale`, and from the
+    client `answers`, `model`, `input_tokens`, `cost`, `cost_source`, `latency_ms`, `request_id`
+    and `error`.
+  - **`reason`** says why a row was not applied, the first that holds in this order: `error`,
+    `malformed` (a choice that is not one of the four tactics), `episode_ended`, `fallback` (the
+    budget was spent first), `stale`, `below_threshold`. It is `null` when `applied` is true.
+  - After the budget stop the rows come from the scripted rules, with `source:
+    "scripted_fallback"` and none of Jev's fields.
 - `run` ends by printing one line: outcome, survival, decisions made and applied, and the run's
   spend. Its options are `--policy` and `--seed` (both required), `--map`, `--runner` (default
-  `docker`) and `--max-seconds` (default 180, of game time).
+  `docker`), `--max-seconds` (default 180, of game time) and, for the Jev policy only,
+  `--budget-usd` (default 0.05: the run stops calling Jev at that spend, or at what the ledger
+  has left, whichever is less).
 - **Same seed, same enemies, not the same episode.** The seed fixes where the enemies spawn,
   but the game runs on real time, so two runs of one policy and seed can differ: three runs of
   the scripted policy on seed 1 took 14.1, 16.1 and 14.1 s to win on the Mac, and three on seed 2

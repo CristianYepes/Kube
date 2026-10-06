@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from fake_jev import KEY, FakeAPI, client_for, good
 from helpers import make_obs
 
 from kube_agent import config, episode
@@ -17,6 +18,8 @@ from kube_agent.bridge import BridgeError, GameBridge
 from kube_agent.config import DEFAULT_MAP, REPO_ROOT
 from kube_agent.controller import Controller
 from kube_agent.episode import STALL_SECONDS, StallCounter, Tally, play, run_episode
+from kube_agent.jev_client import EXPECTED_MODEL, KEY_VARIABLE, BudgetExhausted, KeyMissing
+from kube_agent.ledger import read_ledger
 from kube_agent.policies import make_policy
 
 TESTS = Path(__file__).resolve().parent
@@ -44,10 +47,10 @@ def stdin_seen(folder):
     return (folder / "stdin_seen.txt").read_text().splitlines()
 
 
-async def play_fixture(folder, policy_name, max_seconds, fixture=FIXTURE, wrap=lambda controller: controller):
-    async with GameBridge(fake_command(folder, fixture)) as game:
+async def play_fixture(folder, policy_name, max_seconds, fixture=FIXTURE, wrap=lambda controller: controller, jev_client=None, mode="normal"):
+    async with GameBridge(fake_command(folder, fixture, mode)) as game:
         game_map = game.init["map"]
-        policy = make_policy(policy_name, game_map)
+        policy = make_policy(policy_name, game_map, jev_client=jev_client)
         controller = wrap(Controller(game_map))
         episode_file, decisions_file = io.StringIO(), io.StringIO()
         result = await play(game, policy, controller, episode_file, decisions_file, max_seconds)
@@ -342,10 +345,10 @@ FIXED = datetime(2026, 10, 6, 9, 30, 0, tzinfo=timezone.utc)
 MACHINE = platform.system().lower()
 
 
-def run_fake(folder, policy="scripted", seed=7, mode="normal", max_seconds=2.0, utc_now=lambda: FIXED, map_path=DEFAULT_MAP):
+def run_fake(folder, policy="scripted", seed=7, mode="normal", max_seconds=2.0, utc_now=lambda: FIXED, map_path=DEFAULT_MAP, **options):
     return run(run_episode(
         policy, seed, map_path, "local", max_seconds, runs_dir=folder / "runs", utc_now=utc_now,
-        command=fake_command(folder, mode=mode)))
+        command=fake_command(folder, mode=mode), **options))
 
 
 def test_an_episode_writes_its_folder_with_the_three_files_and_the_documented_result(tmp_path):
@@ -383,8 +386,8 @@ def test_a_map_that_does_not_exist_creates_no_folder(tmp_path):
 
 
 def test_an_unknown_policy_creates_no_folder(tmp_path):
-    with pytest.raises(ValueError, match="policy 'jev'"):
-        run_fake(tmp_path, policy="jev")
+    with pytest.raises(ValueError, match="policy 'chess'"):
+        run_fake(tmp_path, policy="chess")
 
     assert not (tmp_path / "runs").exists()
 
@@ -410,3 +413,159 @@ def test_a_game_that_stops_answering_hits_the_wall_clock_limit(tmp_path, monkeyp
 
     run_dir = tmp_path / "runs" / f"20261006T093000Z-scripted-s7-{MACHINE}"
     assert json.loads((run_dir / "result.json").read_text())["outcome"] == "error"
+
+
+# --- the Jev policy in an episode (T7) ----------------------------------------------------------
+
+
+class ClosingPolicy:
+    """A policy double that records being closed and hands back one pending row."""
+
+    tactic = None
+
+    def __init__(self, row=None):
+        self.closed, self._row = False, row
+
+    def step(self, obs):
+        return None
+
+    async def aclose(self):
+        self.closed = True
+        return [self._row] if self._row else []
+
+
+def test_play_closes_the_policy_and_records_the_rows_it_hands_back(tmp_path):
+    row = {"t": 1.0, "state": {"current_tactic": "ENGAGE"}, "tactic": "KITE", "applied": False,
+           "reason": "episode_ended", "cost": 0.00003}
+    policy = ClosingPolicy(row)
+
+    async def scenario():
+        async with GameBridge(fake_command(tmp_path)) as game:
+            decisions_file = io.StringIO()
+            result = await play(game, policy, Controller(game.init["map"]), io.StringIO(), decisions_file, 1.0)
+            return result, decisions_file.getvalue()
+
+    result, decisions_text = run(scenario())
+
+    assert policy.closed
+    assert jsonl(decisions_text) == [row]
+    assert (result["decisions"], result["decisions_applied"], result["spend_usd"]) == (1, 0, 0.00003)
+
+
+def test_play_closes_the_policy_even_when_the_game_ends_before_the_episode_does(tmp_path):
+    policy = ClosingPolicy()
+
+    async def scenario():
+        async with GameBridge(fake_command(tmp_path, mode="ends-early")) as game:
+            await play(game, policy, Controller(game.init["map"]), io.StringIO(), io.StringIO(), 5.0)
+
+    with pytest.raises(BridgeError, match="output ended"):
+        run(scenario())
+
+    assert policy.closed
+
+
+def test_a_jev_episode_over_a_recording_logs_a_row_for_every_call_and_acts_on_the_answers(tmp_path):
+    api = FakeAPI((200, good(cost=0.00003)))  # always KITE at confidence 0.82, above the threshold
+    client = client_for(api)
+
+    async def scenario():
+        async with client:
+            # paced: at the speed of the real game, a request finishes long before the next half second
+            return await play_fixture(tmp_path, "jev", 2.0, jev_client=client, mode="paced")
+
+    result, episode_text, decisions_text = run(scenario())
+
+    rows = jsonl(decisions_text)
+    assert result["decisions"] == len(rows) >= 3  # about every half second over 2 s
+    assert len(api.requests) == len(rows)  # every request has its row, the last one closed with the episode
+    assert all(r["source"] == "jev" and r["model"] == EXPECTED_MODEL and r["confidence"] == 0.82 for r in rows)
+    assert all(r["latency_ms"] is not None and r["input_tokens"] == 1300 and r["cost"] == 0.00003 for r in rows)
+    assert result["spend_usd"] == pytest.approx(0.00003 * len(rows))
+    assert {row["tactic"] for row in jsonl(episode_text)} <= {"ENGAGE", "KITE"}  # it started on ENGAGE and switched
+    assert "KITE" in {row["tactic"] for row in jsonl(episode_text)}
+    commands = stdin_seen(tmp_path)[:-1]
+    assert commands and all(re.fullmatch(r"C [01]( [01]){6}", line) for line in commands)  # the controller acted on KITE
+
+
+def test_a_jev_episode_refuses_to_start_without_a_key_and_creates_no_folder(tmp_path):
+    with pytest.raises(KeyMissing, match=KEY_VARIABLE):
+        run_fake(tmp_path, policy="jev", environ={})
+
+    assert not (tmp_path / "runs").exists()
+
+
+def test_a_jev_episode_refuses_to_start_when_the_budget_is_spent_and_creates_no_folder(tmp_path):
+    earlier = tmp_path / "runs" / "earlier-run"
+    earlier.mkdir(parents=True)
+    (earlier / "decisions.jsonl").write_text(json.dumps({"cost": 1.0}) + "\n")
+
+    with pytest.raises(BudgetExhausted):
+        run_fake(tmp_path, policy="jev", environ={KEY_VARIABLE: KEY})
+
+    assert [p.name for p in (tmp_path / "runs").iterdir()] == ["earlier-run"]
+
+
+def test_a_jev_run_writes_its_folder_and_its_cost_is_in_the_ledger_exactly_once(tmp_path):
+    api = FakeAPI((200, good(cost=0.00003)))
+    client = client_for(api, cap_usd=0.05)
+
+    async def scenario():
+        async with client:
+            return await run_episode(
+                "jev", 7, DEFAULT_MAP, "local", 2.0, runs_dir=tmp_path / "runs", utc_now=lambda: FIXED,
+                command=fake_command(tmp_path), jev_client=client)
+
+    result = run(scenario())
+
+    folder = tmp_path / "runs" / f"20261006T093000Z-jev-s7-{MACHINE}"
+    assert result["run_id"] == folder.name and result["policy"] == "jev" and result["budget_usd"] == 0.05
+    ledger = read_ledger(tmp_path / "runs")
+    assert result["spend_usd"] > 0
+    assert ledger.spent == pytest.approx(result["spend_usd"])  # result.json repeats the cost and is not read
+    assert ledger.paid_calls == result["decisions"] == len(jsonl((folder / "decisions.jsonl").read_text()))
+
+
+@pytest.mark.parametrize("mode", ["normal", "dies-after-init"])
+def test_a_client_made_by_the_run_gets_the_cap_and_the_ledger_folder_and_is_closed_at_the_end(tmp_path, monkeypatch, mode):
+    made, closed = {}, []
+    client = client_for(FakeAPI((200, good())), cap_usd=0.05)
+    real_aclose = client.aclose
+
+    async def recording_aclose():
+        closed.append(True)
+        await real_aclose()
+
+    client.aclose = recording_aclose
+
+    def from_environment(**kwargs):
+        made.update(kwargs)
+        return client
+
+    monkeypatch.setattr(episode.JevClient, "from_environment", from_environment)
+    environment = {KEY_VARIABLE: KEY}
+
+    try:
+        run_fake(tmp_path, policy="jev", mode=mode, budget_usd=0.02, environ=environment)
+    except BridgeError:
+        assert mode == "dies-after-init"  # the game crashed; the client must be closed all the same
+
+    assert made == {"cap_usd": 0.02, "runs_dir": tmp_path / "runs", "environ": environment}
+    assert closed == [True]
+
+
+def test_a_client_that_the_caller_passes_in_is_not_closed_by_the_run(tmp_path):
+    client = client_for(FakeAPI((200, good())))
+    closed = []
+    real_aclose = client.aclose
+
+    async def recording_aclose():
+        closed.append(True)
+        await real_aclose()
+
+    client.aclose = recording_aclose
+
+    run_fake(tmp_path, policy="jev", jev_client=client)
+
+    assert closed == []  # whoever made it closes it
+    asyncio.run(real_aclose())

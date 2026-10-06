@@ -5,7 +5,7 @@ import pytest
 from kube_agent import cli, jev_client
 from kube_agent.bridge import BridgeError
 from kube_agent.cli import build_parser, main
-from kube_agent.config import DEFAULT_MAP, LATENCY_PROBE_BUDGET_USD
+from kube_agent.config import DEFAULT_MAP, DEFAULT_RUN_BUDGET_USD, LATENCY_PROBE_BUDGET_USD
 from kube_agent.jev_client import BudgetExhausted, KeyMissing
 from kube_agent.probes import describe_latency
 
@@ -73,14 +73,14 @@ def test_eval_takes_the_map_option():
 def test_run_defaults():
     args = build_parser().parse_args(["run", "--policy", "idle", "--seed", "3"])
 
-    assert (args.policy, args.seed, args.map, args.runner, args.max_seconds) == (
-        "idle", 3, DEFAULT_MAP, "docker", 180.0)
+    assert (args.policy, args.seed, args.map, args.runner, args.max_seconds, args.budget_usd) == (
+        "idle", 3, DEFAULT_MAP, "docker", 180.0, DEFAULT_RUN_BUDGET_USD)
 
 
 @pytest.mark.parametrize("argv", [
     ["run", "--seed", "1"],  # no policy
     ["run", "--policy", "idle"],  # no seed
-    ["run", "--policy", "jev", "--seed", "1"],  # not available until it exists
+    ["run", "--policy", "chess", "--seed", "1"],  # a policy that does not exist
     ["run", "--policy", "idle", "--seed", "1", "--runner", "podman"],
 ])
 def test_run_refuses_a_missing_or_unknown_option(argv, capsys):
@@ -106,13 +106,16 @@ def test_run_prints_the_summary_of_the_episode(monkeypatch, capsys):
     code = main(["run", "--policy", "idle", "--seed", "3", "--runner", "local", "--max-seconds", "30"])
 
     assert code == 0
-    assert calls == [(("idle", 3, DEFAULT_MAP, "local", 30.0), {})]
+    assert calls == [(("idle", 3, DEFAULT_MAP, "local", 30.0), {"budget_usd": DEFAULT_RUN_BUDGET_USD})]
     assert capsys.readouterr().out == (
         "idle s3: lose after 9.9 s (wave 1, 0 kills), 0 decisions, 0 applied, "
         "spend $0.0000  [20261006T000000Z-idle-s3-darwin]\n")
 
 
-@pytest.mark.parametrize("error", [BridgeError("the game is gone"), FileNotFoundError("no such map")])
+@pytest.mark.parametrize("error", [
+    BridgeError("the game is gone"), FileNotFoundError("no such map"),
+    KeyMissing("OPENROUTER_API_KEY is not set"), BudgetExhausted("the $1.00 total budget is spent"),
+])
 def test_run_reports_a_failed_episode_and_exits_1(monkeypatch, capsys, error):
     async def failing_run_episode(*args, **kwargs):
         raise error
@@ -279,3 +282,23 @@ def test_any_other_early_stop_exits_1_with_the_reason(monkeypatch, capsys):
 
     assert main(["latency"]) == 1
     assert "stopped early: budget cap reached" in capsys.readouterr().err
+
+
+def test_run_with_the_jev_policy_passes_its_budget_on(monkeypatch, capsys):
+    calls = []
+
+    async def fake_run_episode(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {
+            "run_id": "20261006T000000Z-jev-s1-darwin", "policy": "jev", "seed": 1, "outcome": "win",
+            "survival_seconds": 14.2, "wave_reached": 3, "kills": 8, "decisions": 29, "decisions_applied": 12,
+            "spend_usd": 0.000905,
+        }
+
+    monkeypatch.setattr(cli, "run_episode", fake_run_episode)
+
+    code = main(["run", "--policy", "jev", "--seed", "1", "--max-seconds", "60", "--budget-usd", "0.02"])
+
+    assert code == 0
+    assert calls == [(("jev", 1, DEFAULT_MAP, "docker", 60.0), {"budget_usd": 0.02})]
+    assert "jev s1: win after 14.2 s (wave 3, 8 kills), 29 decisions, 12 applied, spend $0.0009" in capsys.readouterr().out

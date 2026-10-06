@@ -15,8 +15,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from kube_agent.bridge import BridgeError, GameBridge, game_command
-from kube_agent.config import REPO_ROOT, RUNS_DIR, config_sha256
+from kube_agent.config import DEFAULT_RUN_BUDGET_USD, REPO_ROOT, RUNS_DIR, config_sha256
 from kube_agent.controller import Controller
+from kube_agent.jev_client import JevClient
 from kube_agent.policies import POLICIES, make_policy
 
 STALL_SECONDS = 0.1  # a gap above this between two observations handled is a stall (AC8)
@@ -106,37 +107,43 @@ async def play(game, policy, controller, episode_file, decisions_file, max_secon
     """Play one episode on a started game and return its numbers.
 
     It ends on the first observation with `state != 0` (the game is won or lost) or with a game
-    clock at `max_seconds`. The caller closes the game, which sends Q.
+    clock at `max_seconds`. The policy is always closed, which returns the rows of whatever it
+    still had pending. The caller closes the game, which sends Q.
     """
     stalls = StallCounter()
     tally = Tally()
     next_row_at, last_row_t, last, outcome = 0.0, None, None, None
-    async with contextlib.aclosing(game.observations()) as observations:
-        async for obs in observations:
-            stalls.tick()
-            tactic = policy.tactic
-            tally.observe(obs, tactic)
-            if obs["t"] >= next_row_at:
-                write_row(episode_file, _episode_row(obs, tactic))
-                next_row_at, last_row_t = obs["t"] + ROW_INTERVAL, obs["t"]
-            last = obs
-            if obs["state"] != 0:
-                outcome = OUTCOMES.get(obs["state"])
-                if outcome is None:
-                    raise BridgeError(f"unknown game state {obs['state']} in frame {obs['frame']}")
-                break
-            if obs["t"] >= max_seconds:
-                outcome = "timeout"
-                break
+    try:
+        async with contextlib.aclosing(game.observations()) as observations:
+            async for obs in observations:
+                stalls.tick()
+                tactic = policy.tactic
+                tally.observe(obs, tactic)
+                if obs["t"] >= next_row_at:
+                    write_row(episode_file, _episode_row(obs, tactic))
+                    next_row_at, last_row_t = obs["t"] + ROW_INTERVAL, obs["t"]
+                last = obs
+                if obs["state"] != 0:
+                    outcome = OUTCOMES.get(obs["state"])
+                    if outcome is None:
+                        raise BridgeError(f"unknown game state {obs['state']} in frame {obs['frame']}")
+                    break
+                if obs["t"] >= max_seconds:
+                    outcome = "timeout"
+                    break
 
-            decision = policy.step(obs)
-            if decision:
-                write_row(decisions_file, decision)
-                tally.decision(decision)
-            if policy.tactic is not None:
-                line = controller.command(obs, policy.tactic)
-                if line is not None:
-                    await game.send(line)
+                decision = policy.step(obs)
+                if decision:
+                    write_row(decisions_file, decision)
+                    tally.decision(decision)
+                if policy.tactic is not None:
+                    line = controller.command(obs, policy.tactic)
+                    if line is not None:
+                        await game.send(line)
+    finally:  # a request still out when the episode ends has its answer, and its cost, recorded
+        for decision in await policy.aclose():
+            write_row(decisions_file, decision)
+            tally.decision(decision)
 
     if outcome is None:
         where = f"t={last['t']}" if last else "the first observation"
@@ -159,11 +166,11 @@ async def play(game, policy, controller, episode_file, decisions_file, max_secon
     }
 
 
-async def _play_through(command, policy_name, episode_file, decisions_file, max_seconds):
+async def _play_through(command, policy_name, episode_file, decisions_file, max_seconds, jev_client=None):
     limit = max_seconds * GUARD_FACTOR + GUARD_SLACK
     async with GameBridge(command) as game:
         game_map = game.init["map"]
-        policy = make_policy(policy_name, game_map)
+        policy = make_policy(policy_name, game_map, jev_client=jev_client)
         try:
             async with asyncio.timeout(limit):
                 return await play(game, policy, Controller(game_map), episode_file, decisions_file, max_seconds)
@@ -182,14 +189,32 @@ async def run_episode(
     runs_dir: Path = RUNS_DIR,
     utc_now=None,
     command: list[str] | None = None,
+    budget_usd: float = DEFAULT_RUN_BUDGET_USD,
+    jev_client=None,
+    environ=None,
 ) -> dict:
     """Play one episode, write its folder under runs_dir and return result.json's content.
 
-    `utc_now` and `command` exist for the tests: a fixed clock and a stand-in for the game.
+    For the Jev policy `budget_usd` caps what the run may spend (the ledger's remainder caps it too).
+    `utc_now`, `command`, `jev_client` and `environ` exist for the tests: a fixed clock, a
+    stand-in for the game, a client over a fake transport and a fake environment.
     """
     if policy_name not in POLICIES:
         raise ValueError(f"unknown policy {policy_name!r}: expected one of {POLICIES}")
     map_sha256 = hashlib.sha256((REPO_ROOT / map_path).read_bytes()).hexdigest()  # fails before any folder exists
+    owns_client = policy_name == "jev" and jev_client is None
+    if owns_client:  # no key, or no budget left, stops here, before a folder exists
+        jev_client = JevClient.from_environment(cap_usd=budget_usd, runs_dir=runs_dir, environ=environ)
+    try:
+        return await _run_in_folder(
+            policy_name=policy_name, seed=seed, map_path=map_path, runner=runner, max_seconds=max_seconds,
+            runs_dir=runs_dir, utc_now=utc_now, command=command, map_sha256=map_sha256, jev_client=jev_client)
+    finally:
+        if owns_client:
+            await jev_client.aclose()
+
+
+async def _run_in_folder(*, policy_name, seed, map_path, runner, max_seconds, runs_dir, utc_now, command, map_sha256, jev_client):
     machine = platform.system().lower()
     started = (utc_now or (lambda: datetime.now(timezone.utc)))()
     run_id = f"{started:%Y%m%dT%H%M%SZ}-{policy_name}-s{seed}-{machine}"
@@ -201,10 +226,13 @@ async def run_episode(
         "map_sha256": map_sha256, "machine": machine, "runner": runner,
         "config_sha256": config_sha256(), "max_seconds": max_seconds,
     }
+    if jev_client is not None:
+        result["budget_usd"] = jev_client.cap_usd
     command = command or game_command(runner, map_path, seed)
     with (run_dir / "episode.jsonl").open("w") as episode_file, (run_dir / "decisions.jsonl").open("w") as decisions_file:
         try:
-            result.update(await _play_through(command, policy_name, episode_file, decisions_file, max_seconds))
+            result.update(
+                await _play_through(command, policy_name, episode_file, decisions_file, max_seconds, jev_client))
         except Exception as error:
             result.update(outcome="error", error=f"{type(error).__name__}: {error}")
             _write_result(run_dir, result)

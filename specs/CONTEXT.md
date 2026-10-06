@@ -238,9 +238,11 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
   C bridge and its 24 checks) and L1 and L2 passed on the owner's Linux. phase 3 is built (T4a to T5c: the Python package, the bridge, the semantic state, the
   controller, the policies and the episode runner, with the first ten runs in `agent/runs/`).
   The checkpoint **L3 passed on the owner's Linux** (234 tests, the `local` runner, and the game
-  seen on the real display). **T6 and T6b are done**: the Jev client, the spend ledger and the first
-  50 paid calls (p50 309 ms, p95 514 ms, $0.00156; R12). The owner decided to keep the 0.5 s
-  cadence plus events and to start the confidence threshold θ at 0.3. **Next: T7.**
+  seen on the real display). **T6, T6b and T7 are done**: the Jev client, the spend ledger, the
+  first 50 paid calls (p50 309 ms, p95 514 ms, $0.00156; R12) and the Jev policy in the game loop,
+  whose first real episode won in 13.6 s with 26 of 28 answers applied (R13). The owner decided
+  to keep the 0.5 s cadence plus events and to start the confidence threshold θ at 0.3.
+  **Next: L4** (the checkpoint of phase 4 on the owner's Linux), then T8.
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.
@@ -254,7 +256,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T7.
+    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from L4.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;

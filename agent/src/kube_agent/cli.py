@@ -7,7 +7,15 @@ import sys
 from typesafe_sdk import TypeSafeError
 
 from kube_agent.bridge import BridgeError
-from kube_agent.config import DEFAULT_MAP, DEFAULT_MAX_SECONDS, LATENCY_PROBE_BUDGET_USD, RUNS_DIR, TOTAL_BUDGET_USD, questions
+from kube_agent.config import (
+    DEFAULT_MAP,
+    DEFAULT_MAX_SECONDS,
+    DEFAULT_RUN_BUDGET_USD,
+    LATENCY_PROBE_BUDGET_USD,
+    RUNS_DIR,
+    TOTAL_BUDGET_USD,
+    questions,
+)
 from kube_agent.episode import run_episode, summarize
 from kube_agent.jev_client import BudgetExhausted, JevClient, KeyMissing
 from kube_agent.ledger import LedgerError, read_ledger
@@ -33,6 +41,9 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--runner", choices=["docker", "local"], default="docker",
                      help="docker: the game in the kube-dev container; local: on this machine")
     run.add_argument("--max-seconds", type=float, default=DEFAULT_MAX_SECONDS, help="of game time")
+    run.add_argument("--budget-usd", type=float, default=DEFAULT_RUN_BUDGET_USD,
+                     help="PAID, only for --policy jev: stop calling Jev once this much has been spent "
+                          "(the ledger's remainder also caps it); the scripted rules take over")
 
     subparsers.add_parser("spend", help="what the Jev calls of every run have cost, against the $1.00 total")
 
@@ -63,8 +74,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def _run(args: argparse.Namespace) -> int:
     try:
-        result = asyncio.run(run_episode(args.policy, args.seed, args.map, args.runner, args.max_seconds))
-    except (BridgeError, OSError) as error:  # OSError: a missing map, or a run folder that already exists
+        result = asyncio.run(
+            run_episode(args.policy, args.seed, args.map, args.runner, args.max_seconds, budget_usd=args.budget_usd))
+    except (BridgeError, OSError, KeyMissing, BudgetExhausted, LedgerError, TypeSafeError) as error:
+        # OSError: a missing map, or a run folder that already exists. The others: no key, no budget, a bad ledger
         print(f"kube-agent run: {error}", file=sys.stderr)
         return 1
     print(summarize(result))

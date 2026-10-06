@@ -1,8 +1,10 @@
+import asyncio
 import json
 import re
 from pathlib import Path
 
 import pytest
+from fake_jev import FakeClient
 from helpers import ROOM, enemy_ahead, make_obs
 
 from kube_agent.features import HpHistory, semantic_state
@@ -10,6 +12,7 @@ from kube_agent.policies import (
     POLICIES,
     DecisionSchedule,
     IdlePolicy,
+    JevPolicy,
     ScriptedPolicy,
     make_policy,
     scripted_tactic,
@@ -213,11 +216,45 @@ def test_idle_has_no_tactic_and_never_decides():
 
 
 def test_make_policy_builds_the_policy_with_that_name():
-    assert POLICIES == ("idle", "scripted")  # "jev" joins when its policy exists
+    assert POLICIES == ("idle", "scripted", "jev")
     assert isinstance(make_policy("idle", ROOM), IdlePolicy)
     assert isinstance(make_policy("scripted", ROOM), ScriptedPolicy)
+    assert isinstance(make_policy("jev", ROOM, jev_client=FakeClient()), JevPolicy)
+
+
+def test_the_jev_policy_cannot_be_built_without_a_client():
+    with pytest.raises(ValueError, match="needs a Jev client"):
+        make_policy("jev", ROOM)
 
 
 def test_make_policy_rejects_a_name_it_does_not_know():
-    with pytest.raises(ValueError, match="policy 'jev'"):
-        make_policy("jev", ROOM)
+    with pytest.raises(ValueError, match="policy 'chess'"):
+        make_policy("chess", ROOM)
+
+
+def test_the_policies_without_a_client_have_nothing_to_close():
+    assert asyncio.run(IdlePolicy().aclose()) == []
+    assert asyncio.run(ScriptedPolicy(ROOM).aclose()) == []
+
+
+# --- why a decision is due ----------------------------------------------------------------------
+
+
+def test_the_schedule_says_what_made_a_decision_due():
+    schedule = DecisionSchedule()
+    steps = [(0.0, 1, 100), (0.1, 1, 100), (0.2, 2, 100), (0.3, 2, 59), (0.5, 2, 59), (0.9, 2, 59), (1.0, 3, 20)]
+
+    seen = []
+    for t, wave, hp in steps:
+        due = schedule.due(make_obs(t=t, wave=wave, hp=hp))
+        seen.append((due, schedule.last_event))
+
+    assert seen == [
+        (True, None),  # the first observation
+        (False, None),
+        (True, "new_wave"),
+        (True, "health_drop"),  # high to medium at 59
+        (False, None),
+        (True, None),  # the half second, no event
+        (True, "new_wave"),  # a new wave and a band drop on the same observation: the wave is named
+    ]

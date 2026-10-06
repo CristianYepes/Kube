@@ -13,8 +13,10 @@ DEFAULT_MAP = "maps/bonus/subject_map.cub"
 DEFAULT_MAX_SECONDS = 180.0  # of game time per episode
 TOTAL_BUDGET_USD = 1.00  # for every Jev call of the whole spec (spec.md, Decision 3)
 LATENCY_PROBE_BUDGET_USD = 0.01  # three times the estimate for 50 calls (about $0.003), as a safety stop
+DEFAULT_RUN_BUDGET_USD = 0.05  # what one `kube-agent run --policy jev` may spend (plan.md, "Budget ledger")
 
 DECISION_INTERVAL = 0.5  # seconds of game time between decisions; one of the three things T8 may tune
+CONFIDENCE_THRESHOLD = 0.3  # apply Jev's answer when its confidence is at least this; T8 may tune it (R12)
 
 # The question Jev answers (specs/002-jev-agent/plan.md, "The question"). The descriptions say what the
 # controller really does with each tactic, because Jev reads them literally. The ORDER of the options
@@ -61,9 +63,13 @@ def questions() -> dict:
 def config_sha256() -> str:
     """A hash of what tuning may change, written into every result.json.
 
-    Today that is the decision cadence and the question. T7 adds the confidence threshold, and T8
-    freezes the hash with the date in agent/frozen.json. The keys are NOT sorted: the order of the
+    That is the decision cadence, the confidence threshold and the question. T8 freezes the hash
+    with the date in agent/frozen.json. The keys are NOT sorted: the order of the
     options is part of the question, so the same options in another order are another config.
     """
-    tunable = {"decision_interval": DECISION_INTERVAL, "questions": questions()}
+    tunable = {
+        "decision_interval": DECISION_INTERVAL,
+        "confidence_threshold": CONFIDENCE_THRESHOLD,
+        "questions": questions(),
+    }
     return hashlib.sha256(json.dumps(tunable).encode()).hexdigest()

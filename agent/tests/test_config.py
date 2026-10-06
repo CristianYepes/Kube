@@ -66,3 +66,17 @@ def test_the_question_is_part_of_the_config_hash_and_so_is_the_order_of_its_opti
     reordered["criteria"] = dict(reversed(list(reordered["criteria"].items())))
     monkeypatch.setattr(config, "TACTIC_QUESTION", reordered)
     assert config.config_sha256() != first  # the same options in another order are another config
+
+
+def test_the_confidence_threshold_starts_at_a_third_and_is_part_of_the_config_hash(monkeypatch):
+    # The owner's decision of 2026-10-06 on R12: 0.6 would have applied none of 50 real answers.
+    assert config.CONFIDENCE_THRESHOLD == 0.3
+    first = config.config_sha256()
+
+    monkeypatch.setattr(config, "CONFIDENCE_THRESHOLD", 0.4)
+
+    assert config.config_sha256() != first
+
+
+def test_a_run_may_spend_five_cents_by_default():
+    assert config.DEFAULT_RUN_BUDGET_USD == 0.05

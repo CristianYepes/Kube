@@ -16,6 +16,8 @@ directory to ECHO.cwd. MODE makes it misbehave:
   stubborn         prints the fixture, then ignores Q and the end of input and sleeps
   hang             prints nothing and sleeps
   ends-early       prints the init line and 19 observations, then exits with code 0
+  paced            as normal, but 2 ms between observations, so game time and the time a request takes
+                   move together, as they do in the real game
 """
 
 import os
@@ -57,6 +59,8 @@ elif mode == "dies-after-init":
 else:
     for line in fixture_lines:
         say(line)
+        if mode == "paced":
+            time.sleep(0.002)
 
 if mode == "stubborn":
     time.sleep(60)
