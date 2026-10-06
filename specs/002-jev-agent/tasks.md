@@ -118,7 +118,7 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 | 5 | `make -C agent` with the owner's compiler under `-Werror` | **DONE 2026-10-06**: gcc 11.4.0, exit 0, a binary of 144,760 bytes (the same as in the container) | L2 |
 | 6 | `python3 agent/check_bridge.py`: 24 checks | **DONE 2026-10-06**: 24 of 24 | L2 |
 | 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **CLOSED 2026-10-06, not done: no longer needed.** The owner's Linux is aarch64 (UTM, Ubuntu 22.04.5), the same architecture as the Mac's container, and the game is no longer handed in at 42, whose machines are x86_64 | (L5) |
-| 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | does not exist yet | L3 |
+| 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | **built in T4a-T5c, not run on Linux yet.** On the Mac: 234 tests pass, and the docker runner played 10 episodes (R11). The `local` runner has never run anywhere | L3 |
 | 9 | Seeing the game on the real display (`DISPLAY=:0`) | not verified; optional | L3 |
 | 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |
 | 11 | The final x86_64 check of AC1 and one episode | **CLOSED 2026-10-06, not done: no longer needed** (see row 7) | (L5) |
@@ -823,9 +823,23 @@ What does not change: the tests, the honest measurement, and the agent itself.
 
   - The run must write its three files and print its summary line. This is AC13's first
     check.
+  - **Nothing in the game or the C bridge changed since L2** (checked with `git diff --stat
+    8104824..HEAD` over `sources`, `includes`, the Makefiles, `libft`, `maps`, `files`,
+    `tests` and `agent/check_bridge.py`: empty), so L1 and L2 are not repeated. `make -C
+    agent` stays in the commands because the agent needs the binary.
+  - **Expected, from the Mac (R11):** 234 tests pass in about 5 s. `scripted` on seed 1 should
+    win in roughly 11-16 s with 8 kills and no damage; `result.json` says `machine: linux`
+    and `runner: local`. The run's folder is named `...-scripted-s1-linux`.
   - **Report back** (paste the text): the output of `uv sync` (which Python it picked, and
     whether `typesafe-sdk` 0.7.2 installed), the `pytest` summary, and the run's summary line.
     Machine-dependent: the `uv` download of Python 3.12 needs the network.
+  - **Ways it can fail because of the machine and not the code:**
+    - `uv sync` has to fetch Python 3.12, because the owner's Linux has 3.10.12;
+    - `DISPLAY` must point at the running Xvfb (`:99`), in the same terminal;
+    - the game runs on real time, so a slower machine can lose or win differently: report the
+      outcome and the `stalls` number, which was about 1 per episode on the Mac;
+    - two tests use real sleeps (the stall counter and the slow controller) and count at least
+      a number of stalls, so a loaded machine can only add stalls, never remove them.
   - To watch it play instead, use the real display: `DISPLAY=:0 uv run kube-agent run
     --runner local --policy scripted --seed 2`. Not verified yet; L3 is where we find out.
   - **Done when:** pytest is green and the run's `result.json` exists. The tick records the
