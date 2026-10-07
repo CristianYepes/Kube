@@ -44,7 +44,7 @@
 | English everywhere | ✅ | code, logs, docs |
 | YAGNI | ✅ | One Choice question; four tactics; no door tactics, no viewer, no database (JSONL logs) |
 | No push without asking | ✅ | One commit per task on `feature/jev-agentv1`; push only when the owner asks |
-| Key never exposed | ✅ | Read from the host environment (`OPENROUTER_API_KEY`); never passed to Docker; never logged |
+| Key never exposed | ✅ | Read from the host environment (`OPENROUTER_API_KEY`); never passed to Docker; never logged. The game, and the docker client that starts it, get the environment **without** any variable named like a credential (`child_environment()` in `bridge.py`) |
 
 ## Chosen approach
 

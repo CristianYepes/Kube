@@ -6,12 +6,19 @@ what an observation means is up to features.py.
 
 import asyncio
 import json
+import os
+import re
 import shlex
 from collections import deque
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
 from pathlib import Path
 
 from kube_agent.config import REPO_ROOT
+
+# A variable named like this is a credential. Neither the game nor the docker client has any use
+# for one. The match is by name and on purpose not on "AUTH", which would also catch XAUTHORITY,
+# the file the game needs to open a window on a real display.
+CREDENTIAL_NAME = re.compile(r"KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL", re.IGNORECASE)
 
 GAME = "./agent/cub3D_agent"
 DOCKER_CONTAINER = "kube-dev"
@@ -39,6 +46,17 @@ def game_command(runner: str, map_path: str, seed: int) -> list[str]:
     if runner == "local":
         return [GAME, map_path, str(seed)]
     raise ValueError(f"unknown runner {runner!r}: expected 'docker' or 'local'")
+
+
+def child_environment(environ: Mapping[str, str] | None = None) -> dict[str, str]:
+    """The environment the game (or the docker client that starts it) is given.
+
+    This process holds the OpenRouter key while it plays, and a child process inherits the whole
+    environment unless told otherwise. So the key, and anything else named like a credential, is
+    left out. Going by the name is a limit: a secret under an unrelated name would pass.
+    """
+    source = os.environ if environ is None else environ
+    return {name: value for name, value in source.items() if not CREDENTIAL_NAME.search(name)}
 
 
 class GameBridge:
@@ -76,6 +94,7 @@ class GameBridge:
         self._process = await asyncio.create_subprocess_exec(
             *self._command,
             cwd=self._cwd,
+            env=child_environment(),
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,

@@ -77,6 +77,23 @@ def test_commands_arrive_in_order_and_close_sends_q(tmp_path):
     assert echo.read_text().splitlines() == ["C 1 0 0 0 0 0 0", "C 0 0 0 0 1 0 0", "C 0 0 0 0 0 0 1", "Q"]
 
 
+def test_the_game_is_started_without_credentials_in_its_environment(tmp_path, monkeypatch):
+    # The fake game writes the NAMES of the variables it was started with. The "key" is a dummy.
+    monkeypatch.setenv("OPENROUTER_API_KEY", "not-a-real-key")
+    monkeypatch.setenv("HARMLESS_VARIABLE", "kept")
+
+    async def scenario():
+        game, echo = fake(tmp_path)
+        async with game:
+            return echo
+
+    echo = run(scenario())
+    names = Path(f"{echo}.env").read_text().split()
+
+    assert "HARMLESS_VARIABLE" in names  # the capture works, and an ordinary variable still passes
+    assert "OPENROUTER_API_KEY" not in names
+
+
 def test_close_after_a_clean_exit_does_not_raise(tmp_path):
     async def scenario():
         game, _ = fake(tmp_path)

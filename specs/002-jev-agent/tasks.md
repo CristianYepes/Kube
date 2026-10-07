@@ -1037,8 +1037,8 @@ What does not change: the tests, the honest measurement, and the agent itself.
       `docker exec` does not forward the client's environment to the container [measured with a
       dummy variable: 0 matches inside, while `DISPLAY`, passed with `-e`, arrived], so the key
       never entered the container. The `docker` client process does inherit it, as `uv` and
-      python do, because `GameBridge` does not clean the child's environment (**not changed:
-      see the open point at the end of this note**). After the runs, **0 files of the repository
+      python do, because `GameBridge` did not clean the child's environment (**changed the next
+      day: see the open point at the end of this note**). After the runs, **0 files of the repository
       and 0 commits of its history contain a key-shaped string** (control: the same pattern
       finds the key file), and the run's printed output has none;
     - **the runs** (seed 1, `--runner docker`, 60 s limit, `subject_map`): Jev **won in 13.6 s**
@@ -1088,11 +1088,29 @@ What does not change: the tests, the honest measurement, and the agent itself.
     - **not checked:** other seeds and the development and test sets (T8, T9), how much a second
       Jev episode on seed 1 differs, a network failure in the middle of a real episode (only the
       unit tests with a fake transport cover it), the cadence under a slower p95, and Linux (L4);
-    - **open point for the owner, not done:** the bridge starts the game process with the
-      environment it inherits, so the key is in the environment of the `docker` client (or of the
-      game itself with the `local` runner on Linux). Removing `OPENROUTER_API_KEY` from the
-      child's environment is about 3 lines and one test; it would make "the key never reaches
-      the game or Docker" true by construction instead of by what `docker exec` happens to do.
+    - **open point for the owner: closed 2026-10-07**, the owner said yes ("la seguridad es algo
+      muy importante"). The bridge started the game process with the environment it inherited,
+      so the key was in the environment of the `docker` client (or of the game itself with the
+      `local` runner on Linux). Now `child_environment()` in `bridge.py` removes every variable
+      named like a credential (`KEY`, `TOKEN`, `SECRET`, `PASSWORD`, `PASSWD`, `CREDENTIAL`, in
+      any case) and `GameBridge.start()` passes the result to the child, so "the key never
+      reaches the game or Docker" no longer rests on what `docker exec` happens to do. See the
+      commit `agent: keep credentials out of the game's environment`:
+      - **tests first, seen failing:** a fake game that writes the names (never the values) of
+        its environment variables showed `OPENROUTER_API_KEY` arriving before the change. 20 new
+        tests, 385 in the suite;
+      - **11 deliberate breaks, each caught.** One was **not** at first: removing `SECRET` from
+        the pattern passed, because the only test name with it, `AWS_SECRET_ACCESS_KEY`, also
+        holds `KEY`. A test with a name that holds only `SECRET` closed that gap;
+      - **checked for real** (free, Docker on, a dummy variable): the `docker` client started by
+        the bridge held no credential-named variable and kept `HOME`, `PATH` and the ordinary
+        ones, and the game answered with its init line. The control, a child started the plain
+        way, did show the dummy variable. My first control was `/bin/sleep`, a protected macOS
+        binary whose environment `ps` hides, so it proved nothing and I replaced it;
+      - **what stays exposed:** this process, `uv` and the shell that loaded the key hold it, as
+        before. The match is by name: a secret under an unrelated name would pass, and
+        `SSH_AUTH_SOCK` is not caught (matching `AUTH` would also drop `XAUTHORITY`, which the
+        game needs to open a window on a real display).
 - [ ] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). Ledger row
   10: first create the key file on Linux (`START_HERE.md` 2b, step 3, the `read -s` variant:
   never paste the key into the chat). On Linux, after `git pull --ff-only` (the spend ledger

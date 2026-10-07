@@ -4,7 +4,8 @@ usage: fake_game.py FIXTURE ECHO MODE
 
 It prints the recorded FIXTURE line by line, then copies every line it reads on stdin to ECHO
 until it reads Q or the input ends, as the real game does. It also writes its working
-directory to ECHO.cwd. MODE makes it misbehave:
+directory to ECHO.cwd and the NAMES of its environment variables (never their values) to
+ECHO.env, one per line. MODE makes it misbehave:
 
   normal           as described above
   no-output        prints nothing on stdout, says "boom" on stderr and exits 1
@@ -27,6 +28,7 @@ from pathlib import Path
 
 fixture_path, echo_path, mode = sys.argv[1:4]
 Path(echo_path + ".cwd").write_text(os.getcwd())
+Path(echo_path + ".env").write_text("\n".join(sorted(os.environ)))
 fixture_lines = Path(fixture_path).read_text().splitlines()
 
 
