@@ -64,8 +64,9 @@
   seeds.
 - **Next: T8 is in progress** (phase 5; details in R15 and in the progress note of T8 in `tasks.md`). Done: the
   baseline of the three policies on seeds 1-20, the option-order check, and iteration 1 of the question
-  (episodes with damage 6 of 20 to 1 of 40, choices neutral to the order). **Nothing is frozen.** Waiting for
-  the owner on two questions, a harder map and the spawn trap of R15, and then the 🛑 of T8. Every Jev
+  (episodes with damage 6 of 20 to 1 of 40, choices neutral to the order), a map exploration (T8b, R16: no layout
+  makes the rule bot lose) and the baseline on `pillars`. The owner chose to freeze and to test on `subject_map` and
+  `pillars`. **Nothing is frozen yet:** the 🛑 of T8 is next. Every Jev
   episode is paid: **ask the owner for the OK before spending**, and **push only when the owner asks**.
 - **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
   Their terminal splits long pasted lines (it happened twice in L4).

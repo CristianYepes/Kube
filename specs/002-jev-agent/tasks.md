@@ -1234,7 +1234,11 @@ What does not change: the tests, the honest measurement, and the agent itself.
     results, for a reason found in the code and not because of who it favoured):** a candidate is also playable
     only if every scripted episode kills 8 enemies. With it, the rule picks `pillars` (scripted 1 episode with damage
     of 10, the others none), which still leaves no room in wins or in damage; the room it has is in time (median
-    21.4 s against a floor of about 10.7 s). **The owner decides what to do next** (see R16).
+    21.4 s against a floor of about 10.7 s). **The owner decided on 2026-10-08: freeze and test on `subject_map` and `pillars`.**
+  - **The pillars baseline, 2026-10-08 (R16):** idle, scripted and Jev interleaved by seed 1-20 with the iteration-1
+    wording: 0 of 20, 20 of 20 and 20 of 20 wins; the time to win has a median of 19.2 s for scripted and 21.0 s for Jev (Jev slower in
+    15 of 20 seeds, p = 0.041); Jev's tactic equals the scripted rules' in 99% of its decisions; its one hit followed a call of 2 s. **No new
+    failure of the wording appeared, so the question, θ = 0.3 and the 0.5 s cadence stay as in iteration 1.** The 🛑 of T8 is next.
   - **Verify:** a test that every map in `agent/maps/` passes the checks above (charset, one start, closed
     border, every floor cell reachable), and the game itself loads each one (its `init` line).
   - **Commit:** `agent: a harder map for the final evaluation`.
