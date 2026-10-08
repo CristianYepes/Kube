@@ -696,6 +696,16 @@ sources/jev/
   leans toward its first option, and ENGAGE is listed first. If that bias is real here, Jev
   could look better or worse than it is because of a list order. T8 measures it on logged
   states before anything is frozen; the mitigation is described there.
+  - **How T8 measures it** (decided 2026-10-08): `kube-agent order-check --n 100` draws 100 distinct
+    states that Jev was asked on development seeds (1-20 only, drawn with a fixed random seed) and asks
+    each one **three times**: in the current order, in the opposite order (the same texts) and in the
+    current order again. **The third ask is an addition to `tasks.md`, which says twice.** R12 showed
+    that the same request does not always get the same answer, so some of the choices that differ
+    between the two orders are the model's own noise, and only a control, the same order asked twice,
+    says how many. The report gives both rates with a Wilson 95% interval, how often the first-listed
+    option is chosen in each position, the mean probability of each option, and the rule of `tasks.md`:
+    the order is **not neutral** if the choice differs between the two orders in more than 10% of the
+    states. 300 calls, about $0.0094 [calc].
 - **aarch64 vs x86_64** (R1). **Closed 2026-10-06, not done: no longer needed.** The container
   and the owner's Linux (UTM) are both aarch64. The x86_64 check existed for 42's machines, and
   the game is no longer handed in there.

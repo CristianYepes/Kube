@@ -5,12 +5,13 @@ import pytest
 from kube_agent import cli, jev_client
 from kube_agent.bridge import BridgeError
 from kube_agent.cli import build_parser, main
-from kube_agent.config import DEFAULT_MAP, DEFAULT_RUN_BUDGET_USD, LATENCY_PROBE_BUDGET_USD
+from kube_agent.config import DEFAULT_MAP, DEFAULT_RUN_BUDGET_USD, LATENCY_PROBE_BUDGET_USD, ORDER_CHECK_BUDGET_USD
 from kube_agent.jev_client import BudgetExhausted, KeyMissing
+from kube_agent.order_check import describe_order_check
 from kube_agent.probes import describe_latency
 
 SUBCOMMANDS = ["run", "eval", "spend", "latency", "order-check"]
-STUBS = ["eval", "order-check"]  # `run` is real since T5c, `spend` since T6 and `latency` since T6b
+STUBS = ["eval"]  # `run` is real since T5c, `spend` since T6, `latency` since T6b and `order-check` since T8
 
 
 @pytest.fixture(autouse=True)
@@ -302,3 +303,103 @@ def test_run_with_the_jev_policy_passes_its_budget_on(monkeypatch, capsys):
     assert code == 0
     assert calls == [(("jev", 1, DEFAULT_MAP, "docker", 60.0), {"budget_usd": 0.02})]
     assert "jev s1: win after 14.2 s (wave 3, 8 kills), 29 decisions, 12 applied, spend $0.0009" in capsys.readouterr().out
+
+
+# --- order-check (T8) ---------------------------------------------------------------------------
+
+ORDER_RESULT = {
+    "kind": "order-check", "run_id": "order-check-20261008T093000Z-darwin", "calls_requested": 300, "calls_made": 0,
+    "ok": 0, "errors": 0, "spend_usd": 0.0, "order": None, "stopped": None,
+}
+
+
+def fake_order_check(monkeypatch, result, calls=None, states=("state-a", "state-b")):
+    record = (calls if calls is not None else []).append
+
+    class Client(AsyncNothing):
+        @classmethod
+        def from_environment(cls, **kwargs):
+            record(("from_environment", kwargs))
+            return cls()
+
+    def load_dev_states(runs_dir, n):
+        record(("load_dev_states", n))
+        return list(states)
+
+    async def run_order_check(client, picked, question):
+        record(("run_order_check", picked, question["type"]))
+        return result
+
+    monkeypatch.setattr(cli, "JevClient", Client)
+    monkeypatch.setattr(cli, "load_dev_states", load_dev_states)
+    monkeypatch.setattr(cli, "run_order_check", run_order_check)
+
+
+def test_order_check_defaults_are_100_states_and_a_cap_twice_the_estimate():
+    args = build_parser().parse_args(["order-check"])
+
+    assert (args.n, args.budget_usd) == (100, ORDER_CHECK_BUDGET_USD)
+    assert ORDER_CHECK_BUDGET_USD == 0.02  # 300 calls of $0.0000312 are about $0.0094
+
+
+@pytest.mark.parametrize("n", ["0", "-3", "x"])
+def test_order_check_needs_a_positive_number_of_states(n):
+    with pytest.raises(SystemExit) as exit_info:
+        main(["order-check", "--n", n])
+
+    assert exit_info.value.code == 2
+
+
+def test_order_check_prints_one_summary_line_and_exits_0(monkeypatch, capsys):
+    calls = []
+    fake_order_check(monkeypatch, ORDER_RESULT, calls)
+
+    code = main(["order-check", "--n", "7", "--budget-usd", "0.03"])
+
+    assert code == 0
+    assert calls == [("load_dev_states", 7), ("from_environment", {"cap_usd": 0.03}), ("run_order_check", ["state-a", "state-b"], "choice")]
+    assert capsys.readouterr().out == describe_order_check(ORDER_RESULT) + "\n"
+
+
+def test_order_check_with_too_few_logged_states_says_so_before_anything_is_paid(monkeypatch, capsys):
+    calls = []
+    fake_order_check(monkeypatch, ORDER_RESULT, calls)
+
+    def too_few(runs_dir, n):
+        raise ValueError("only 3 distinct states were logged on development seeds and 100 were asked")
+
+    monkeypatch.setattr(cli, "load_dev_states", too_few)
+
+    assert main(["order-check"]) == 1
+    assert "only 3 distinct states" in capsys.readouterr().err
+    assert calls == []  # no client was made
+
+
+@pytest.mark.parametrize("error", [KeyMissing("OPENROUTER_API_KEY is not set"), BudgetExhausted("the $1.00 total budget is spent")])
+def test_order_check_refuses_to_start_without_a_key_or_a_budget(monkeypatch, capsys, error):
+    fake_order_check(monkeypatch, ORDER_RESULT)
+
+    class Client:
+        @classmethod
+        def from_environment(cls, **kwargs):
+            raise error
+
+    monkeypatch.setattr(cli, "JevClient", Client)
+
+    assert main(["order-check"]) == 1
+    assert str(error) in capsys.readouterr().err
+
+
+def test_order_check_with_a_model_that_is_not_the_expected_one_exits_2(monkeypatch, capsys):
+    stopped = "unexpected model: 'typesafe/jev-9' answered and 'typesafe/jev-1.13-20260917' was expected"
+    fake_order_check(monkeypatch, {**ORDER_RESULT, "stopped": stopped})
+
+    assert main(["order-check"]) == 2
+    assert "STOP, tell the owner" in capsys.readouterr().err
+
+
+def test_order_check_stopped_early_for_any_other_reason_exits_1_with_it(monkeypatch, capsys):
+    fake_order_check(monkeypatch, {**ORDER_RESULT, "stopped": "budget cap reached: $0.020020 spent of the $0.020000 cap"})
+
+    assert main(["order-check"]) == 1
+    assert "stopped early: budget cap reached" in capsys.readouterr().err

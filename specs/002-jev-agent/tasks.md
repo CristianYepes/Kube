@@ -1179,24 +1179,28 @@ What does not change: the tests, the honest measurement, and the agent itself.
       where does the tactic look wrong, and where are episodes won or lost?
     - **option-order check** (R5, "Choice option order": `jev-1.13` leans toward the first
       option of a Choice). `kube-agent order-check --n 100` takes at least 100 states already
-      logged in `decisions.jsonl` on dev seeds. It asks each one twice through `jev_client`,
-      once in the current order and once with the options reversed (same criteria text), and
-      logs both answers under `agent/runs/order-check-<UTC date-time>-<machine>/`. Report how
-      often the `choice` differs, and how often the first-listed option wins in each order.
-      The spend counts against the $1 ledger: 200 calls times the tokens per call measured in
-      R12, about $0.011 at 1,300 tokens [calc].
+      logged in `decisions.jsonl` on dev seeds. It asks each one **three times** through
+      `jev_client`: in the current order, with the options reversed (same criteria text) and in
+      the current order again, and logs the answers under
+      `agent/runs/order-check-<UTC date-time>-<machine>/`. **The third ask is a control added on
+      2026-10-08:** R12 showed that the same request does not always get the same answer, so
+      the control says how many of the differences between the two orders are noise. Report how
+      often the `choice` differs between the orders and between the two asks of the same order,
+      and how often the first-listed option wins in each order. The spend counts against the $1
+      ledger: 300 calls times the 743 tokens per call measured in R12, about $0.0094 [calc].
       - If the choice differs in more than 10% of the states (**ASSUMPTION**: a starting
         value, the owner may change it), the order is not neutral. Then ask the same Choice
         twice in one request (two question ids, reversed orders; same state, so the state
         tokens are paid once) and apply a tactic only when both agree. Measure that on the
         same states before adopting it.
-      - Otherwise keep one question and note the result in R13.
+      - Otherwise keep one question and note the result in R15.
     - adjust only the question's criteria text, θ and the decision cadence (and, if the order
       check calls for it, the two-order question);
-    - log every iteration in the research as **R13**: what changed, dev numbers, spend;
+    - log every iteration in the research as **R15**: what changed, dev numbers, spend (R13 and R14
+      are the first Jev episodes, on the Mac and on the Linux);
     - never use seeds >= 101;
     - keep `kube-agent spend` under about $0.45 at the end of tuning.
-  - 🛑 **Before freezing, show the owner:** R13, the final question and θ, and the dev results
+  - 🛑 **Before freezing, show the owner:** R15, the final question and θ, and the dev results
     of idle, scripted and Jev. **Wait for the OK.**
   - **Done when:** the owner said OK, and `agent/frozen.json` holds `config_sha256` plus the
     date.
@@ -1224,7 +1228,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       prefix. To see that the search can find something, run it once on a temporary file
       holding a made-up key of that shape.
     - The Wilson function is unit-tested with 47/50, which gives 84-98% (the `libros` result).
-  - Append the report's summary to the research as **R14**.
+  - Append the report's summary to the research as **R16**.
   - 🛑 **Report the results to the owner as they are.** If scripted beats Jev, say so.
   - **Commit** (with the whole evaluation folder): `agent: final evaluation on test seeds
     101-120`.

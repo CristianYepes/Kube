@@ -12,6 +12,7 @@ from kube_agent.config import (
     DEFAULT_MAX_SECONDS,
     DEFAULT_RUN_BUDGET_USD,
     LATENCY_PROBE_BUDGET_USD,
+    ORDER_CHECK_BUDGET_USD,
     RUNS_DIR,
     TOTAL_BUDGET_USD,
     questions,
@@ -19,12 +20,12 @@ from kube_agent.config import (
 from kube_agent.episode import run_episode, summarize
 from kube_agent.jev_client import BudgetExhausted, JevClient, KeyMissing
 from kube_agent.ledger import LedgerError, read_ledger
+from kube_agent.order_check import describe_order_check, load_dev_states, run_order_check
 from kube_agent.policies import POLICIES
 from kube_agent.probes import describe_latency, fixture_state, run_latency
 
 # The tasks that implement each stub are in specs/002-jev-agent/tasks.md.
-STUBS_WITH_MAP = ["eval"]
-STUBS_WITHOUT_MAP = ["order-check"]
+STUBS = ["eval"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -52,11 +53,15 @@ def build_parser() -> argparse.ArgumentParser:
     latency.add_argument("--budget-usd", type=float, default=LATENCY_PROBE_BUDGET_USD,
                          help="stop calling once this much has been spent (the ledger's remainder also caps it)")
 
-    for name in STUBS_WITH_MAP:
+    order_check = subparsers.add_parser(
+        "order-check", help="PAID: ask logged states in two opposite option orders and compare the choices")
+    order_check.add_argument("--n", type=_positive_int, default=100, help="how many logged states (each is asked 3 times)")
+    order_check.add_argument("--budget-usd", type=float, default=ORDER_CHECK_BUDGET_USD,
+                             help="stop calling once this much has been spent (the ledger's remainder also caps it)")
+
+    for name in STUBS:
         subparser = subparsers.add_parser(name)
         subparser.add_argument("--map", default=DEFAULT_MAP, help="map file, relative to the repo root")
-    for name in STUBS_WITHOUT_MAP:
-        subparsers.add_parser(name)
     return parser
 
 
@@ -68,6 +73,8 @@ def main(argv: list[str] | None = None) -> int:
         return _spend()
     if args.command == "latency":
         return _latency(args)
+    if args.command == "order-check":
+        return _order_check(args)
     print(f"kube-agent {args.command}: not implemented yet", file=sys.stderr)
     return 1
 
@@ -117,13 +124,38 @@ def _latency(args: argparse.Namespace) -> int:
         print(f"kube-agent latency: {error}", file=sys.stderr)
         return 1
     print(describe_latency(result))
-    stopped = result["stopped"]
+    return _exit_code("latency", result["stopped"])
+
+
+def _order_check(args: argparse.Namespace) -> int:
+    try:
+        states = load_dev_states(RUNS_DIR, args.n)  # free: nothing is paid if there are too few
+        client = JevClient.from_environment(cap_usd=args.budget_usd)
+    except (ValueError, OSError, KeyMissing, BudgetExhausted, LedgerError, TypeSafeError) as error:
+        print(f"kube-agent order-check: {error}", file=sys.stderr)
+        return 1
+
+    async def probe() -> dict:
+        async with client:
+            return await run_order_check(client, states, questions()["tactic"])
+
+    try:
+        result = asyncio.run(probe())
+    except OSError as error:  # a probe folder that already exists
+        print(f"kube-agent order-check: {error}", file=sys.stderr)
+        return 1
+    print(describe_order_check(result))
+    return _exit_code("order-check", result["stopped"])
+
+
+def _exit_code(command: str, stopped: str | None) -> int:
+    """How a paid probe ends: 0 if it finished, 2 if another model answered (tell the owner), else 1."""
     if stopped is None:
         return 0
     if stopped.startswith("unexpected model"):
-        print(f"kube-agent latency: STOP, tell the owner: {stopped}", file=sys.stderr)
+        print(f"kube-agent {command}: STOP, tell the owner: {stopped}", file=sys.stderr)
         return 2
-    print(f"kube-agent latency: stopped early: {stopped}", file=sys.stderr)
+    print(f"kube-agent {command}: stopped early: {stopped}", file=sys.stderr)
     return 1
 
 

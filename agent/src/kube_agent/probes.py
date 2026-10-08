@@ -1,4 +1,5 @@
-"""Probes that spend money to learn something about Jev. The first one measures how long a call takes.
+"""Probes that spend money to learn something about Jev: how long a call takes (this module) and whether the
+order of the options matters (order_check.py). Both run through run_probe.
 
 A probe writes a folder under agent/runs/ with a decisions.jsonl, so the spend ledger counts it,
 and a result.json with the summary. It stops by itself, on purpose, when anything is odd: a model
@@ -10,7 +11,7 @@ import math
 import platform
 import statistics
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -68,15 +69,18 @@ def summarize_latency(rows: list[dict], requested: int, stopped: str | None) -> 
     }
 
 
-async def run_latency(
+async def run_probe(
     client: JevClient,
-    state: Any,
-    questions: Mapping[str, Any],
-    n: int,
+    kind: str,
+    requests: list[dict],
+    summarize: Callable[[list[dict], int, str | None], dict],
     runs_dir: Path = RUNS_DIR,
     utc_now=None,
 ) -> dict:
-    """Send the same request `n` times, one after the other, and write the probe's folder.
+    """Send `requests` one after the other and write the probe's folder `<kind>-<UTC date-time>-<machine>/`.
+
+    A request is a dict with its `state`, its `questions` and any other fields its row should carry.
+    `summarize(rows, requested, stopped)` makes the numbers of the probe's result.json.
 
     It stops early, and says why in `stopped`, when the cap is reached, when a model other than the
     expected one answers (stop and tell the owner), or after ERRORS_IN_A_ROW_LIMIT errors in a row.
@@ -84,19 +88,20 @@ async def run_latency(
     """
     started = (utc_now or (lambda: datetime.now(timezone.utc)))()
     machine = platform.system().lower()
-    run_id = f"latency-{started:%Y%m%dT%H%M%SZ}-{machine}"
+    run_id = f"{kind}-{started:%Y%m%dT%H%M%SZ}-{machine}"
     run_dir = runs_dir / run_id
     run_dir.mkdir(parents=True)  # FileExistsError if it is there: a probe is never overwritten
 
     rows: list[dict] = []
     stopped, errors_in_a_row = None, 0
     with (run_dir / "decisions.jsonl").open("w") as decisions:
-        for call in range(1, n + 1):
+        for call, request in enumerate(requests, start=1):
             if client.exhausted:
                 stopped = f"budget cap reached: ${client.spent:.6f} spent of the ${client.cap_usd:.6f} cap"
                 break
-            result = await client.ask(state, questions)
-            row = {"call": call, "state": state, **result.to_row()}
+            result = await client.ask(request["state"], request["questions"])
+            extra = {key: value for key, value in request.items() if key not in ("state", "questions")}
+            row = {"call": call, **extra, "state": request["state"], **result.to_row()}
             write_row(decisions, row)
             rows.append(row)
             if result.error is not None:
@@ -111,17 +116,30 @@ async def run_latency(
                 break
 
     summary = {
-        "kind": "latency",
+        "kind": kind,
         "run_id": run_id,
         "machine": machine,
         "config_sha256": config_sha256(),
         "pinned_model": client.model,
         "expected_model": client.expected_model,
         "cap_usd": client.cap_usd,
-        **summarize_latency(rows, n, stopped),
+        **summarize(rows, len(requests), stopped),
     }
     (run_dir / "result.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
+
+
+async def run_latency(
+    client: JevClient,
+    state: Any,
+    questions: Mapping[str, Any],
+    n: int,
+    runs_dir: Path = RUNS_DIR,
+    utc_now=None,
+) -> dict:
+    """Send the same request `n` times, one after the other (see run_probe)."""
+    requests = [{"state": state, "questions": questions}] * n
+    return await run_probe(client, "latency", requests, summarize_latency, runs_dir, utc_now)
 
 
 def describe_latency(result: dict) -> str:
