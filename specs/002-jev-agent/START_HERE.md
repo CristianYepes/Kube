@@ -44,31 +44,37 @@
   has not decided what to do about it (harder maps are already on their list for after v1).
 - **Phase 3's checkpoint L3 passed on the owner's Linux** (2026-10-06): 234 tests in 3.87 s, the
   `local` runner played 4 episodes, and the owner saw the game on the real display. Ledger
-  rows 8 and 9 are closed; only row 10 (L4, the key on Linux and one paid run) is open.
-- **Phase 4: T6, T6b and T7 are done.** T6 is the Jev client and the spend ledger. T6b made the
+  rows 8 and 9 are closed (row 10, L4, closed on 2026-10-08: see below).
+- **Phase 4 is done: T6, T6b, T7 and L4.** T6 is the Jev client and the spend ledger. T6b made the
   first 50 paid calls ($0.00156 of the $1.00): Jev answered with the expected model, p50 309 ms
   and p95 514 ms, 743 tokens and $0.0000312 per call (R12). T7 is the Jev policy in the game loop
   (`JevPolicy` in `policies.py`). Its first real episode (seed 1) won in 13.6 s: 26 of its 28
   answers were applied, 2 were stale at wave changes, 0 stalls, $0.000873, and AC6, AC8 and AC9
   passed (R13). Scripted won the same seed in 14.04 s, which shows nothing (R11's ceiling). The
-  ledger says `$0.002434 of $1.00`. The owner chose to measure Jev on the current map first and
+  ledger said `$0.002434 of $1.00`. The owner chose to measure Jev on the current map first and
   to look at a harder map afterwards.
+- **L4 passed on the owner's Linux (2026-10-08).** 385 tests, a key of its own for that machine
+  (`kube-linux`), and 4 paid Jev episodes on the real display, all won, with the game started
+  under the cleaned environment. Verified on the Mac: AC9 and AC6 hold on all 91 decisions.
+  The ledger says `$0.005271 of $1.00` (169 paid calls). **Jev answered more slowly from that
+  Linux: p50 553 ms against 318 ms on the Mac** (R14). No ledger row is open.
 - **Decided by the owner on 2026-10-06 (R12):** the cadence stays at 0.5 s plus events with one
   request in flight (the p95 of 514 ms is 14 ms over the 500 ms line, but a weak estimate), and
   the starting θ is 0.3 (0.6 would have applied 0 of 50 answers). T8 tunes both on development
   seeds.
-- **Next: L4**, phase 4's checkpoint, on the owner's Linux: the key file there and one paid run
-  (about $0.003 [calc]; ledger row 10, the only open row). The Mac's commits must be on GitHub
-  first so that Linux's `spend` counts them: **push only when the owner asks, and ask for the OK
-  before the paid run.** After L4 comes **T8** (tuning on development seeds 1-20, the
-  option-order check and the freeze).
+- **Next: T8** (phase 5): tuning on development seeds 1-20, the option-order check and the
+  freeze. Every Jev episode is paid: **ask the owner for the OK before spending**, and **push
+  only when the owner asks**. T8 has to weigh R12, R13 and R14: the 500 ms line, the share of
+  stale answers and the Linux latency.
+- **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
+  Their terminal splits long pasted lines (it happened twice in L4).
 - **Already in the repo:**
   - the game;
   - `dev/dev.sh`, a Linux container on macOS;
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** L4 and everything in `specs/002-jev-agent/tasks.md` from T8 on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T8 on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

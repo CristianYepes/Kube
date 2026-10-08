@@ -120,7 +120,7 @@ compiler, x86_64 against aarch64, the real packages and `uv`, and a real screen.
 | 7 | An x86_64 machine: AC1 and one episode on it. 42's machines are x86_64 | **CLOSED 2026-10-06, not done: no longer needed.** The owner's Linux is aarch64 (UTM, Ubuntu 22.04.5), the same architecture as the Mac's container, and the game is no longer handed in at 42, whose machines are x86_64 | (L5) |
 | 8 | The Python agent: `uv sync` (Python 3.12, `typesafe-sdk` 0.7.2), `pytest`, `--runner local` | **DONE 2026-10-06** on the owner's Linux: CPython 3.12.11, 19 packages with `typesafe-sdk` 0.7.2, **234 tests passed in 3.87 s**, and the `local` runner played 4 episodes (see L3) | L3 |
 | 9 | Seeing the game on the real display (`DISPLAY=:0`) | **DONE 2026-10-06**: the owner saw the game window on the real desktop, it ran smoothly, and 3 episodes ran that way and won | L3 |
-| 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | does not exist yet | L4 |
+| 10 | The key file on Linux (`START_HERE.md` 2b, step 3) and one paid run | **DONE 2026-10-08** on the owner's Linux: a new key for that machine only (`kube-linux`, credit limit 1 on OpenRouter) in `~/jev/libros/.env`, written with `read -s`; 4 paid Jev episodes played there, all won, $0.002838 in all (see L4) | L4 |
 | 11 | The final x86_64 check of AC1 and one episode | **CLOSED 2026-10-06, not done: no longer needed** (see row 7) | (L5) |
 
 ## Decided 2026-10-06: the game is no longer handed in at 42
@@ -1111,7 +1111,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
         before. The match is by name: a secret under an unrelated name would pass, and
         `SSH_AUTH_SOCK` is not caught (matching `AUTH` would also drop `XAUTHORITY`, which the
         game needs to open a window on a real display).
-- [ ] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). Ledger row
+- [x] 🔑 **L4** — Linux checkpoint, phase 4 (one paid run, about $0.003 [calc]). **Done 2026-10-08, see the note at the end of this task.** Ledger row
   10: first create the key file on Linux (`START_HERE.md` 2b, step 3, the `read -s` variant:
   never paste the key into the chat). On Linux, after `git pull --ff-only` (the spend ledger
   must include the Mac's runs), with `DISPLAY=:99` as in L1:
@@ -1128,6 +1128,47 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - **Done when:** pytest is green, no model warning was printed, and the summary line shows
     decisions applied and a spend above $0. The push carries the run's cost to the Mac's
     ledger.
+  - **Done 2026-10-08** on the owner's Linux (UTM, aarch64, Ubuntu 22.04.5). The owner gave the
+    OK for the spend ("Sí, lánzala") before the run, then asked for another game; I gave them one
+    command for seed 3 and they ran it three times:
+    - **setup:** `git pull --ff-only` brought `0c04181`; `make -C agent` had nothing to rebuild
+      (the binary is the same 144,760 bytes); `uv sync` and **385 tests passed in 7.07 s**;
+      `kube-agent spend` said `$0.002434 of $1.00 (paid calls: 78, decisions files read: 17)`,
+      the same as the Mac, so the ledger does travel through git;
+    - **the key:** a new OpenRouter key for that machine only (`kube-linux`), made in the browser
+      of the Linux itself, with a credit limit of 1 on OpenRouter's side (the owner's choice; I
+      had suggested 0.10). OpenRouter shows a key only once, so the Mac's key could not have been
+      copied from the site anyway. It was typed into `read -s` and written under `umask 077`, so
+      the file was private from the first instant, and `key file OK` came from a shape check that
+      does not print it. It never went through the chat or the Mac. Before each push the owner
+      searched `runs` for a key-shaped string: 0 files (control on the key file: 1). On the Mac,
+      after pulling everything: 0 files in the tree and 0 commits in the history;
+    - **the runs:** `jev s2` (the planned one) and three more of `jev s3`, all on the real desktop
+      (`DISPLAY=:0`, Wayland with Xwayland, `XAUTHORITY` under `/run/user/1000/`). The game started
+      and played with the **cleaned environment**, so `DISPLAY` and `XAUTHORITY` do survive the
+      filter [measured: four episodes ran]. All four **won**: 14.35, 10.87, 12.56 and 15.38 s,
+      wave 3, 8 kills, 0 stalls, 0 drops, and no damage except 10 in the last one;
+    - **verified on the Mac after the pull** (91 rows): **AC9** 0 bad rows, the expected model in
+      all 91; **AC6** 0 bad states (361 to 396 characters, no decimals); 78 of 91 applied, **8
+      stale** (2 per episode: the two wave changes), **4 `episode_ended`** (the request in flight
+      when the game was won: its answer is recorded and its cost counted), **1 `below_threshold`**
+      (confidence 0.24 against θ = 0.3: the first time the gate did anything), 0 errors. The cost
+      in the rows equals `result.json` in the four runs: **$0.002838 for 91 calls**. The Mac's
+      `kube-agent spend` now says `$0.005271 of $1.00 (paid calls: 169, decisions files read:
+      21)`;
+    - **latency on this Linux is higher** (R14): p50 553 ms, p95 760 ms, max 1662 ms, minimum
+      455 ms, 69 of 91 calls over 500 ms, against p50 318 ms and p95 625 ms in the Mac's episode.
+      The first call of each episode was the slowest (1662, 861, 676 and 629 ms). The gap between
+      two requests was 0.557 s of game time (Mac: 0.502 s). The cause was not looked for. It is
+      input for T8's decision on the cadence;
+    - **my mistakes, caught:** I gave the first command of L4 as one long chain; the owner's
+      terminal split it and the `export` alone printed the whole environment (no secret in the
+      part pasted). The run command had a line of 94 characters that was split too:
+      `--budget-usd 0.02` ran as its own command ("command not found") and the run used the
+      default cap of $0.05 (it spent $0.000655). After that every line was under 70 characters;
+    - **not checked:** an x86_64 machine, the cause of the latency, and how the Linux numbers
+      compare with the Mac's on the same seed (the Mac's episode was seed 1, the Linux ones 2 and
+      3). **Ledger rows: none is open now** (7 and 11 were closed as not needed).
 
 ## Phase 5 — Tuning, evaluation and close
 
