@@ -1,9 +1,10 @@
 import copy
+import json
 import re
 import subprocess
 from pathlib import Path
 
-from kube_agent import config
+from kube_agent import config, jev_client
 from kube_agent.controller import TACTICS
 from kube_agent.config import DEFAULT_MAP, REPO_ROOT as CONFIG_REPO_ROOT
 
@@ -80,3 +81,27 @@ def test_the_confidence_threshold_starts_at_a_third_and_is_part_of_the_config_ha
 
 def test_a_run_may_spend_five_cents_by_default():
     assert config.DEFAULT_RUN_BUDGET_USD == 0.05
+
+
+# --- the freeze (T8) ----------------------------------------------------------------------------
+
+FROZEN = REPO_ROOT / "agent" / "frozen.json"
+
+
+def test_the_config_is_frozen_and_nothing_that_it_covers_has_changed_since():
+    # frozen.json is written once, with the owner's OK, before the test seeds are touched. If this fails,
+    # the question, theta or the cadence was edited after the freeze: that is a new config, and it needs
+    # a new freeze (and the owner's OK), not a change to this file.
+    frozen = json.loads(FROZEN.read_text())
+
+    assert frozen["config_sha256"] == config.config_sha256()
+    assert (frozen["decision_interval"], frozen["confidence_threshold"]) == (config.DECISION_INTERVAL, config.CONFIDENCE_THRESHOLD)
+    assert frozen["model"] == jev_client.MODEL
+
+
+def test_the_freeze_says_when_it_was_made_and_on_what_it_was_tuned():
+    frozen = json.loads(FROZEN.read_text())
+
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", frozen["frozen_on"])
+    assert all(seed <= 20 for seed in frozen["tuned_on_seeds"])  # development seeds only
+    assert re.fullmatch(r"[0-9a-f]{64}", frozen["config_sha256"])

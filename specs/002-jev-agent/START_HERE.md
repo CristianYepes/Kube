@@ -62,12 +62,15 @@
   request in flight (the p95 of 514 ms is 14 ms over the 500 ms line, but a weak estimate), and
   the starting θ is 0.3 (0.6 would have applied 0 of 50 answers). T8 tunes both on development
   seeds.
-- **Next: T8 is in progress** (phase 5; details in R15 and in the progress note of T8 in `tasks.md`). Done: the
-  baseline of the three policies on seeds 1-20, the option-order check, and iteration 1 of the question
-  (episodes with damage 6 of 20 to 1 of 40, choices neutral to the order), a map exploration (T8b, R16: no layout
-  makes the rule bot lose) and the baseline on `pillars`. The owner chose to freeze and to test on `subject_map` and
-  `pillars`. **Nothing is frozen yet:** the 🛑 of T8 is next. Every Jev
-  episode is paid: **ask the owner for the OK before spending**, and **push only when the owner asks**.
+- **Phase 5, T8 and T8b are done (2026-10-08): the Jev config is FROZEN** in `agent/frozen.json` (hash `3642f98220b3…`: the
+  question, θ = 0.3 and the 0.5 s cadence), and a test fails if any of them changes. T8 tuned the wording once (R15). T8b tried six
+  maps (R16): none makes the rule bot lose, so the owner chose to test on `subject_map` and on `pillars`.
+- **Next: T9**, the final evaluation on seeds 101-120 (AC11, AC12). It needs `kube-agent eval`, which is a stub today. Decisions already
+  taken: both maps; idle, scripted and Jev **interleaved by seed**, so that a slow stretch of the network or the machine hits all of them
+  alike (R15 showed one); on the Mac; `eval` refuses to start if the config hash differs from `frozen.json`'s; an episode lost to the
+  spawn trap of `subject_map` is counted apart, with the reason. Every Jev episode is paid (about $0.04 for the whole evaluation
+  [calc]): **ask the owner for the OK before spending**, and **push only when the owner asks**. Report the results as they are; if scripted
+  is as good or better, say so.
 - **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
   Their terminal splits long pasted lines (it happened twice in L4).
 - **Already in the repo:**

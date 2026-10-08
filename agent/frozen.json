@@ -1,0 +1,32 @@
+{
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "frozen_on": "2026-10-08",
+  "model": "typesafe/jev-1.13",
+  "decision_interval": 0.5,
+  "confidence_threshold": 0.3,
+  "tuned_on_seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "tuned_on_map": "maps/bonus/subject_map.cub",
+  "checked_on_map": "agent/maps/pillars.cub",
+  "note": "Written with the owner's OK on 2026-10-08 (T8 of specs/002-jev-agent/tasks.md; the log is R15 and R16 of specs/research-2026-09-28.md). The hash covers the question (its text and the order of its options), theta and the decision interval. A change to any of them is a new config and needs a new freeze and the owner's OK; this file is not edited to make a test pass."
+}

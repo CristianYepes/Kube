@@ -1172,7 +1172,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
 
 ## Phase 5 — Tuning, evaluation and close
 
-- [ ] **T8** — Tuning on development seeds 1-20 only, then the freeze.
+- [x] **T8** — Tuning on development seeds 1-20 only, then the freeze. **Done 2026-10-08, see the note at the end of this task.**
   - **Progress 2026-10-08 (the details are R15):** baseline of the three policies on seeds 1-20; the
     option-order check found the order not neutral (17 of 100 choices change, noise 5; no bias toward the first
     option); iteration 1 rewrote `ENGAGE`, `KITE` and `RETREAT` so that they do not overlap, and with it the choice changes in 6
@@ -1211,7 +1211,28 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - **Done when:** the owner said OK, and `agent/frozen.json` holds `config_sha256` plus the
     date.
   - **Commit** (with every tuning run): `agent: freeze the Jev policy config after dev tuning`.
-- [ ] **T8b** — A harder map, before the freeze (owner's decision, 2026-10-08).
+  - **Done 2026-10-08.** The owner saw R15, R16, the final question, θ and the development results of both maps, and said "Sí,
+    congelar ahora":
+    - **frozen:** `agent/frozen.json` holds `config_sha256` `3642f98220b3…`, the date 2026-10-08, the model `typesafe/jev-1.13`, the
+      cadence (0.5 s of game time plus events, one request in flight), θ = 0.3 and the seeds it was tuned on (1-20). The question is the one of
+      iteration 1: four options in the order `ENGAGE`, `KITE`, `RETREAT`, `SEARCH`, each with `what`, `when` and `not_for`.
+      Two tests in `tests/test_config.py` fail if the question, θ or the cadence differ from the file, or if the file names a seed above 20:
+      8 deliberate edits, each caught. 471 tests;
+    - **what the tuning was** (R15): one iteration of the wording. With the first text Jev took damage in 6 of 20 episodes, all in the fight
+      with the final boss, because the options `ENGAGE` and `KITE` overlapped, and the choice changed with the order of the options in 17 of
+      100 states (noise 5). The new text makes the options exclusive: the choice changes in 6 of 100, the episodes with damage fell to 1 of 40
+      (that one with every call timed out) and Jev's tactic equals the scripted rules' in 99% of its decisions on `pillars`. The cadence and θ were
+      not touched because nothing in the data asked for it (θ filtered 5 of 1,179 answers);
+    - **development results** (idle / scripted / Jev; wins, median time to win, episodes with damage):
+      `subject_map` 0 of 20 / 20 of 20 / 39 of 40, dies at 7.6 s / 12.5 s / 11.1 s, all / 0 / 1 of 40;
+      `pillars` 0 of 20 / 20 of 20 / 20 of 20, dies at 10.6 s / 19.2 s / 21.0 s, all / 0 / 1 of 20. On `pillars` Jev is slower than scripted in 15 of
+      20 seeds (p = 0.041). The cost of Jev is $0.0007 per episode on `subject_map` and $0.0013 on `pillars`;
+    - **spend of T8 and T8b:** $0.1039 (the ledger went from $0.0053 to $0.1092);
+    - **not checked, and open:** whether the lag of the answers (0.47 s on average) explains by itself why Jev is slower on `pillars` (a scripted
+      policy with the same delay would test it, free; the owner chose to freeze first); a clean interleaved pass of Jev on `subject_map`
+      (the 40 episodes there are two passes, the second with a slow stretch of the API); the cause of the stalls and errors of that stretch; and the
+      spawn trap of `subject_map` (R15), which is accepted: T9 counts an episode lost to it apart and says why. T9 runs on the Mac.
+- [x] **T8b** — A harder map, before the freeze (owner's decision, 2026-10-08). **Done 2026-10-08: no map makes the rule bot lose (R16); the owner chose `subject_map` and `pillars`.**
   - **Why:** on `subject_map` the scripted rules and Jev both win every development seed with no damage (R11,
     R15), so a final test there could not tell them apart. The closed door of that map is also what makes the
     spawn trap of R15, which an all-connected map does not have.
