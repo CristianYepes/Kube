@@ -62,10 +62,11 @@
   request in flight (the p95 of 514 ms is 14 ms over the 500 ms line, but a weak estimate), and
   the starting θ is 0.3 (0.6 would have applied 0 of 50 answers). T8 tunes both on development
   seeds.
-- **Next: T8** (phase 5): tuning on development seeds 1-20, the option-order check and the
-  freeze. Every Jev episode is paid: **ask the owner for the OK before spending**, and **push
-  only when the owner asks**. T8 has to weigh R12, R13 and R14: the 500 ms line, the share of
-  stale answers and the Linux latency.
+- **Next: T8 is in progress** (phase 5; details in R15 and in the progress note of T8 in `tasks.md`). Done: the
+  baseline of the three policies on seeds 1-20, the option-order check, and iteration 1 of the question
+  (episodes with damage 6 of 20 to 1 of 40, choices neutral to the order). **Nothing is frozen.** Waiting for
+  the owner on two questions, a harder map and the spawn trap of R15, and then the 🛑 of T8. Every Jev
+  episode is paid: **ask the owner for the OK before spending**, and **push only when the owner asks**.
 - **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
   Their terminal splits long pasted lines (it happened twice in L4).
 - **Already in the repo:**

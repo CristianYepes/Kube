@@ -20,7 +20,7 @@ from kube_agent.config import (
 from kube_agent.episode import run_episode, summarize
 from kube_agent.jev_client import BudgetExhausted, JevClient, KeyMissing
 from kube_agent.ledger import LedgerError, read_ledger
-from kube_agent.order_check import describe_order_check, load_dev_states, run_order_check
+from kube_agent.order_check import describe_order_check, load_dev_states, load_states_of, run_order_check
 from kube_agent.policies import POLICIES
 from kube_agent.probes import describe_latency, fixture_state, run_latency
 
@@ -56,6 +56,9 @@ def build_parser() -> argparse.ArgumentParser:
     order_check = subparsers.add_parser(
         "order-check", help="PAID: ask logged states in two opposite option orders and compare the choices")
     order_check.add_argument("--n", type=_positive_int, default=100, help="how many logged states (each is asked 3 times)")
+    order_check.add_argument("--same-states-as", metavar="FOLDER",
+                             help="take the first --n states of an earlier order-check folder under agent/runs/ instead of "
+                                  "drawing new ones, to compare another wording on the same inputs")
     order_check.add_argument("--budget-usd", type=float, default=ORDER_CHECK_BUDGET_USD,
                              help="stop calling once this much has been spent (the ledger's remainder also caps it)")
 
@@ -129,7 +132,9 @@ def _latency(args: argparse.Namespace) -> int:
 
 def _order_check(args: argparse.Namespace) -> int:
     try:
-        states = load_dev_states(RUNS_DIR, args.n)  # free: nothing is paid if there are too few
+        # free: nothing is paid if there are too few states
+        states = (load_states_of(RUNS_DIR, args.same_states_as, args.n) if args.same_states_as
+                  else load_dev_states(RUNS_DIR, args.n))
         client = JevClient.from_environment(cap_usd=args.budget_usd)
     except (ValueError, OSError, KeyMissing, BudgetExhausted, LedgerError, TypeSafeError) as error:
         print(f"kube-agent order-check: {error}", file=sys.stderr)

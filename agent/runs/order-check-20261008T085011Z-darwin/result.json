@@ -1,0 +1,82 @@
+{
+  "kind": "order-check",
+  "run_id": "order-check-20261008T085011Z-darwin",
+  "machine": "darwin",
+  "config_sha256": "2d735966627d4bdbfbc11fbc8ce1974208b431e3ee6b391c916a8cb6742d6856",
+  "pinned_model": "typesafe/jev-1.13",
+  "expected_model": "typesafe/jev-1.13-20260917",
+  "cap_usd": 0.02,
+  "calls_requested": 300,
+  "calls_made": 300,
+  "ok": 300,
+  "errors": 0,
+  "models": {
+    "typesafe/jev-1.13-20260917": 300
+  },
+  "latency_ms": {
+    "p50": 346,
+    "p95": 541,
+    "min": 287,
+    "max": 718,
+    "mean": 373.4
+  },
+  "input_tokens_per_call": 741.53,
+  "cost_per_call_usd": 3.114426e-05,
+  "cost_sources": {
+    "usage.cost": 300
+  },
+  "spend_usd": 0.009343278,
+  "stopped": null,
+  "order": {
+    "options": [
+      "ENGAGE",
+      "KITE",
+      "RETREAT",
+      "SEARCH"
+    ],
+    "states": 100,
+    "incomplete_states": 0,
+    "differs_between_orders": {
+      "count": 17,
+      "rate": 0.17,
+      "wilson95": [
+        0.10893476059773155,
+        0.25548181233642975
+      ]
+    },
+    "differs_same_order": {
+      "count": 5,
+      "rate": 0.05,
+      "wilson95": [
+        0.02154336145631356,
+        0.11175196527208817
+      ]
+    },
+    "first_in_current": {
+      "option": "ENGAGE",
+      "chosen_listed_first": 0.48,
+      "chosen_listed_last": 0.55
+    },
+    "last_in_current": {
+      "option": "SEARCH",
+      "chosen_listed_first": 0.14,
+      "chosen_listed_last": 0.11
+    },
+    "mean_probability": {
+      "current": {
+        "ENGAGE": 0.5098999999999999,
+        "KITE": 0.32539999999999997,
+        "RETREAT": 0.0478,
+        "SEARCH": 0.1165
+      },
+      "reversed": {
+        "ENGAGE": 0.5413,
+        "KITE": 0.2729,
+        "RETREAT": 0.059800000000000006,
+        "SEARCH": 0.126
+      }
+    },
+    "limit": 0.1,
+    "not_neutral": true
+  }
+}

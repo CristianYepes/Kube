@@ -52,6 +52,22 @@ def load_dev_states(runs_dir: Path, n: int, sample_seed: int = 0) -> list[dict]:
     return random.Random(sample_seed).sample(candidates, n)
 
 
+def load_states_of(runs_dir: Path, folder: str, n: int) -> list[dict]:
+    """The first n states that an earlier order-check asked, in the same order, so that another wording of the
+    question is compared on exactly the same inputs."""
+    path = runs_dir / folder
+    result = json.loads((path / "result.json").read_text())
+    if result.get("kind") != "order-check":
+        raise ValueError(f"{folder} is not an order-check folder (its kind is {result.get('kind')!r})")
+    asked = {}  # each state was asked three times and the file is in the order of the calls: one entry per state
+    for line in (path / "decisions.jsonl").read_text().splitlines():
+        row = json.loads(line)
+        asked[row["state_index"]] = {"run_id": row["source_run"], "row": row["source_row"], "state": row["state"]}
+    if len(asked) < n:
+        raise ValueError(f"{folder} holds only {len(asked)} states and {n} were asked")
+    return list(asked.values())[:n]
+
+
 def reversed_options(question: Mapping) -> dict:
     """The same question with its options listed in the opposite order. Every text stays as it is."""
     flipped = dict(question)

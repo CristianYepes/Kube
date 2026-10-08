@@ -1,0 +1,26 @@
+{
+  "run_id": "20261008T083333Z-scripted-s7-darwin",
+  "policy": "scripted",
+  "seed": 7,
+  "map": "maps/bonus/subject_map.cub",
+  "map_sha256": "415c2a2d6dcffb132f18969252d7dd0ec7340cb0dfa7292a6d0395b9a723b00f",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "2d735966627d4bdbfbc11fbc8ce1974208b431e3ee6b391c916a8cb6742d6856",
+  "max_seconds": 180.0,
+  "outcome": "win",
+  "survival_seconds": 13.01,
+  "wave_reached": 3,
+  "kills": 8,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {
+    "ENGAGE": 5.1,
+    "KITE": 7.88
+  },
+  "switches": 4,
+  "decisions": 27,
+  "decisions_applied": 27,
+  "spend_usd": 0.0
+}

@@ -326,12 +326,17 @@ def fake_order_check(monkeypatch, result, calls=None, states=("state-a", "state-
         record(("load_dev_states", n))
         return list(states)
 
+    def load_states_of(runs_dir, folder, n):
+        record(("load_states_of", folder, n))
+        return list(states)
+
     async def run_order_check(client, picked, question):
         record(("run_order_check", picked, question["type"]))
         return result
 
     monkeypatch.setattr(cli, "JevClient", Client)
     monkeypatch.setattr(cli, "load_dev_states", load_dev_states)
+    monkeypatch.setattr(cli, "load_states_of", load_states_of)
     monkeypatch.setattr(cli, "run_order_check", run_order_check)
 
 
@@ -359,6 +364,17 @@ def test_order_check_prints_one_summary_line_and_exits_0(monkeypatch, capsys):
     assert code == 0
     assert calls == [("load_dev_states", 7), ("from_environment", {"cap_usd": 0.03}), ("run_order_check", ["state-a", "state-b"], "choice")]
     assert capsys.readouterr().out == describe_order_check(ORDER_RESULT) + "\n"
+
+
+def test_order_check_can_reuse_the_states_of_an_earlier_check(monkeypatch, capsys):
+    calls = []
+    fake_order_check(monkeypatch, ORDER_RESULT, calls)
+
+    code = main(["order-check", "--same-states-as", "order-check-20261008T085011Z-darwin", "--n", "7"])
+
+    assert code == 0
+    assert calls[0] == ("load_states_of", "order-check-20261008T085011Z-darwin", 7)  # and no new states were drawn
+    assert [call[0] for call in calls] == ["load_states_of", "from_environment", "run_order_check"]
 
 
 def test_order_check_with_too_few_logged_states_says_so_before_anything_is_paid(monkeypatch, capsys):

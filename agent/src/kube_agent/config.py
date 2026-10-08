@@ -31,20 +31,23 @@ TACTIC_QUESTION = {
     "criteria": {
         "ENGAGE": {
             "what": "Stand and shoot the nearest threat.",
-            "when": "a threat is in view and not touching, and health is not low",
-            "not_for": "several threats close at once",
+            "when": "a threat is in view and the nearest one is at medium distance or farther, and health is not low",
+            "not_for": (
+                "a threat that is close or touching: once it touches you it hits for 10 every second, "
+                "so step back instead"
+            ),
         },
         "KITE": {
             "what": "Step straight back from the nearest threat while facing and shooting it.",
-            "when": "threats are close and there is open space behind",
-            "not_for": "being cornered",
+            "when": "the nearest threat is close or touching and there is open space behind you",
+            "not_for": "being cornered, or low health",
         },
         "RETREAT": {
             "what": (
                 "Move along a path to the open area farthest from every threat, still facing and shooting "
                 "the nearest one."
             ),
-            "when": "health is low, or you are being hit by more than one threat",
+            "when": "health is low, or you are cornered with a threat close, or you are being hit by more than one threat",
             "not_for": "a single wounded threat you can finish",
         },
         "SEARCH": {

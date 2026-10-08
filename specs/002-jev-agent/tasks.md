@@ -1173,6 +1173,12 @@ What does not change: the tests, the honest measurement, and the agent itself.
 ## Phase 5 — Tuning, evaluation and close
 
 - [ ] **T8** — Tuning on development seeds 1-20 only, then the freeze.
+  - **Progress 2026-10-08 (the details are R15):** baseline of the three policies on seeds 1-20; the
+    option-order check found the order not neutral (17 of 100 choices change, noise 5; no bias toward the first
+    option); iteration 1 rewrote `ENGAGE`, `KITE` and `RETREAT` so that they do not overlap, and with it the choice changes in 6
+    of 100 (neutral) and the episodes with damage went from 6 of 20 to 1 of 40 (that one with every call timed out); 39 of 40
+    won, and the other one is a trap of the game (see R15). **Not frozen: `frozen.json` does not exist and the 🛑 below
+    is still ahead.** Open questions for the owner: a harder map before the freeze, and the trap.
   - **Read:** research R5 (Jev's weak points); `CONTEXT.md`, "Jev in two minutes".
   - **Do:**
     - run the Jev policy on dev seeds and look at `decisions.jsonl` and `episode.jsonl`:

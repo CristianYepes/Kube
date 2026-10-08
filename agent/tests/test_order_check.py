@@ -22,6 +22,7 @@ from kube_agent.order_check import (
     VARIANTS,
     describe_order_check,
     load_dev_states,
+    load_states_of,
     order_requests,
     reversed_options,
     run_order_check,
@@ -135,6 +136,50 @@ def test_a_folder_without_a_result_is_skipped(tmp_path):
     (tmp_path / "half-written").mkdir()
 
     assert numbers_of(load_dev_states(tmp_path, n=2)) == [0, 1]
+
+
+# --- the states of an earlier check, to compare another wording on the same inputs ---------------
+
+
+def make_check_folder(runs_dir, name="order-check-x", kind="order-check", count=3):
+    """An order-check folder as the probe leaves it: three rows per state, with the request fields."""
+    folder = runs_dir / name
+    folder.mkdir()
+    (folder / "result.json").write_text(json.dumps({"kind": kind}))
+    rows = [{"call": call, **{k: v for k, v in request.items() if k != "questions"}}
+            for call, request in enumerate(order_requests(states(count), QUESTION), start=1)]
+    (folder / "decisions.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows))
+
+
+def test_the_states_of_an_earlier_check_come_back_in_their_order_one_each(tmp_path):
+    make_check_folder(tmp_path, count=3)
+
+    assert load_states_of(tmp_path, "order-check-x", n=3) == states(3)  # the three asks of a state are one state
+
+
+def test_only_the_first_n_states_of_the_earlier_check_are_taken(tmp_path):
+    make_check_folder(tmp_path, count=5)
+
+    assert load_states_of(tmp_path, "order-check-x", n=2) == states(2)
+
+
+def test_an_earlier_check_with_too_few_states_is_an_error_naming_both_numbers(tmp_path):
+    make_check_folder(tmp_path, count=3)
+
+    with pytest.raises(ValueError, match="order-check-x holds only 3 states and 4 were asked"):
+        load_states_of(tmp_path, "order-check-x", n=4)
+
+
+def test_a_folder_that_is_not_an_order_check_is_refused(tmp_path):
+    make_check_folder(tmp_path, name="latency-x", kind="latency")
+
+    with pytest.raises(ValueError, match="latency-x is not an order-check folder"):
+        load_states_of(tmp_path, "latency-x", n=1)
+
+
+def test_a_folder_that_does_not_exist_is_a_file_error_that_names_it(tmp_path):
+    with pytest.raises(FileNotFoundError, match="order-check-nope"):
+        load_states_of(tmp_path, "order-check-nope", n=1)
 
 
 # --- the question in the opposite order ---------------------------------------------------------
