@@ -1,0 +1,27 @@
+{
+  "run_id": "20261008T093353Z-scripted-s5-darwin",
+  "policy": "scripted",
+  "seed": 5,
+  "map": "agent/maps/alcoves.cub",
+  "map_sha256": "1883a4a63f26afe077781923438b105c5ed4ff297071ffe38962aff66e820c40",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "win",
+  "survival_seconds": 21.57,
+  "wave_reached": 3,
+  "kills": 8,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 1,
+  "tactic_seconds": {
+    "ENGAGE": 7.86,
+    "SEARCH": 11.05,
+    "KITE": 2.6
+  },
+  "switches": 16,
+  "decisions": 44,
+  "decisions_applied": 44,
+  "spend_usd": 0.0
+}

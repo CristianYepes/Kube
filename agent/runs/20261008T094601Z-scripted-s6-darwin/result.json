@@ -1,0 +1,27 @@
+{
+  "run_id": "20261008T094601Z-scripted-s6-darwin",
+  "policy": "scripted",
+  "seed": 6,
+  "map": "agent/maps/maze.cub",
+  "map_sha256": "1a2df2cf2752619101f7e47ce5e33a530add89f8e0044685bf00d7ed5844054d",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "win",
+  "survival_seconds": 15.81,
+  "wave_reached": 3,
+  "kills": 4,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {
+    "ENGAGE": 1.52,
+    "KITE": 11.76,
+    "SEARCH": 2.53
+  },
+  "switches": 15,
+  "decisions": 33,
+  "decisions_applied": 33,
+  "spend_usd": 0.0
+}

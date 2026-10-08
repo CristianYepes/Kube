@@ -1,0 +1,27 @@
+{
+  "run_id": "20261008T092429Z-scripted-s1-darwin",
+  "policy": "scripted",
+  "seed": 1,
+  "map": "agent/maps/ring.cub",
+  "map_sha256": "076be988a06ec28f7b7b97a19df4338dfba5b5200d672966ffcc126b41ac20f1",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "win",
+  "survival_seconds": 46.62,
+  "wave_reached": 3,
+  "kills": 8,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 1,
+  "tactic_seconds": {
+    "ENGAGE": 38.98,
+    "KITE": 3.08,
+    "SEARCH": 4.55
+  },
+  "switches": 9,
+  "decisions": 94,
+  "decisions_applied": 94,
+  "spend_usd": 0.0
+}

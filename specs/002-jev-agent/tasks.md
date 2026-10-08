@@ -1211,6 +1211,33 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - **Done when:** the owner said OK, and `agent/frozen.json` holds `config_sha256` plus the
     date.
   - **Commit** (with every tuning run): `agent: freeze the Jev policy config after dev tuning`.
+- [ ] **T8b** — A harder map, before the freeze (owner's decision, 2026-10-08).
+  - **Why:** on `subject_map` the scripted rules and Jev both win every development seed with no damage (R11,
+    R15), so a final test there could not tell them apart. The closed door of that map is also what makes the
+    spawn trap of R15, which an all-connected map does not have.
+  - **Do:**
+    - candidate maps in `agent/maps/` (never in `maps/`), made as `plan.md` says: charset `012NSEW`, no door, fewer
+      than 64 rows and columns, the textures and colours of `subject_map`, and every floor cell reachable from the
+      start;
+    - **the rule for choosing was written down before any candidate was run:** a candidate is *playable* when idle
+      loses on its development seeds 1-5 and scripted has no timeout on seeds 1-10. Among the playable ones, the
+      chosen is the one with the **lowest scripted win rate on seeds 1-10**, ties broken by the **higher mean
+      damage** scripted takes. **Jev takes no part in the choice,** so the choice cannot favour it. It does favour
+      a map where the rules do worse, and the report has to say so;
+    - Jev, the tuning and the freeze are then done on the development seeds of the chosen map.
+  - **Progress and an amendment of the rule, 2026-10-08 (the details are R16).** Six candidates were run (scripted
+    on seeds 1-10, idle on 1-5): `pillars`, `ring`, `alcoves`, `corridor`, `maze`, `chambers`. **None lowered
+    scripted below 10 wins out of 10.** The rule as written picked `maze` (2 episodes with damage against 0),
+    **but the maze is not a valid map for comparing policies:** the game places only as many enemies as there are
+    cells in view of the player, so there the waves came with 4 or 7 kills instead of 8, and on the same seed scripted
+    and Jev faced different numbers of enemies. The rule did not foresee that. **Amendment (made after seeing the
+    results, for a reason found in the code and not because of who it favoured):** a candidate is also playable
+    only if every scripted episode kills 8 enemies. With it, the rule picks `pillars` (scripted 1 episode with damage
+    of 10, the others none), which still leaves no room in wins or in damage; the room it has is in time (median
+    21.4 s against a floor of about 10.7 s). **The owner decides what to do next** (see R16).
+  - **Verify:** a test that every map in `agent/maps/` passes the checks above (charset, one start, closed
+    border, every floor cell reachable), and the game itself loads each one (its `init` line).
+  - **Commit:** `agent: a harder map for the final evaluation`.
 - [ ] **T9** — The final evaluation on test seeds 101-120 (AC11, AC12).
   - **Do:** `kube-agent eval --seeds 101-120 --policies idle,scripted,jev` (in the
     background; up to about 2 h) writes `agent/runs/eval-<UTC date-time>-<machine>/`, one
@@ -1234,7 +1261,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
       prefix. To see that the search can find something, run it once on a temporary file
       holding a made-up key of that shape.
     - The Wilson function is unit-tested with 47/50, which gives 84-98% (the `libros` result).
-  - Append the report's summary to the research as **R16**.
+  - Append the report's summary to the research as **R17** (R16 is the map exploration of T8b).
   - 🛑 **Report the results to the owner as they are.** If scripted beats Jev, say so.
   - **Commit** (with the whole evaluation folder): `agent: final evaluation on test seeds
     101-120`.

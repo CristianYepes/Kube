@@ -1,0 +1,23 @@
+{
+  "run_id": "20261008T093132Z-idle-s2-darwin",
+  "policy": "idle",
+  "seed": 2,
+  "map": "agent/maps/ring.cub",
+  "map_sha256": "076be988a06ec28f7b7b97a19df4338dfba5b5200d672966ffcc126b41ac20f1",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "lose",
+  "survival_seconds": 17.91,
+  "wave_reached": 1,
+  "kills": 0,
+  "damage_taken": 100,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {},
+  "switches": 0,
+  "decisions": 0,
+  "decisions_applied": 0,
+  "spend_usd": 0.0
+}

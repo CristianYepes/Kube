@@ -1,0 +1,23 @@
+{
+  "run_id": "20261008T095018Z-idle-s2-darwin",
+  "policy": "idle",
+  "seed": 2,
+  "map": "agent/maps/chambers.cub",
+  "map_sha256": "c7eddfade20442f25a19453f2786664604c1e6bee8e0e3853f71e3aaf2c06cdc",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "lose",
+  "survival_seconds": 7.12,
+  "wave_reached": 1,
+  "kills": 0,
+  "damage_taken": 100,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {},
+  "switches": 0,
+  "decisions": 0,
+  "decisions_applied": 0,
+  "spend_usd": 0.0
+}
