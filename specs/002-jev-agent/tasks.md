@@ -1264,6 +1264,12 @@ What does not change: the tests, the honest measurement, and the agent itself.
     border, every floor cell reachable), and the game itself loads each one (its `init` line).
   - **Commit:** `agent: a harder map for the final evaluation`.
 - [ ] **T9** — The final evaluation on test seeds 101-120 (AC11, AC12).
+  - **Progress 2026-10-08:** `kube-agent eval` is written and tested (`evaluation.py`; the design is in `plan.md`, "How `kube-agent
+    eval` works"): 41 deliberate breaks, each caught; 547 tests in the suite. One of my first design mistakes was caught by reading how it
+    chains with `run_episode`: the Jev client would have read the spend ledger of the evaluation folder only, not of the whole tree
+    (fixed with `ledger_dir`, guarded by two tests). A free rehearsal on development seeds 1-2, both maps, idle and scripted (8 episodes,
+    `agent/runs/eval-20261008T143025Z-darwin`) gave a folder and a `report.md` that agree with the `result.json` of the episodes. **The
+    evaluation itself has not been run and it is paid: the owner's OK for its spend comes first.**
   - **Do:** `kube-agent eval --seeds 101-120 --policies idle,scripted,jev` (in the
     background; up to about 2 h) writes `agent/runs/eval-<UTC date-time>-<machine>/`, one
     folder per episode plus `report.md`. Pull and check `spend` first.

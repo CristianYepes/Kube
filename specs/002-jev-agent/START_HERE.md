@@ -65,7 +65,8 @@
 - **Phase 5, T8 and T8b are done (2026-10-08): the Jev config is FROZEN** in `agent/frozen.json` (hash `3642f98220b3…`: the
   question, θ = 0.3 and the 0.5 s cadence), and a test fails if any of them changes. T8 tuned the wording once (R15). T8b tried six
   maps (R16): none makes the rule bot lose, so the owner chose to test on `subject_map` and on `pillars`.
-- **Next: T9**, the final evaluation on seeds 101-120 (AC11, AC12). It needs `kube-agent eval`, which is a stub today. Decisions already
+- **Next: T9**, the final evaluation on seeds 101-120 (AC11, AC12). `kube-agent eval` is written and rehearsed on development seeds
+  (see `plan.md`, "How `kube-agent eval` works"); **what is left is to run it, which is paid: ask the owner for the OK first.** Decisions already
   taken: both maps; idle, scripted and Jev **interleaved by seed**, so that a slow stretch of the network or the machine hits all of them
   alike (R15 showed one); on the Mac; `eval` refuses to start if the config hash differs from `frozen.json`'s; an episode lost to the
   spawn trap of `subject_map` is counted apart, with the reason. Every Jev episode is paid (about $0.04 for the whole evaluation

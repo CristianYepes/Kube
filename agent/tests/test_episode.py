@@ -554,6 +554,23 @@ def test_a_client_made_by_the_run_gets_the_cap_and_the_ledger_folder_and_is_clos
     assert closed == [True]
 
 
+def test_the_ledger_is_read_where_the_caller_says_and_the_episode_goes_in_its_own_folder(tmp_path, monkeypatch):
+    # An evaluation plays its episodes in a folder of its own inside agent/runs/, but the $1 budget is the spend
+    # of the whole tree: the client has to read the ledger from the root, not from that folder.
+    made = {}
+
+    def from_environment(**kwargs):
+        made.update(kwargs)
+        return client_for(FakeAPI((200, good())), cap_usd=0.05)
+
+    monkeypatch.setattr(episode.JevClient, "from_environment", from_environment)
+
+    result = run_fake(tmp_path, policy="jev", environ={KEY_VARIABLE: KEY}, ledger_dir=tmp_path / "the-whole-tree")
+
+    assert made["runs_dir"] == tmp_path / "the-whole-tree"
+    assert (tmp_path / "runs" / result["run_id"] / "result.json").is_file()  # the folder of the episode is still runs_dir's
+
+
 def test_a_client_that_the_caller_passes_in_is_not_closed_by_the_run(tmp_path):
     client = client_for(FakeAPI((200, good())))
     closed = []

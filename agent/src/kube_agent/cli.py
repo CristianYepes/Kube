@@ -11,6 +11,7 @@ from kube_agent.config import (
     DEFAULT_MAP,
     DEFAULT_MAX_SECONDS,
     DEFAULT_RUN_BUDGET_USD,
+    EVAL_BUDGET_USD,
     LATENCY_PROBE_BUDGET_USD,
     ORDER_CHECK_BUDGET_USD,
     RUNS_DIR,
@@ -18,14 +19,13 @@ from kube_agent.config import (
     questions,
 )
 from kube_agent.episode import run_episode, summarize
+from kube_agent.evaluation import EvalRefused, parse_seeds, run_evaluation
 from kube_agent.jev_client import BudgetExhausted, JevClient, KeyMissing
 from kube_agent.ledger import LedgerError, read_ledger
 from kube_agent.order_check import describe_order_check, load_dev_states, load_states_of, run_order_check
 from kube_agent.policies import POLICIES
 from kube_agent.probes import describe_latency, fixture_state, run_latency
 
-# The tasks that implement each stub are in specs/002-jev-agent/tasks.md.
-STUBS = ["eval"]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -62,9 +62,17 @@ def build_parser() -> argparse.ArgumentParser:
     order_check.add_argument("--budget-usd", type=float, default=ORDER_CHECK_BUDGET_USD,
                              help="stop calling once this much has been spent (the ledger's remainder also caps it)")
 
-    for name in STUBS:
-        subparser = subparsers.add_parser(name)
-        subparser.add_argument("--map", default=DEFAULT_MAP, help="map file, relative to the repo root")
+    evaluation = subparsers.add_parser(
+        "eval", help="PAID: play idle, scripted and Jev on the test seeds with the frozen config, and write the report")
+    evaluation.add_argument("--seeds", type=_seed_list, help="for example 101-120 (needed unless --resume)")
+    evaluation.add_argument("--policies", type=_policy_list, default=["idle", "scripted", "jev"], help="comma separated")
+    evaluation.add_argument("--maps", type=_map_list, default=[DEFAULT_MAP], help="comma separated, relative to the repo root")
+    evaluation.add_argument("--runner", choices=["docker", "local"], default="docker")
+    evaluation.add_argument("--max-seconds", type=float, default=DEFAULT_MAX_SECONDS, help="of game time")
+    evaluation.add_argument("--budget-usd", type=float, default=EVAL_BUDGET_USD, help="for all of Jev's episodes together")
+    evaluation.add_argument("--per-episode-usd", type=float, default=DEFAULT_RUN_BUDGET_USD, help="cap of one Jev episode")
+    evaluation.add_argument("--repeat", action="store_true", help="measure test seeds that an earlier evaluation already measured")
+    evaluation.add_argument("--resume", metavar="FOLDER", help="play what is missing in this evaluation folder (its plan is kept)")
     return parser
 
 
@@ -78,8 +86,7 @@ def main(argv: list[str] | None = None) -> int:
         return _latency(args)
     if args.command == "order-check":
         return _order_check(args)
-    print(f"kube-agent {args.command}: not implemented yet", file=sys.stderr)
-    return 1
+    return _eval(args)
 
 
 def _run(args: argparse.Namespace) -> int:
@@ -162,6 +169,54 @@ def _exit_code(command: str, stopped: str | None) -> int:
         return 2
     print(f"kube-agent {command}: stopped early: {stopped}", file=sys.stderr)
     return 1
+
+
+def _eval(args: argparse.Namespace) -> int:
+    if args.resume is None and args.seeds is None:
+        print("kube-agent eval: --seeds is needed (unless --resume)", file=sys.stderr)
+        return 1
+    plan = None if args.resume else {
+        "seeds": args.seeds, "maps": args.maps, "policies": args.policies, "runner": args.runner,
+        "max_seconds": args.max_seconds, "budget_usd": args.budget_usd, "per_episode_usd": args.per_episode_usd,
+    }
+    try:
+        summary = asyncio.run(run_evaluation(plan, repeat=args.repeat, resume=args.resume))
+    except (EvalRefused, OSError, LedgerError) as error:  # OSError: a folder that already exists
+        print(f"kube-agent eval: {error}", file=sys.stderr)
+        return 1
+    print(f"eval: {summary['episodes_done']} of {summary['episodes_planned']} episodes with a result, {summary['errors']} failed, "
+          f"${summary['spend_usd']:.4f} spent | report: agent/runs/{summary['run_id']}/report.md")
+    if summary["complete"]:
+        return 0
+    reason = summary["stopped"] or "some episodes have no result"
+    print(f"kube-agent eval: INCOMPLETE ({reason}); --resume {summary['run_id']} plays what is missing", file=sys.stderr)
+    return 1
+
+
+def _comma_list(text: str, what: str) -> list[str]:
+    items = [item.strip() for item in text.split(",")]
+    if not all(items):
+        raise argparse.ArgumentTypeError(f"{what} must be a comma separated list with no empty item, got {text!r}")
+    return items
+
+
+def _seed_list(text: str) -> list[int]:
+    try:
+        return parse_seeds(text)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(str(error)) from None
+
+
+def _policy_list(text: str) -> list[str]:
+    policies = _comma_list(text, "the policies")
+    unknown = [policy for policy in policies if policy not in POLICIES]
+    if unknown:
+        raise argparse.ArgumentTypeError(f"unknown policy {unknown[0]!r}: expected some of {', '.join(POLICIES)}")
+    return policies
+
+
+def _map_list(text: str) -> list[str]:
+    return _comma_list(text, "the maps")
 
 
 def _positive_int(text: str) -> int:

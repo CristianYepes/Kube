@@ -14,6 +14,7 @@ DEFAULT_MAX_SECONDS = 180.0  # of game time per episode
 TOTAL_BUDGET_USD = 1.00  # for every Jev call of the whole spec (spec.md, Decision 3)
 LATENCY_PROBE_BUDGET_USD = 0.01  # three times the estimate for 50 calls (about $0.003), as a safety stop
 ORDER_CHECK_BUDGET_USD = 0.02  # twice the estimate for 100 states asked three times (300 calls, about $0.0094)
+EVAL_BUDGET_USD = 0.50  # all of Jev's episodes of one evaluation together (plan.md, "Budget ledger")
 DEFAULT_RUN_BUDGET_USD = 0.05  # what one `kube-agent run --policy jev` may spend (plan.md, "Budget ledger")
 
 DECISION_INTERVAL = 0.5  # seconds of game time between decisions; one of the three things T8 may tune

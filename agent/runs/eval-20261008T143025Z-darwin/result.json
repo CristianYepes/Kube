@@ -1,0 +1,30 @@
+{
+  "kind": "eval",
+  "run_id": "eval-20261008T143025Z-darwin",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "frozen_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "plan": {
+    "seeds": [
+      1,
+      2
+    ],
+    "maps": [
+      "maps/bonus/subject_map.cub",
+      "agent/maps/pillars.cub"
+    ],
+    "policies": [
+      "idle",
+      "scripted"
+    ],
+    "runner": "docker",
+    "max_seconds": 180.0,
+    "budget_usd": 0.5,
+    "per_episode_usd": 0.05
+  },
+  "episodes_planned": 8,
+  "episodes_done": 8,
+  "errors": 0,
+  "spend_usd": 0.0,
+  "complete": true,
+  "stopped": null
+}

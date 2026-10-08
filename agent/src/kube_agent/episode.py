@@ -192,10 +192,13 @@ async def run_episode(
     budget_usd: float = DEFAULT_RUN_BUDGET_USD,
     jev_client=None,
     environ=None,
+    ledger_dir: Path | None = None,
 ) -> dict:
     """Play one episode, write its folder under runs_dir and return result.json's content.
 
     For the Jev policy `budget_usd` caps what the run may spend (the ledger's remainder caps it too).
+    The ledger is read from `ledger_dir`, which is `runs_dir` unless the caller says otherwise: an evaluation plays
+    its episodes in a folder of its own and passes agent/runs, because the $1 budget is the spend of the whole tree.
     `utc_now`, `command`, `jev_client` and `environ` exist for the tests: a fixed clock, a
     stand-in for the game, a client over a fake transport and a fake environment.
     """
@@ -204,7 +207,7 @@ async def run_episode(
     map_sha256 = hashlib.sha256((REPO_ROOT / map_path).read_bytes()).hexdigest()  # fails before any folder exists
     owns_client = policy_name == "jev" and jev_client is None
     if owns_client:  # no key, or no budget left, stops here, before a folder exists
-        jev_client = JevClient.from_environment(cap_usd=budget_usd, runs_dir=runs_dir, environ=environ)
+        jev_client = JevClient.from_environment(cap_usd=budget_usd, runs_dir=ledger_dir or runs_dir, environ=environ)
     try:
         return await _run_in_folder(
             policy_name=policy_name, seed=seed, map_path=map_path, runner=runner, max_seconds=max_seconds,

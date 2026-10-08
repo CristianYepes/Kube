@@ -677,6 +677,31 @@ sources/jev/
     first answer to "how does the game get beaten";
   - for Jev: cost per episode and latency p50/p95.
 
+**How `kube-agent eval` works** (decided and built in T9, 2026-10-08):
+- `eval --seeds 101-120 --policies idle,scripted,jev --maps maps/bonus/subject_map.cub,agent/maps/pillars.cub` plays the
+  episodes one after the other, **seed by seed, and within a seed map by map and policy by policy.** R15 showed a stretch of
+  three minutes in which the API was slow and the agent's loop stalled; played one policy after another, that would have fallen on
+  one policy. Interleaved, it falls on all of them alike.
+- **It refuses to start** if `agent/frozen.json` is missing or its hash is not the hash of the config in the code (FR12), if a map does not
+  exist, or if a **test seed (101 or more) was already measured** for the same policy and map by an earlier evaluation: the test seeds are
+  measured once, and `--repeat` is the explicit way round it. Development seeds have no such guard.
+- The folder is `agent/runs/eval-<UTC date-time>-<machine>/`: one folder per episode (as `run` makes them), `plan.json`, `result.json` and
+  `report.md`. It is never overwritten. The episodes are played with the evaluation folder as their `runs_dir` but with `agent/runs` as
+  the **ledger root** (`ledger_dir`), because the $1 budget is the spend of the whole tree. A first version passed only the folder, which would
+  have made each Jev client see only the spend of the evaluation; a test now guards it.
+- **Budget:** `--budget-usd` (0.50) is for all of Jev's episodes of the evaluation together and `--per-episode-usd` (0.05) for one; the cap
+  of an episode is the smaller of its own and what is left. At the end of the budget it stops (it does not fall back to the rules, which would
+  put scripted answers into Jev's column) and the report says INCOMPLETE.
+- **Stops:** 3 episodes that fail in a row, or an exception of an episode (no key, no budget, a bad ledger). Whatever was played is reported.
+  `--resume eval-<folder>` plays only the episodes that have no result (the ones that failed are played again; their folders stay) and keeps
+  the plan of that folder.
+- **The report** (`report.md`, AC11), per map and policy: n, wins with the Wilson 95% interval, lost, timeouts, failed; survival time and
+  time to win with median and quartiles; waves cleared; episodes with damage; stalls; the share of time in each tactic in wins, in losses and in
+  timeouts; for Jev, cost per episode, calls, what became of its answers, the episodes that fell back to the rules and latency p50, p95 and max;
+  and Jev against scripted on the same seeds (the time to win where both won, faster, slower and equal, and the exact sign test). It prints the
+  config hash and says whether it equals the frozen one. **A timeout in which neither the player's position nor the enemy count changed in
+  the last 60 s of game time is marked as probably the spawn trap of R15** (a heuristic: the owner reads `episode.jsonl` to confirm).
+
 ## Risks & mitigations
 - **Jev latency** (R2, measured in T6b: R12). If p95 > 500 ms, tactics lag behind the fight. If it
   is too slow, decide on events only instead of every 0.5 s. **Measured 2026-10-06 through

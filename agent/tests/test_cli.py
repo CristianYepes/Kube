@@ -5,13 +5,13 @@ import pytest
 from kube_agent import cli, jev_client
 from kube_agent.bridge import BridgeError
 from kube_agent.cli import build_parser, main
-from kube_agent.config import DEFAULT_MAP, DEFAULT_RUN_BUDGET_USD, LATENCY_PROBE_BUDGET_USD, ORDER_CHECK_BUDGET_USD
+from kube_agent.config import DEFAULT_MAP, DEFAULT_RUN_BUDGET_USD, EVAL_BUDGET_USD, LATENCY_PROBE_BUDGET_USD, ORDER_CHECK_BUDGET_USD
+from kube_agent.evaluation import EvalRefused
 from kube_agent.jev_client import BudgetExhausted, KeyMissing
 from kube_agent.order_check import describe_order_check
 from kube_agent.probes import describe_latency
 
 SUBCOMMANDS = ["run", "eval", "spend", "latency", "order-check"]
-STUBS = ["eval"]  # `run` is real since T5c, `spend` since T6, `latency` since T6b and `order-check` since T8
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +25,11 @@ def no_episode_by_accident(monkeypatch):
     async def refuse(*args, **kwargs):
         raise AssertionError("a CLI test reached run_episode: it would start a real episode")
 
+    async def refuse_evaluation(*args, **kwargs):
+        raise AssertionError("a CLI test reached run_evaluation: it would play a whole evaluation")
+
     monkeypatch.setattr(cli, "run_episode", refuse)
+    monkeypatch.setattr(cli, "run_evaluation", refuse_evaluation)
 
 
 class FakeJev:
@@ -52,23 +56,11 @@ def test_help_lists_every_subcommand(capsys):
         assert name in help_text
 
 
-@pytest.mark.parametrize("name", STUBS)
-def test_a_stub_says_so_and_fails(name, capsys):
-    # A skeleton must never look like a success: exit code 1, message on stderr.
-    assert main([name]) == 1
-    assert f"kube-agent {name}: not implemented yet" in capsys.readouterr().err
-
-
 def test_no_subcommand_is_a_usage_error(capsys):
     with pytest.raises(SystemExit) as exit_info:
         main([])
 
     assert exit_info.value.code == 2
-
-
-def test_eval_takes_the_map_option():
-    assert build_parser().parse_args(["eval"]).map == DEFAULT_MAP
-    assert build_parser().parse_args(["eval", "--map", "x.cub"]).map == "x.cub"
 
 
 def test_run_defaults():
@@ -419,3 +411,88 @@ def test_order_check_stopped_early_for_any_other_reason_exits_1_with_it(monkeypa
 
     assert main(["order-check"]) == 1
     assert "stopped early: budget cap reached" in capsys.readouterr().err
+
+
+# --- eval (T9) ----------------------------------------------------------------------------------
+
+EVAL_SUMMARY = {
+    "kind": "eval", "run_id": "eval-20261009T080000Z-darwin", "episodes_planned": 120, "episodes_done": 120, "errors": 0,
+    "spend_usd": 0.0412, "complete": True, "stopped": None,
+}
+
+
+def fake_evaluation(monkeypatch, summary=EVAL_SUMMARY, calls=None):
+    async def run_evaluation(plan, **kwargs):
+        (calls if calls is not None else []).append((plan, kwargs))
+        return summary
+
+    monkeypatch.setattr(cli, "run_evaluation", run_evaluation)
+
+
+def test_eval_defaults_are_all_three_policies_the_default_map_and_a_cap_of_fifty_cents():
+    args = build_parser().parse_args(["eval", "--seeds", "101-102"])
+
+    assert args.seeds == [101, 102]
+    assert args.policies == ["idle", "scripted", "jev"] and args.maps == [DEFAULT_MAP]
+    assert (args.runner, args.max_seconds, args.budget_usd, args.per_episode_usd) == ("docker", 180.0, EVAL_BUDGET_USD, DEFAULT_RUN_BUDGET_USD)
+    assert EVAL_BUDGET_USD == 0.50 and (args.repeat, args.resume) == (False, None)
+
+
+def test_eval_passes_its_plan_on_and_prints_one_line(monkeypatch, capsys):
+    calls = []
+    fake_evaluation(monkeypatch, calls=calls)
+
+    code = main(["eval", "--seeds", "101-103", "--maps", "a.cub,b.cub", "--policies", "scripted,jev", "--runner", "local",
+                 "--max-seconds", "60", "--budget-usd", "0.2", "--per-episode-usd", "0.01"])
+
+    assert code == 0
+    assert calls == [({"seeds": [101, 102, 103], "maps": ["a.cub", "b.cub"], "policies": ["scripted", "jev"], "runner": "local",
+                       "max_seconds": 60.0, "budget_usd": 0.2, "per_episode_usd": 0.01}, {"repeat": False, "resume": None})]
+    out = capsys.readouterr().out
+    assert "120 of 120" in out and "$0.0412" in out and "agent/runs/eval-20261009T080000Z-darwin/report.md" in out
+
+
+def test_eval_needs_seeds_unless_it_resumes(monkeypatch, capsys):
+    calls = []
+    fake_evaluation(monkeypatch, calls=calls)
+
+    assert main(["eval"]) == 1
+    assert "--seeds" in capsys.readouterr().err and calls == []
+
+    assert main(["eval", "--resume", "eval-20261009T080000Z-darwin"]) == 0
+    assert calls == [(None, {"repeat": False, "resume": "eval-20261009T080000Z-darwin"})]  # the plan is read from that folder
+
+
+def test_eval_can_be_told_to_measure_the_test_seeds_again(monkeypatch):
+    calls = []
+    fake_evaluation(monkeypatch, calls=calls)
+
+    main(["eval", "--seeds", "101", "--repeat"])
+
+    assert calls[0][1]["repeat"] is True
+
+
+@pytest.mark.parametrize("argv", [["--seeds", "5-3"], ["--seeds", "1,1"], ["--seeds", "1", "--policies", "idle,wizard"], ["--seeds", "1", "--maps", ""]])
+def test_eval_refuses_bad_options_before_anything_is_played(argv, capsys):
+    with pytest.raises(SystemExit) as exit_info:
+        main(["eval", *argv])
+
+    assert exit_info.value.code == 2
+
+
+def test_eval_that_is_refused_says_why_and_exits_1(monkeypatch, capsys):
+    async def refuse(plan, **kwargs):
+        raise EvalRefused("the config in the code is not the frozen config")
+
+    monkeypatch.setattr(cli, "run_evaluation", refuse)
+
+    assert main(["eval", "--seeds", "101"]) == 1
+    assert "kube-agent eval: the config in the code is not the frozen config" in capsys.readouterr().err
+
+
+def test_an_evaluation_that_stopped_early_exits_1_and_says_how_to_resume(monkeypatch, capsys):
+    fake_evaluation(monkeypatch, {**EVAL_SUMMARY, "episodes_done": 40, "complete": False, "stopped": "3 episodes failed in a row"})
+
+    assert main(["eval", "--seeds", "101"]) == 1
+    err = capsys.readouterr().err
+    assert "INCOMPLETE" in err and "3 episodes failed in a row" in err and "--resume eval-20261009T080000Z-darwin" in err
