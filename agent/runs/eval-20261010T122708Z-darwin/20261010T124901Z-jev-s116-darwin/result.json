@@ -1,0 +1,28 @@
+{
+  "run_id": "20261010T124901Z-jev-s116-darwin",
+  "policy": "jev",
+  "seed": 116,
+  "map": "agent/maps/pillars.cub",
+  "map_sha256": "c182bb753273dc222ce272054f301b91f8cee39ce9db8860b1145e23895dea91",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "budget_usd": 0.05,
+  "outcome": "win",
+  "survival_seconds": 19.33,
+  "wave_reached": 3,
+  "kills": 8,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {
+    "ENGAGE": 7.39,
+    "SEARCH": 8.81,
+    "KITE": 3.12
+  },
+  "switches": 11,
+  "decisions": 39,
+  "decisions_applied": 37,
+  "spend_usd": 0.001294
+}

@@ -1,0 +1,27 @@
+{
+  "run_id": "20261010T124141Z-scripted-s111-darwin",
+  "policy": "scripted",
+  "seed": 111,
+  "map": "agent/maps/pillars.cub",
+  "map_sha256": "c182bb753273dc222ce272054f301b91f8cee39ce9db8860b1145e23895dea91",
+  "machine": "darwin",
+  "runner": "docker",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "win",
+  "survival_seconds": 17.63,
+  "wave_reached": 3,
+  "kills": 8,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {
+    "ENGAGE": 7.11,
+    "KITE": 4.82,
+    "SEARCH": 5.56
+  },
+  "switches": 16,
+  "decisions": 36,
+  "decisions_applied": 36,
+  "spend_usd": 0.0
+}

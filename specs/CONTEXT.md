@@ -244,7 +244,9 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
   to keep the 0.5 s cadence plus events and to start the confidence threshold θ at 0.3.
   **L4 passed on the owner's Linux on 2026-10-08**: 4 paid Jev episodes, all won, and Jev's
   latency there was higher (p50 553 ms against 318 ms on the Mac; R14). **T8 and T8b are done: the Jev config is frozen** (R15, R16) after one
-  tuning of the wording, and no map makes the rule bot lose. **Next: T9.**
+  tuning of the wording, and no map makes the rule bot lose. **T9 is done (2026-10-10): the final evaluation on the test seeds 101-120** (R17). On
+  `subject_map` and on `pillars`, Jev and the rule bot tie: 20 of 20 wins each, no damage, no difference in the time to win; idle lost 40 of 40; Jev cost
+  about $0.001 an episode. **Next: T10.**
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.
@@ -258,7 +260,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T9.
+    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T10.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;

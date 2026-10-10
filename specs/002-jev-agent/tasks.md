@@ -1263,13 +1263,32 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - **Verify:** a test that every map in `agent/maps/` passes the checks above (charset, one start, closed
     border, every floor cell reachable), and the game itself loads each one (its `init` line).
   - **Commit:** `agent: a harder map for the final evaluation`.
-- [ ] **T9** — The final evaluation on test seeds 101-120 (AC11, AC12).
+- [x] **T9** — The final evaluation on test seeds 101-120 (AC11, AC12). **Done 2026-10-10: Jev ties with the rule bot on both maps; it is not better (R17).**
   - **Progress 2026-10-08:** `kube-agent eval` is written and tested (`evaluation.py`; the design is in `plan.md`, "How `kube-agent
     eval` works"): 41 deliberate breaks, each caught; 547 tests in the suite. One of my first design mistakes was caught by reading how it
     chains with `run_episode`: the Jev client would have read the spend ledger of the evaluation folder only, not of the whole tree
     (fixed with `ledger_dir`, guarded by two tests). A free rehearsal on development seeds 1-2, both maps, idle and scripted (8 episodes,
     `agent/runs/eval-20261008T143025Z-darwin`) gave a folder and a `report.md` that agree with the `result.json` of the episodes. **The
     evaluation itself has not been run and it is paid: the owner's OK for its spend comes first.**
+  - **Done 2026-10-10 (the details are R17).** The owner gave the OK for the spend. A Jev rehearsal on development seeds 1-2 went first (4 episodes,
+    all won, $0.0042; its report adds up to the ledger: 127 calls in both). Then `kube-agent eval --seeds 101-120 --maps
+    maps/bonus/subject_map.cub,agent/maps/pillars.cub` ran in the background (with `caffeinate`, so that the Mac would not sleep): folder
+    `agent/runs/eval-20261010T122708Z-darwin`, 120 of 120 episodes with a result, none failed, 27.5 min, $0.0432 for Jev, and the ledger reads
+    **$0.156536 of $1.00** (4,787 paid calls). The code was `5b4fcb9`; the config hash in the report equals `frozen.json`'s.
+    - **Results** (idle / scripted / Jev; wins; median survival or time to win; episodes with damage): `subject_map` 0 of 20 / 20 of 20 / 20 of 20, dies at
+      7.3 s / 11.1 s / 11.9 s, all / 0 / 0; `pillars` 0 of 20 / 20 of 20 / 20 of 20, dies at 10.3 s / 18.9 s / 19.2 s, all / 0 / 0. **Scripted and Jev tie.**
+      The paired sign test of the time to win gives p = 0.815 and p = 0.824, and the finding of the development seeds (Jev slower on `pillars`, p = 0.041) did not
+      replicate. No episode timed out, so the spawn trap of R15 did not show. Jev cost $0.00087 (`subject_map`) and $0.00129 (`pillars`) per episode, with
+      latency p50 292 ms and p95 420 ms. Calculated afterwards and not planned: Jev's tactic equals the rules' in 91% and 98% of its decisions, and the 95%
+      bootstrap interval of its mean time difference to scripted is -1.1 to +1.1 s over both maps.
+    - **AC11 passed.** `report.md` has every column asked for. A second program, written apart from the evaluation code, recomputed every table from the 120
+      folders: 0 differences (its first run found one, a rule it lacked, which is how the damage is floored at 0 hp), and three numbers changed on purpose in
+      a copy of the report were caught. **AC6 and AC9 hold on all 1,302 Jev rows.**
+    - **AC12 passed.** The shape `sk-or-v1-[0-9a-f]{64}` and the exact value of the key matched nothing in the working tree (2,680 files), `git log -p --all`,
+      `docker history --no-trunc kube-dev`, `docker exec kube-dev env`, `docker inspect kube-dev`, the post notes, the memory, the session transcripts and the
+      logs of the paid runs; five controls found their targets. The Wilson function has its test with 47/50 (84-98%); 547 tests pass.
+    - **Not checked, and open:** the lag hypothesis (the control "scripted with the same delay" is free and was not run), Jev on Linux on the test seeds, a
+      harder variant of the game (a decision for the owner), and another wording or model.
   - **Do:** `kube-agent eval --seeds 101-120 --policies idle,scripted,jev` (in the
     background; up to about 2 h) writes `agent/runs/eval-<UTC date-time>-<machine>/`, one
     folder per episode plus `report.md`. Pull and check `spend` first.

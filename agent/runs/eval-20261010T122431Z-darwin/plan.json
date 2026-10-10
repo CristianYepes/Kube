@@ -1,0 +1,18 @@
+{
+  "seeds": [
+    1,
+    2
+  ],
+  "maps": [
+    "maps/bonus/subject_map.cub",
+    "agent/maps/pillars.cub"
+  ],
+  "policies": [
+    "jev"
+  ],
+  "runner": "docker",
+  "max_seconds": 180.0,
+  "budget_usd": 0.5,
+  "per_episode_usd": 0.05,
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475"
+}

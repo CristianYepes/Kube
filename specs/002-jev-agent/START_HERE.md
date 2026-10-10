@@ -65,13 +65,15 @@
 - **Phase 5, T8 and T8b are done (2026-10-08): the Jev config is FROZEN** in `agent/frozen.json` (hash `3642f98220b3…`: the
   question, θ = 0.3 and the 0.5 s cadence), and a test fails if any of them changes. T8 tuned the wording once (R15). T8b tried six
   maps (R16): none makes the rule bot lose, so the owner chose to test on `subject_map` and on `pillars`.
-- **Next: T9**, the final evaluation on seeds 101-120 (AC11, AC12). `kube-agent eval` is written and rehearsed on development seeds
-  (see `plan.md`, "How `kube-agent eval` works"); **what is left is to run it, which is paid: ask the owner for the OK first.** Decisions already
-  taken: both maps; idle, scripted and Jev **interleaved by seed**, so that a slow stretch of the network or the machine hits all of them
-  alike (R15 showed one); on the Mac; `eval` refuses to start if the config hash differs from `frozen.json`'s; an episode lost to the
-  spawn trap of `subject_map` is counted apart, with the reason. Every Jev episode is paid (about $0.04 for the whole evaluation
-  [calc]): **ask the owner for the OK before spending**, and **push only when the owner asks**. Report the results as they are; if scripted
-  is as good or better, say so.
+- **T9 is done (2026-10-10): the final evaluation on seeds 101-120 (R17).** `kube-agent eval` played 120 episodes (idle, scripted and Jev
+  interleaved by seed, on `subject_map` and `pillars`, on the Mac) with the frozen config: `agent/runs/eval-20261010T122708Z-darwin`. **Jev and the
+  rule bot tie:** 20 of 20 wins each on both maps, no damage for either, and no significant difference in the time to win (p = 0.82 on both maps);
+  idle lost 40 of 40. The finding of the development seeds, that Jev is slower on `pillars`, did not replicate. Jev cost $0.00087 and $0.00129 per
+  episode, with latency p50 292 ms. AC11 and AC12 pass. The ledger reads `$0.156536 of $1.00`. **Report this as it is: Jev did not beat the
+  rules; this test found nothing that tells them apart.**
+- **Next: T10**, the regression on the Mac (`check_bridge.py`, `dev/dev.sh check`, `uv run pytest -q`), then L5 on the owner's Linux and T12, the
+  push, **only when the owner asks**. Open and not started: the free control "scripted with the same delay" (does the lag explain the small
+  gap?), and a harder variant of the game, which is a decision for the owner.
 - **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
   Their terminal splits long pasted lines (it happened twice in L4).
 - **Already in the repo:**
@@ -80,7 +82,7 @@
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T8 on.
+- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T10 on.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 
