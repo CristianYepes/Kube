@@ -24,9 +24,9 @@
   - `x11` is what `--place-game` needs. If it says `wayland`: log out and pick "Ubuntu on Xorg" on the gear of the
     login screen. If there is no gear, setting `WaylandEnable=false` in `/etc/gdm3/custom.conf` changes every login on
     that machine: **the owner decides**, and it is undone by putting the line back.
-  - The screen should be at least 1920×1200, so that the area under the game's title bar and GNOME's top bar still
-    fits 1080 rows (research, gotchas). If it is 1920×1080, the bottom band gets shorter and the video is about
-    1920×1011, which LinkedIn accepts (research F5).
+  - The screen should be at least 1920×1200, so that the whole 1920×1080 of the page fits under the game's title bar (about 37 px,
+    to be measured). On a 1920×1080 screen it still works: the content of the page ends at row 1019 of its 1080, so the
+    recorded region can end about 1040 rows down (1920×1040 is inside what LinkedIn accepts, research F5).
   - A missing `xwininfo` or `xprop` comes with `sudo apt install x11-utils`.
   - **Done when:** the four facts are written into the research (F3) with the date.
 
