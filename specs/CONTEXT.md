@@ -262,6 +262,10 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
     - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from L5.
+- **Spec 003 (the visual pass): approved by the owner on 2026-10-10, being built.** A clean live view of an episode
+  (the game, Jev's decision beside it, what the rules would have chosen, and the conclusion of spec 002 at the end) that
+  the owner records from the screen on the owner's Linux, in 16:9. `003-visual-pass/spec.md`, `plan.md`, `tasks.md`;
+  facts in `research-2026-10-10.md`.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;
