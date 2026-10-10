@@ -1,4 +1,5 @@
-"""Spec 003: the events behind `kube-agent view`, from a run folder that is being written or from a finished one.
+"""Spec 003: `kube-agent view`. The events from a run folder that is being written or from a finished one, and the
+server that hands them, with one page, to a browser on this machine.
 
 The agent flushes every row of `episode.jsonl` and `decisions.jsonl` as it plays (episode.py, `write_row`), so a
 separate process can read them while the game runs and the agent's loop is never touched. This module turns the rows
@@ -14,7 +15,9 @@ import threading
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs
 
 from kube_agent.config import RUNS_DIR
 from kube_agent.controller import TACTICS
@@ -24,6 +27,13 @@ FOLLOW_POLL_SECONDS = 0.025  # how often the live mode looks at the run folder
 PAGE_POLL_SECONDS = 0.05  # how often the page asks for new events (plan.md)
 UNREADABLE_RESULT_POLLS = 80  # polls of a result.json that does not parse (2 s) before it is reported
 MAX_FACTS = 3
+DEFAULT_PORT = 8765
+PAGE_DIR = Path(__file__).resolve().parent / "view_page"
+CONCLUSION_PATH = Path(__file__).resolve().parent / "view_conclusion.json"
+FONT_FILES = ("IBMPlexSans-Regular.woff2", "IBMPlexSans-SemiBold.woff2", "IBMPlexMono-Regular.woff2", "IBMPlexMono-SemiBold.woff2")
+# The page is one file with its own style and script. It loads its fonts from here and asks only this server.
+CONTENT_SECURITY_POLICY = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src 'self'; "
+                           "connect-src 'self'; frame-ancestors 'none'")
 RUN_NAME = re.compile(r"^(\d{8}T\d{6}Z)-(idle|scripted|jev)-s(\d+)-[a-z0-9]+$")  # `kube-agent run`'s folders only
 
 
@@ -265,3 +275,112 @@ def replay(log: EventLog, folder: Path, stop: threading.Event, until: float | No
         if stop.is_set():
             return
         log.append(event)
+
+
+# --- the server --------------------------------------------------------------------------------------------------------------
+
+
+class _Handler(BaseHTTPRequestHandler):
+    """Serves the page, its four fonts, the conclusion card and the events. Nothing else, and only GET."""
+
+    log: EventLog  # set by make_server
+
+    def version_string(self) -> str:
+        return "kube-view"
+
+    def log_message(self, format: str, *args) -> None:  # the page asks 20 times a second: no line per request
+        pass
+
+    def do_GET(self) -> None:
+        if not self._host_is_ours():  # DNS rebinding: a page on another site whose name points here must not read the run
+            return self._reply(404, b"not found\n", "text/plain; charset=utf-8")
+        path, _, query = self.path.partition("?")
+        font = path.removeprefix("/fonts/") if path.startswith("/fonts/") else None
+        if path == "/":
+            self._file(PAGE_DIR / "index.html", "text/html; charset=utf-8")
+        elif path == "/conclusion":
+            self._file(CONCLUSION_PATH, "application/json")
+        elif font in FONT_FILES:  # a name from this list, never a path made from the request
+            self._file(PAGE_DIR / "fonts" / font, "font/woff2")
+        elif path == "/events":
+            self._events(query)
+        else:
+            self._reply(404, b"not found\n", "text/plain; charset=utf-8")
+
+    def _method_not_allowed(self) -> None:
+        self._reply(405, b"only GET\n", "text/plain; charset=utf-8", {"Allow": "GET"})
+
+    do_POST = do_PUT = do_DELETE = do_PATCH = do_OPTIONS = do_HEAD = _method_not_allowed
+
+    def _host_is_ours(self) -> bool:
+        port = self.server.server_address[1]
+        return self.headers.get("Host", "") in (f"127.0.0.1:{port}", f"localhost:{port}")
+
+    def _events(self, query: str) -> None:
+        values = parse_qs(query, keep_blank_values=True).get("after", ["-1"])
+        if len(values) != 1 or not re.fullmatch(r"-?\d{1,12}", values[0]):
+            return self._reply(400, b"after must be a whole number\n", "text/plain; charset=utf-8")
+        self._reply(200, json.dumps(self.log.after(int(values[0]))).encode(), "application/json")
+
+    def _file(self, path: Path, content_type: str) -> None:
+        try:
+            body = path.read_bytes()
+        except FileNotFoundError:
+            return self._reply(404, b"not found\n", "text/plain; charset=utf-8")
+        self._reply(200, body, content_type)
+
+    def _reply(self, status: int, body: bytes, content_type: str, extra: dict[str, str] | None = None) -> None:
+        self.send_response(status)
+        headers = {"Content-Type": content_type, "Content-Length": str(len(body)), "Cache-Control": "no-store",
+                   "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer",
+                   "Content-Security-Policy": CONTENT_SECURITY_POLICY, **(extra or {})}
+        for name, value in headers.items():
+            self.send_header(name, value)
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def make_server(log: EventLog, port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
+    """A server on 127.0.0.1 only. It is already listening when this returns; the caller runs `serve_forever`."""
+    try:
+        server = ThreadingHTTPServer(("127.0.0.1", port), type("Handler", (_Handler,), {"log": log}))
+    except OSError as error:
+        raise OSError(error.errno, f"cannot listen on 127.0.0.1:{port}: {error.strerror}") from error
+    server.daemon_threads = True
+    return server
+
+
+def serve(port: int, replay_folder: Path | None = None, until: float | None = None, runs_dir: Path = RUNS_DIR,
+          say: Callable[[str], None] = _say, on_ready: Callable[[ThreadingHTTPServer], None] | None = None) -> int:
+    """Serve the view until it is interrupted: the newest live run, or a replay of `replay_folder`. Returns the exit code."""
+    if replay_folder is not None:
+        replay_schedule(replay_folder)  # a folder that is not a run, or a file that cannot be read, fails here, before anything starts
+    log, stop = EventLog(), threading.Event()
+    server = make_server(log, port)
+    failures: list[Exception] = []
+
+    def work() -> None:
+        try:
+            if replay_folder is not None:
+                replay(log, replay_folder, stop, until)
+            else:
+                follow(log, stop, runs_dir, say=say)
+        except Exception as error:  # nothing would feed the page any more: say so and stop, rather than serve a frozen page
+            failures.append(error)
+            say(f"view: stopped: {type(error).__name__}: {error}")
+            server.shutdown()
+
+    worker = threading.Thread(target=work, daemon=True)
+    worker.start()
+    say(f"view: open http://127.0.0.1:{server.server_address[1]}  (Ctrl-C to stop)")
+    if on_ready:
+        on_ready(server)
+    try:
+        server.serve_forever(poll_interval=0.1)
+    except KeyboardInterrupt:
+        say("view: stopped")
+    finally:
+        stop.set()
+        server.server_close()
+        worker.join(2)
+    return 1 if failures else 0

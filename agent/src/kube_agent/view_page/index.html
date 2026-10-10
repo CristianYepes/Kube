@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Jev plays cub3D</title>
+<style>
+@font-face { font-family: "Plex Sans"; font-weight: 400; font-display: block; src: url("/fonts/IBMPlexSans-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Plex Sans"; font-weight: 600; font-display: block; src: url("/fonts/IBMPlexSans-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "Plex Mono"; font-weight: 400; font-display: block; src: url("/fonts/IBMPlexMono-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Plex Mono"; font-weight: 600; font-display: block; src: url("/fonts/IBMPlexMono-SemiBold.woff2") format("woff2"); }
+
+/* The only colours of the page. The four tactic hues are slots 1, 4, 5 and 6 of the dark categorical palette of the
+   dataviz skill, validated on this background with every pair (CVD 6.9 worst, normal vision 19.3, contrast 3.8 or more). */
+:root {
+  --bg: #121212;
+  --fg: #ececec;
+  --muted: #8c8c8c;
+  --rule: #2b2b2b;
+  --engage: #3987e5;
+  --kite: #c98500;
+  --retreat: #d55181;
+  --search: #008300;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--fg); cursor: none; }
+body { font-family: "Plex Sans", sans-serif; font-weight: 400; font-size: 32px; line-height: 1.25; }
+
+.stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+
+/* the game window is put over this corner (1280 x 720); the page paints nothing in it */
+.marks span { position: absolute; width: 24px; height: 24px; border: 0 solid var(--muted); }
+.marks .tl { left: 0; top: 0; border-width: 1px 0 0 1px; }
+.marks .tr { right: 0; top: 0; border-width: 1px 1px 0 0; }
+.marks .bl { left: 0; bottom: 0; border-width: 0 0 1px 1px; }
+.marks .br { right: 0; bottom: 0; border-width: 0 1px 1px 0; }
+.panel { position: absolute; left: 1280px; top: 0; width: 640px; height: 720px; padding: 36px 48px; border-left: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.clock { display: flex; justify-content: space-between; height: 44px; font-size: 32px; color: var(--muted); }
+.tactic { height: 128px; font-family: "Plex Mono", monospace; font-weight: 600; font-size: 112px; line-height: 128px; }
+.does { height: 48px; font-size: 36px; }
+.probs { margin-top: 20px; }
+.prob { display: grid; grid-template-columns: 150px 1fr 90px; align-items: center; height: 44px; font-family: "Plex Mono", monospace; font-size: 32px; color: var(--muted); }
+.prob.chosen { color: var(--fg); }
+.prob .bar { height: 8px; background: var(--rule); }
+.prob .fill { height: 8px; width: 0; transition: width 150ms linear; }
+.prob .pct { text-align: right; }
+.rules { margin-top: 20px; height: 48px; font-size: 36px; }
+.rules .name { font-family: "Plex Mono", monospace; font-weight: 600; }
+.facts { color: var(--muted); font-size: 32px; line-height: 42px; }
+
+.bottom { position: absolute; left: 0; top: 720px; width: 1920px; height: 360px; padding: 28px 64px 24px 64px; }
+.band { position: relative; display: grid; grid-template-columns: 160px 1fr; align-items: center; height: 44px; margin-bottom: 12px; }
+.band .who { font-size: 32px; color: var(--muted); }
+.band .track { position: relative; height: 44px; background: var(--rule); overflow: hidden; }
+.seg { position: absolute; top: 0; height: 44px; border-right: 2px solid var(--bg); color: var(--bg); font-family: "Plex Mono", monospace; font-weight: 600; font-size: 28px; line-height: 44px; padding-left: 10px; white-space: nowrap; overflow: hidden; }
+.axis { position: relative; margin-left: 160px; height: 36px; }
+.axis .tick { position: absolute; top: 0; white-space: nowrap; font-family: "Plex Mono", monospace; font-size: 28px; color: var(--muted); transform: translateX(-50%); }
+.line { display: flex; justify-content: space-between; align-items: center; height: 48px; margin-top: 14px; }
+.agreement { font-size: 36px; }
+.legend { display: flex; gap: 32px; font-family: "Plex Mono", monospace; font-size: 28px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 20px; height: 20px; margin-right: 10px; vertical-align: -2px; background: var(--c); }
+.thesis { margin-top: 12px; height: 44px; font-size: 32px; color: var(--muted); }
+
+.c-ENGAGE { --c: var(--engage); }
+.c-KITE { --c: var(--kite); }
+.c-RETREAT { --c: var(--retreat); }
+.c-SEARCH { --c: var(--search); }
+.seg, .fill { background: var(--c); }
+.tactic.c-ENGAGE, .tactic.c-KITE, .tactic.c-RETREAT, .tactic.c-SEARCH, .rules .name { color: var(--c); }
+
+.card { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; padding: 96px 128px; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 200ms linear; }
+.card.on { opacity: 1; }
+.card .headline { font-weight: 600; font-size: 96px; line-height: 112px; margin-bottom: 48px; }
+.card .row { font-size: 64px; line-height: 84px; margin-bottom: 12px; }
+.card .source { position: absolute; left: 128px; bottom: 72px; width: 1664px; font-size: 32px; line-height: 42px; color: var(--muted); }
+
+.hidden { display: none; }
+.invisible { visibility: hidden; }
+
+.problem { position: absolute; left: 1280px; top: 680px; width: 640px; padding: 0 48px; font-size: 28px; color: var(--muted); }
+</style>
+</head>
+<body>
+<script type="application/json" id="text">
+{
+  "tactics": {
+    "ENGAGE": "stand still and fire",
+    "KITE": "back away, keep firing",
+    "RETREAT": "get to open space",
+    "SEARCH": "walk to the nearest zombie"
+  },
+  "waiting": "waiting for a game",
+  "chose": { "jev": "Jev chose", "scripted": "rules chose" },
+  "rulesWould": "rules would choose",
+  "rules": "rules",
+  "agreement": "same choice as the rules",
+  "of": "of",
+  "players": { "jev": "Jev", "scripted": "rules", "idle": "idle" },
+  "thesis": {
+    "jev": "Jev picks one of four tactics every half second. The code aims, fires and walks.",
+    "scripted": "Four hand-written rules pick one of four tactics every half second. The code aims, fires and walks.",
+    "idle": "This player does nothing. It is the floor."
+  },
+  "result": {
+    "win": "won in {t} s",
+    "lose": "lost after {t} s",
+    "timeout": "no result after {t} s",
+    "noDamage": "no damage",
+    "damage": "{n} hp lost"
+  },
+  "noConnection": "no connection to the view"
+}
+</script>
+
+<div class="stage" id="stage">
+  <div class="marks" id="marks"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+  <div class="panel">
+    <div class="clock"><span id="who-now"></span><span id="time"></span></div>
+    <div class="tactic" id="tactic"></div>
+    <div class="does" id="does"></div>
+    <div class="probs" id="probs"></div>
+    <div class="rules" id="rules"></div>
+    <div class="facts" id="facts"></div>
+  </div>
+  <div class="problem hidden" id="problem"></div>
+
+  <div class="bottom">
+    <div class="band"><div class="who" id="who-top"></div><div class="track" id="track-top"></div></div>
+    <div class="band" id="band-rules"><div class="who" id="who-rules"></div><div class="track" id="track-rules"></div></div>
+    <div class="axis" id="axis"></div>
+    <div class="line"><div class="agreement" id="agreement"></div><div class="legend" id="legend"></div></div>
+    <div class="thesis" id="thesis"></div>
+  </div>
+
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+"use strict";
+
+const TEXT = JSON.parse(document.getElementById("text").textContent);
+const TACTICS = ["ENGAGE", "KITE", "RETREAT", "SEARCH"];
+const WINDOW_SECONDS = 25;
+const TICK_SECONDS = 5;
+const TRACK_WIDTH = 1920 - 128 - 160;  // the bottom area's width less its padding and the label column
+const CARD_DELAY_MS = 3000;
+const POLL_MS = 50;
+const SEGMENT_CHAR_WIDTH = 17;  // px per character of the 28 px mono face, to know when a name fits
+
+const $ = (id) => document.getElementById(id);
+const playing = () => (state.run ? state.run.policy : "jev");  // before any run the page is laid out for Jev
+const state = { after: -1, run: null, now: 0, decisions: [], current: null, end: null, cardTimer: null, conclusion: null };
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function format(template, values) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => values[key]);
+}
+
+function seconds(value) {
+  return value.toFixed(1);
+}
+
+// --- events ---------------------------------------------------------------------------------------------------------
+
+function apply(event) {
+  switch (event.kind) {
+    case "run":
+      clearTimeout(state.cardTimer);
+      $("card").classList.remove("on");
+      Object.assign(state, { run: event, now: 0, decisions: [], current: null, end: null });
+      break;
+    case "row":
+      state.now = Math.max(state.now, event.t);
+      break;
+    case "decision":
+      if (event.applied && event.answered_at !== null && event.tactic !== null) {
+        state.decisions.push(event);
+        state.current = event;
+        state.now = Math.max(state.now, event.answered_at);
+      }
+      break;
+    case "end":
+      state.end = event;
+      state.now = Math.max(state.now, event.survival_seconds);
+      if (state.conclusion) state.cardTimer = setTimeout(() => $("card").classList.add("on"), CARD_DELAY_MS);
+      break;
+    case "layout":
+      $("stage").style.left = event.x + "px";
+      $("stage").style.top = event.y + "px";
+      break;
+  }
+}
+
+// --- drawing --------------------------------------------------------------------------------------------------------
+
+function clock() {
+  if (state.end) {
+    const outcome = format(TEXT.result[state.end.outcome], { t: seconds(state.end.survival_seconds) });
+    const damage = state.end.damage_taken === 0 ? TEXT.result.noDamage : format(TEXT.result.damage, { n: state.end.damage_taken });
+    return outcome + " · " + damage;
+  }
+  return state.run ? seconds(state.now) + " s" : TEXT.waiting;
+}
+
+function drawPanel() {
+  const current = state.current;
+  const over = state.end !== null;
+  $("who-now").textContent = over ? clock() : (current && TEXT.chose[playing()]) || "";
+  $("time").textContent = over ? "" : clock();
+  const tactic = $("tactic");
+  tactic.textContent = current ? current.tactic : "";
+  tactic.className = "tactic" + (current ? " c-" + current.tactic : "");
+  $("does").textContent = current ? TEXT.tactics[current.tactic] : "";
+
+  const probabilities = current && current.probabilities;
+  for (const name of TACTICS) {
+    const row = $("prob-" + name);
+    row.classList.toggle("hidden", !probabilities);
+    row.classList.toggle("chosen", Boolean(current) && current.tactic === name);
+    const value = probabilities ? probabilities[name] : 0;
+    row.querySelector(".fill").style.width = Math.round(value * 100) + "%";
+    row.querySelector(".pct").textContent = Math.round(value * 100) + "%";
+  }
+
+  const rules = $("rules");
+  rules.replaceChildren();
+  if (current && playing() === "jev") {
+    rules.append(TEXT.rulesWould + " ", element("span", "name c-" + current.rules, current.rules));
+  }
+  const facts = $("facts");
+  facts.replaceChildren(...(current ? current.read : []).map((fact) => element("div", "", fact)));
+}
+
+function drawBands() {
+  $("who-top").textContent = TEXT.players[playing()];
+  $("who-rules").textContent = TEXT.rules;
+  const start = Math.max(0, state.now - WINDOW_SECONDS);
+  const scale = TRACK_WIDTH / WINDOW_SECONDS;
+  for (const [id, pick] of [["track-top", (d) => d.tactic], ["track-rules", (d) => d.rules]]) {
+    const track = $(id);
+    track.replaceChildren();
+    state.decisions.forEach((decision, index) => {
+      const next = state.decisions[index + 1];
+      const from = Math.max(decision.t, start), to = next ? next.t : state.now;
+      if (to <= start || to <= from) return;
+      const name = pick(decision);
+      const segment = element("div", "seg c-" + name);
+      const width = (to - from) * scale;
+      segment.style.left = (from - start) * scale + "px";
+      segment.style.width = width + "px";
+      if (width >= name.length * SEGMENT_CHAR_WIDTH + 24) segment.textContent = name;
+      track.append(segment);
+    });
+  }
+  const axis = $("axis");
+  axis.replaceChildren();
+  for (let tick = Math.ceil(start / TICK_SECONDS) * TICK_SECONDS; tick <= start + WINDOW_SECONDS; tick += TICK_SECONDS) {
+    const label = element("div", "tick", tick + " s");
+    label.style.left = (tick - start) * scale + "px";
+    axis.append(label);
+  }
+}
+
+function drawText() {
+  const same = state.decisions.filter((decision) => decision.tactic === decision.rules).length;
+  const showCount = playing() === "jev" && state.decisions.length > 0;
+  $("agreement").textContent = showCount ? TEXT.agreement + ": " + same + " " + TEXT.of + " " + state.decisions.length : "";
+  $("thesis").textContent = TEXT.thesis[playing()];
+  $("band-rules").classList.toggle("invisible", playing() !== "jev");
+  $("marks").classList.toggle("hidden", state.run !== null);
+}
+
+function drawCard() {
+  const card = $("card");
+  card.replaceChildren();
+  if (!state.conclusion) return;
+  card.append(element("div", "headline", state.conclusion.headline));
+  for (const line of state.conclusion.lines) card.append(element("div", "row", line));
+  card.append(element("div", "source", state.conclusion.source));
+}
+
+function draw() {
+  drawPanel();
+  drawBands();
+  drawText();
+}
+
+// --- building the parts that do not change ---------------------------------------------------------------------------
+
+function build() {
+  const probs = $("probs");
+  for (const name of TACTICS) {
+    const row = element("div", "prob c-" + name);
+    row.id = "prob-" + name;
+    row.append(element("div", "", name), element("div", "bar"), element("div", "pct", "0%"));
+    row.children[1].append(element("div", "fill"));
+    probs.append(row);
+  }
+  const legend = $("legend");
+  for (const name of TACTICS) legend.append(element("span", "c-" + name, name));
+}
+
+// --- talking to the server -------------------------------------------------------------------------------------------
+
+async function poll() {
+  try {
+    const response = await fetch("/events?after=" + state.after, { cache: "no-store" });
+    if (!response.ok) throw new Error("the server answered " + response.status);
+    const events = await response.json();
+    for (const event of events) {
+      apply(event);
+      state.after = event.n;
+    }
+    if (events.length) draw();
+    $("problem").classList.add("hidden");
+  } catch (error) {
+    $("problem").textContent = TEXT.noConnection;
+    $("problem").classList.remove("hidden");
+  }
+  setTimeout(poll, POLL_MS);
+}
+
+async function loadConclusion() {
+  try {
+    const response = await fetch("/conclusion", { cache: "no-store" });
+    if (response.ok) state.conclusion = await response.json();
+  } catch (error) {
+    state.conclusion = null;
+  }
+  drawCard();
+}
+
+build();
+draw();
+loadConclusion();
+document.fonts.ready.then(poll);
+</script>
+</body>
+</html>

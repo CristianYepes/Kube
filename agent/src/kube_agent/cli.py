@@ -1,8 +1,9 @@
-"""Command line of the agent: `kube-agent run | eval | spend | latency | order-check`."""
+"""Command line of the agent: `kube-agent run | eval | spend | latency | order-check | view`."""
 
 import argparse
 import asyncio
 import sys
+from pathlib import Path
 
 from typesafe_sdk import TypeSafeError
 
@@ -25,6 +26,7 @@ from kube_agent.ledger import LedgerError, read_ledger
 from kube_agent.order_check import describe_order_check, load_dev_states, load_states_of, run_order_check
 from kube_agent.policies import POLICIES
 from kube_agent.probes import describe_latency, fixture_state, run_latency
+from kube_agent.view import DEFAULT_PORT, serve
 
 
 
@@ -73,6 +75,13 @@ def build_parser() -> argparse.ArgumentParser:
     evaluation.add_argument("--per-episode-usd", type=float, default=DEFAULT_RUN_BUDGET_USD, help="cap of one Jev episode")
     evaluation.add_argument("--repeat", action="store_true", help="measure test seeds that an earlier evaluation already measured")
     evaluation.add_argument("--resume", metavar="FOLDER", help="play what is missing in this evaluation folder (its plan is kept)")
+
+    view = subparsers.add_parser(
+        "view", help="a clean live view of an episode in the browser, for a screen recording (spec 003); makes no call to Jev")
+    view.add_argument("--port", type=_port, default=DEFAULT_PORT, help="the view listens on 127.0.0.1 only")
+    view.add_argument("--replay", metavar="FOLDER",
+                      help="replay a finished run folder at real speed (a name under agent/runs/ or a path) instead of following the live run")
+    view.add_argument("--until", type=float, metavar="SECONDS", help="with --replay: stop at this game time, for a still")
     return parser
 
 
@@ -86,6 +95,8 @@ def main(argv: list[str] | None = None) -> int:
         return _latency(args)
     if args.command == "order-check":
         return _order_check(args)
+    if args.command == "view":
+        return _view(args)
     return _eval(args)
 
 
@@ -191,6 +202,29 @@ def _eval(args: argparse.Namespace) -> int:
     reason = summary["stopped"] or "some episodes have no result"
     print(f"kube-agent eval: INCOMPLETE ({reason}); --resume {summary['run_id']} plays what is missing", file=sys.stderr)
     return 1
+
+
+def _view(args: argparse.Namespace) -> int:
+    if args.until is not None and args.replay is None:
+        print("kube-agent view: --until needs --replay", file=sys.stderr)
+        return 1
+    folder = None
+    if args.replay is not None:
+        folder = next((path for path in (Path(args.replay).expanduser(), RUNS_DIR / args.replay) if path.is_dir()), None)
+        if folder is None:
+            print(f"kube-agent view: no run folder {args.replay!r}, here or under agent/runs/", file=sys.stderr)
+            return 1
+    try:
+        return serve(args.port, folder, args.until)
+    except (ValueError, OSError) as error:  # a folder that is not a run, a file that cannot be read, a port that is taken
+        print(f"kube-agent view: {error}", file=sys.stderr)
+        return 1
+
+
+def _port(text: str) -> int:
+    if not text.isdigit() or not 1024 <= int(text) <= 65535:
+        raise argparse.ArgumentTypeError(f"the port must be a number from 1024 to 65535, got {text!r}")
+    return int(text)
 
 
 def _comma_list(text: str, what: str) -> list[str]:

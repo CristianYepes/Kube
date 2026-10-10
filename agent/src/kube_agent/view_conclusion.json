@@ -1,0 +1,12 @@
+{
+  "headline": "What I found",
+  "lines": [
+    "Jev won 40 of 40 games.",
+    "Four hand-written rules won 40 of 40 too.",
+    "Jev matched the rules in 91 to 98% of its decisions.",
+    "No difference in how fast they won.",
+    "About $0.001 a game, and an answer in 0.3 s.",
+    "What changed its play was how I wrote the four options."
+  ],
+  "source": "120 games, 20 held-out seeds, two maps, a Mac, 2026-10-10. typesafe/jev-1.13. R17, R15."
+}

@@ -83,8 +83,9 @@ The owner decided (2026-10-10): **the owner records it live, on the owner's Linu
 - **AC8 (FR7)** — A test over the page's source fails on any emoji, gradient, shadow, blur, `@keyframes`, transition over
   200 ms, font family outside the bundled one, colour defined outside the list of tokens, external URL or exclamation mark
   in the text; it is seen failing on a copy of the page with each of them put in.
-- **AC9 (FR7)** — At 1920×1080, the tactic's name is at least 96 px tall, the lines of the final card at least 48 px, and
-  no text is under 28 px (on a phone 390 px wide: about 20, 10 and 6 px [calc]).
+- **AC9 (FR7)** — At 1920×1080, the tactic's name is at least 96 px tall, the lines of the final card at least 64 px, and
+  no text is under 28 px (on a phone 390 px wide: about 23, 13 and 6 px [calc]). The card was 48 px in the first draft; 64 px is
+  what keeps it readable on a phone.
 - **AC10 (security)** — The server listens on 127.0.0.1 only, serves only its own fixed files and the events of the run
   folder (a request for any other path, `..` included, gets a 404), makes no request to the network, and never reads the
   key file or the environment's credentials.

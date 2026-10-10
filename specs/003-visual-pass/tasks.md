@@ -45,7 +45,7 @@
     rows) and were rewritten before the breaks. What changed from the plan: the polls are 25 ms, the `run` event carries
     `mode`, no `confidence` (the page does not use it), and the facts are `being hit` and not `boss here`.
 
-- [ ] **V3** — The page, its fonts and the server.
+- [x] **V3** — The page, its fonts and the server. **Done 2026-10-10.**
   - Fonts: the four `woff2` files and `OFL.txt` of IBM Plex from its official release (research F6), their SHA-256
     written here.
   - The colour of each tactic chosen with the `dataviz` skill's palette and validator (`plan.md`, "Look").
@@ -54,8 +54,32 @@
     encoded `%2e%2e` included), listens on 127.0.0.1 only, and opens no outgoing connection (AC10).
   - **Commit:** `agent: the view page, with IBM Plex`.
   - **Done when:** the tests pass, each seen failing, and the page loads in Chrome on the Mac from a replay.
+  - **Done 2026-10-10.** The page, `kube-agent view` (`--port`, `--replay`, `--until`), the server and the draft of the card
+    (`view_conclusion.json`, whose numbers V4 checks). **Tests:** `test_view_server.py` 45, `test_view_page.py` 43 (of them 31
+    deliberate breaks of the page, each caught by the check), 8 new in `test_cli.py`; all seen failing first (no `PAGE_DIR`),
+    then **31 deliberate breaks of `view.py` and `cli.py`, all caught**, files restored and identical (`cmp`). The suite:
+    681 passed. Two things that came from reading my own tests: the `serve` threads of two tests were not daemons (a failing test
+    would have hung pytest), and the worker-failure test could hang; both fixed before the breaks.
+  - **Fonts** (IBM Plex, OFL-1.1, from the releases `@ibm/plex-sans@1.1.0` and `@ibm/plex-mono@2.5.0` of github.com/IBM/plex,
+    2026-10-10; the license file is the one of the release, `OFL.txt` next to them; the test pins every hash):
+    `IBMPlexSans-Regular.woff2` ba711a3085ff9f27440b6b9c4550cfc47c97bf36591d5da958b975bb3add8c1a;
+    `IBMPlexSans-SemiBold.woff2` f78048030eab62e860efa39a0df79e2e5581bf122eb95b9bc42c0b8a4988d205;
+    `IBMPlexMono-Regular.woff2` ba204497f16b6d334cee9d1e963a831b73e3a56e1d6300a8489d18df7214b350;
+    `IBMPlexMono-SemiBold.woff2` 6a825b4824c01cbb401e829e5a066a1818411bcb3538b5a5792c5ca9b82343c3;
+    `OFL.txt` 7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da.
+  - **Colours:** `node <dataviz skill>/scripts/validate_palette.js "#3987e5,#c98500,#d55181,#008300" --mode dark --surface "#121212"
+    --pairs all` -> all checks pass, with one WARN on colour-blind separation (6.9) that the names in the bands and the legend
+    make legal (`plan.md`, "Look"). The skill's first four slots fail on all pairs; of the 70 choices of four hues only two pass.
+  - **Seen:** Chrome headless at 1920x1080 on a replay of a T9 Jev game (`eval-20261010T122708Z-darwin`, seed 101, `subject_map`),
+    mid-game, at the end and the card. The page loads, draws the decision, the four probabilities, what Jev read, the rules'
+    choice, the bands and the count, and the card fits on one screen. What the first look changed: the last tick wrapped, the
+    window was 30 s and left two thirds of the band empty (now 25 s), the big word did not say whose it was (now `Jev chose`),
+    `rules ENGAGE` became `rules would choose ENGAGE`, the bars went from 4 to 8 px, and the card lines were shortened until each
+    fits one row (no widow). The page's package files travel in the wheel (`uv build --wheel` lists them).
+  - **Not checked yet:** that the numbers on the page are the ones of the run, moment by moment (V5), and the game window on
+    top of the page (V6, V7).
 
-- [ ] **V4** — The final card. `view_conclusion.json` with the text of `plan.md` and the source of each number;
+- [ ] **V4** — The final card (the file exists since V3, with the draft text; V4 adds the facts and the check). `view_conclusion.json` with the text of `plan.md` and the source of each number;
   `test_view_conclusion.py` recomputes them from `agent/runs/eval-20261010T122708Z-darwin` (AC5) and is seen failing
   on a copy with one number changed.
   - 🔑 The owner approves the text, or changes it; the test then checks the new text.

@@ -87,6 +87,18 @@ Every event has `n` (its index) and `kind`:
 - The page counts "same as the rules" over the decisions that were applied.
 - Milliseconds are not sent to the page: it does not show them (design rule 7).
 
+## The server (as built, V3)
+
+`view.make_server` gives a `ThreadingHTTPServer` on `127.0.0.1` only. It answers GET and nothing else (405 with `Allow: GET`):
+`/` the page, `/fonts/<one of the four names>`, `/conclusion`, and `/events?after=N`. Anything else is a 404, whatever
+the path (`..`, `%2e%2e`, a trailing slash, a file that is next to the fonts, such as `OFL.txt`): the name of a font is looked
+up in a fixed list, a file name is never made from the request. A request whose `Host` is not `127.0.0.1:<port>` or
+`localhost:<port>` is a 404, which stops a page on another site, whose name points to this machine, from reading the run
+(DNS rebinding). Every answer carries `Content-Security-Policy: default-src 'none'; ...; frame-ancestors 'none'`,
+`X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` and `Cache-Control: no-store`. The module imports nothing that
+opens a connection and never reads the environment (a test reads its source for both). A worker that dies stops the server and
+says why; Ctrl-C stops it cleanly.
+
 ## Layout
 
 The recorded area is 1920×1080 with its origin at the top-left of the game's drawing area. All sizes are in that area's
@@ -95,19 +107,19 @@ pixels; the page offsets them by the `layout` event.
 ```
 x 0                        1280                    1920
 y 0 ┌──────────────────────┬────────────────────────┐
-    │                      │ 6.5 s                  │ 28 px, muted
+    │                      │ Jev chose        6.5 s │ Sans 32 px, muted
     │                      │ KITE                   │ Mono SemiBold 112 px
-    │   game 1280×720      │ back away, keep firing │ Sans 32 px
-    │   (its own hp bar    │ ENGAGE ─         3 %   │ four rows, Mono 28 px,
-    │   and wave dots)     │ KITE   ━━━━━━━  97 %   │ bars 4 px high
-    │                      │ RETREAT          0 %   │
-    │                      │ SEARCH           0 %   │
-    │                      │ rules  KITE            │ Mono 32 px
-    │                      │ runner, close, left    │ Sans 28 px, at most 3
+    │   game 1280×720      │ back away, keep firing │ Sans 36 px
+    │   (its own hp bar    │ ENGAGE ─          3%   │ four rows, Mono 32 px,
+    │   and wave dots)     │ KITE   ━━━━━━━   97%   │ bars 8 px high
+    │                      │ RETREAT ─         0%   │
+    │                      │ SEARCH  ─         0%   │
+    │                      │ rules would choose KITE│ Sans 36 px, name in Mono
+    │                      │ runner, close, left    │ Sans 32 px, at most 3
 y720├──────────────────────┴────────────────────────┤
     │ Jev    ▇▇▇ENGAGE▇▇▇▇KITE▇▇▇ENGAGE▇▇▇           │ two bands, 44 px high,
-    │ rules  ▇▇▇ENGAGE▇▇▇▇KITE▇▇▇▇▇▇ENGAGE▇▇         │ 0-30 s axis, 28 px ticks
-    │ same choice as the rules: 27 of 29             │ Sans 32 px
+    │ rules  ▇▇▇ENGAGE▇▇▇▇KITE▇▇▇▇▇▇ENGAGE▇▇         │ 0-25 s axis, 28 px ticks
+    │ same choice as the rules: 27 of 29     legend  │ Sans 36 px; legend Mono 28 px
     │ Jev picks one of four tactics every half       │ Sans 32 px, muted
     │ second. The code aims, fires and walks.        │
 y1080└──────────────────────────────────────────────┘
@@ -116,8 +128,11 @@ y1080└────────────────────────
 - **Words under the tactic** (what the code does, read in `controller.py`): `ENGAGE` "stand still and fire",
   `KITE` "back away, keep firing", `RETREAT` "get to open space", `SEARCH` "walk to the nearest zombie". The code fires
   whenever a target is lined up, whatever the tactic.
-- **Time axis:** 0-30 s; past 30 s it scrolls with the last 30 s. The cursor moves between rows by the page's clock and
-  snaps to each row (rows come every 0.5 s).
+- **Time axis:** 0-25 s, so that the episodes of both maps (11 to 24 s in T9) fit without moving; past 25 s it scrolls with
+  the last 25 s. The bands are drawn by decision (each decision from its state's time to the next one's), the clock steps
+  with the rows (every 0.5 s), and nothing is interpolated.
+- **Whose word it is:** the top line of the panel says `Jev chose` (or `rules chose`), and the time on the right; at the end the
+  result takes its place.
 - **When the rules differ,** both names are shown as they are; nothing turns red. The difference is the content.
 - **Before a run** (waiting), the page shows only the thesis line and four 1-px corner marks of the recorded area, to
   align the recorder's selection; they go away when the run starts.
@@ -127,11 +142,20 @@ y1080└────────────────────────
 ## Look (design rules of `spec.md`)
 
 - **Type:** IBM Plex, Mono for the tactic names and numbers (tabular figures), Sans for words; weights 400 and 600 only.
-  Sizes at 1920×1080: tactic 112 px; card headline 72 px, card lines 48 px; everything else 28-32 px; nothing under 28.
+  Sizes at 1920×1080: tactic 112 px; card headline 96 px, card lines 64 px (13 px on a phone 390 px wide, which is what makes
+  the card readable there); everything else 28-36 px; nothing under 28.
 - **Colour tokens** (the only colour literals in the page, on `:root`): `--bg #121212`, `--fg #ECECEC`, `--muted #8C8C8C`,
-  `--rule #2B2B2B`, and one per tactic, chosen in task V3 with the palette and the validator of the `dataviz` skill: four
-  hues apart for colour-blind viewers, each at least 3:1 against `--bg`. Bands always carry the tactic's name inside or
-  beside them.
+  `--rule #2B2B2B`, and one per tactic: `ENGAGE #3987E5` (blue), `KITE #C98500` (amber), `RETREAT #D55181` (magenta),
+  `SEARCH #008300` (green). **How they were chosen (2026-10-10):** with the validator of the `dataviz` skill
+  (`validate_palette.js`), dark mode, surface `#121212`, **all pairs**, because any two tactics can sit side by side in a band.
+  The skill's own first four slots fail that (amber beside orange: colour-blind distance 4.8, normal vision 10.6, floor 15);
+  of the 70 ways to take four of its eight dark hues, only two pass, and this is one. Result: lightness band PASS, chroma PASS,
+  normal-vision floor PASS (worst 19.3), contrast against the background PASS (3.79 to 6.10), colour-blind separation WARN
+  (worst 6.9, green and amber under protanopia; floor 6, target 8), which the skill allows only with a second channel: each band
+  segment carries the tactic's name when it is wide enough, there is a legend, and the big word names it too. The test
+  `test_the_four_tactic_colours_are_the_validated_ones` pins the values; the command is in `tasks.md`, V3.
+- **What of the dataviz skill is not built, on purpose:** the table view, the texture fill and the hover tooltips. They serve a
+  chart that people use; this page is the backdrop of a recording, with the pointer hidden. The identity channel is the name.
 - **Motion:** `transition` on `opacity` and `width` only, 150-200 ms. No `@keyframes`.
 - **The lint** (AC8, `test_view_page.py`) reads `index.html` and fails on: any character in Unicode's Extended_Pictographic
   set; `gradient(`, `box-shadow`, `text-shadow`, `blur(`, `backdrop-filter`, `@keyframes`; a `transition` longer than
@@ -144,20 +168,22 @@ y1080└────────────────────────
 ```
 What I found
 
-Jev won 40 of 40 games. Four hand-written rules won 40 of 40 too.
-It chose what the rules would choose in 91-98 % of its decisions.
-Neither won faster.
-About $0.001 a game, and an answer in about 0.3 s.
+Jev won 40 of 40 games.
+Four hand-written rules won 40 of 40 too.
+Jev matched the rules in 91 to 98% of its decisions.
+No difference in how fast they won.
+About $0.001 a game, and an answer in 0.3 s.
 What changed its play was how I wrote the four options.
 
-120 games: three players, 20 held-out seeds, two maps, on a Mac, 2026-10-10. typesafe/jev-1.13. Details: R17, R15.
+120 games, 20 held-out seeds, two maps, a Mac, 2026-10-10. typesafe/jev-1.13. R17, R15.
 ```
 
-Each number has its source in the file, and `test_view_conclusion.py` recomputes it from
+Each number has its source in the file (`facts`, V4), and `test_view_conclusion.py` recomputes it from
 `agent/runs/eval-20261010T122708Z-darwin` (wins of `jev` and `scripted`; agreement with `scripted_tactic` per map; the
-sign test's p over 0.8 on both maps for "neither won faster"; spend per Jev episode; latency p50). The last line rests on
-the tuning, where the wording was the only thing changed (R15: damage in 6 of 20 games before the rewording, 1 of 40
-after); it carries no number on the card.
+sign test's p above 0.8 on both maps for "no difference in how fast"; spend per Jev episode; latency p50). The last line
+rests on the tuning, where the wording was the only thing changed (R15: damage in 6 of 20 games before the rewording, 1 of 40
+after); it carries no number on the card. It was shortened in V3 until each line fits one row at 64 px (the page was
+rendered in Chrome to check it).
 **The text is the owner's to approve (task V4).**
 
 ## Testing

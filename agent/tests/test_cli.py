@@ -11,7 +11,7 @@ from kube_agent.jev_client import BudgetExhausted, KeyMissing
 from kube_agent.order_check import describe_order_check
 from kube_agent.probes import describe_latency
 
-SUBCOMMANDS = ["run", "eval", "spend", "latency", "order-check"]
+SUBCOMMANDS = ["run", "eval", "spend", "latency", "order-check", "view"]
 
 
 @pytest.fixture(autouse=True)
@@ -28,8 +28,12 @@ def no_episode_by_accident(monkeypatch):
     async def refuse_evaluation(*args, **kwargs):
         raise AssertionError("a CLI test reached run_evaluation: it would play a whole evaluation")
 
+    def refuse_serving(*args, **kwargs):
+        raise AssertionError("a CLI test reached serve: it would open a port and wait to be interrupted")
+
     monkeypatch.setattr(cli, "run_episode", refuse)
     monkeypatch.setattr(cli, "run_evaluation", refuse_evaluation)
+    monkeypatch.setattr(cli, "serve", refuse_serving)
 
 
 class FakeJev:
@@ -496,3 +500,77 @@ def test_an_evaluation_that_stopped_early_exits_1_and_says_how_to_resume(monkeyp
     assert main(["eval", "--seeds", "101"]) == 1
     err = capsys.readouterr().err
     assert "INCOMPLETE" in err and "3 episodes failed in a row" in err and "--resume eval-20261009T080000Z-darwin" in err
+
+
+# --- view (spec 003) ---------------------------------------------------------------------------------------------------------
+
+
+def fake_serve(monkeypatch, code=0, error=None):
+    calls = []
+
+    def serve(*args, **kwargs):
+        calls.append((args, kwargs))
+        if error:
+            raise error
+        return code
+
+    monkeypatch.setattr(cli, "serve", serve)
+    return calls
+
+
+def test_view_follows_the_live_run_on_port_8765_by_default(monkeypatch):
+    calls = fake_serve(monkeypatch)
+
+    assert main(["view"]) == 0
+    assert calls == [((8765, None, None), {})]
+
+
+def test_view_replays_a_folder_named_under_agent_runs(monkeypatch):
+    calls = fake_serve(monkeypatch)
+    name = "20261008T090926Z-jev-s12-darwin"
+
+    assert main(["view", "--replay", name, "--until", "3.5", "--port", "9000"]) == 0
+    assert calls == [((9000, cli.RUNS_DIR / name, 3.5), {})]
+
+
+def test_view_replays_a_folder_given_as_a_path(monkeypatch, tmp_path):
+    calls = fake_serve(monkeypatch)
+
+    assert main(["view", "--replay", str(tmp_path)]) == 0
+    assert calls == [((8765, tmp_path, None), {})]
+
+
+def test_view_says_when_the_folder_to_replay_is_not_there(monkeypatch, capsys):
+    calls = fake_serve(monkeypatch)
+
+    assert main(["view", "--replay", "no-such-run"]) == 1
+    assert "no run folder 'no-such-run'" in capsys.readouterr().err and calls == []
+
+
+def test_view_until_needs_a_replay(monkeypatch, capsys):
+    calls = fake_serve(monkeypatch)
+
+    assert main(["view", "--until", "3"]) == 1
+    assert "--until needs --replay" in capsys.readouterr().err and calls == []
+
+
+@pytest.mark.parametrize("port", ["80", "1023", "65536", "abc", "-1", "8765.5"])
+def test_view_refuses_a_port_that_is_not_one_of_the_user_ports(port, capsys):
+    with pytest.raises(SystemExit) as exit_info:
+        main(["view", "--port", port])
+
+    assert exit_info.value.code == 2 and "port" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("error", [ValueError("'x' is not the name of a run folder"), OSError(48, "cannot listen on 127.0.0.1:8765")])
+def test_view_reports_what_could_not_start_and_exits_1(monkeypatch, capsys, error):
+    fake_serve(monkeypatch, error=error)
+
+    assert main(["view"]) == 1
+    assert "kube-agent view: " in capsys.readouterr().err
+
+
+def test_view_exits_with_the_code_of_the_server(monkeypatch):
+    fake_serve(monkeypatch, code=1)
+
+    assert main(["view"]) == 1
