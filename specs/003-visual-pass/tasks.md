@@ -30,13 +30,20 @@
   - A missing `xwininfo` or `xprop` comes with `sudo apt install x11-utils`.
   - **Done when:** the four facts are written into the research (F3) with the date.
 
-- [ ] **V2** — `view.py`: the events of a run folder, in follow and in replay.
+- [x] **V2** — `view.py`: the events of a run folder, in follow and in replay. **Done 2026-10-10.**
   - Tests first: `describe_state` on every value of the T9 runs (AC4); `rules` equal to `scripted_tactic`; a run folder
     written line by line by the test, with `view` following it, each event served at most 150 ms after its line (AC1);
     a half-written line is not served until it is complete; replay of a T9 Jev folder releases the last decision within
     0.2 s of its `answered_at` (AC6); `--until T` releases nothing after `T`.
-  - **Commit:** `agent: kube-agent view, events from a run folder`.
+  - **Commit:** `agent: the events of the view, from a run folder` (the command itself comes with V3, so the first message
+    would have promised too much).
   - **Done when:** the new tests pass, each was seen failing, and the suite is green.
+  - **Done 2026-10-10:** 32 tests in `agent/tests/test_view.py`, seen failing first (no module) and then against **32 deliberate
+    breaks of `view.py`, all caught**, the file restored and identical (`cmp`). The suite: 579 passed. AC1 measured on 120 rows:
+    median 45 ms, p95 70 ms, max 80 ms between writing a row and the page's poll seeing it (limit 150 ms). Two tests of mine
+    would have passed for the wrong reason (the one on folders that are not runs, and the one on the end coming after the
+    rows) and were rewritten before the breaks. What changed from the plan: the polls are 25 ms, the `run` event carries
+    `mode`, no `confidence` (the page does not use it), and the facts are `being hit` and not `boss here`.
 
 - [ ] **V3** — The page, its fonts and the server.
   - Fonts: the four `woff2` files and `OFL.txt` of IBM Plex from its official release (research F6), their SHA-256

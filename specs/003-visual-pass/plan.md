@@ -15,7 +15,7 @@ and tested on the Mac.
 kube-agent run --runner local ...       (unchanged)
    └─ writes agent/runs/<run>/episode.jsonl, decisions.jsonl, result.json   (row by row, flushed)
 kube-agent view                          (new, a separate process)
-   ├─ reads the newest run folder every 50 ms, adds `rules` and `read` to each decision
+   ├─ reads the newest run folder every 25 ms, adds `rules` and `read` to each decision
    ├─ (Linux, X11) moves the window `cub3D` into place and reads where it landed
    └─ serves 127.0.0.1:8765   /  (the page)   /fonts/<file>   /events?after=N
 browser, full screen, asks /events every 50 ms and draws
@@ -53,9 +53,10 @@ kube-agent view [--port 8765] [--place-game X,Y]      follow: the newest run fol
 kube-agent view --replay FOLDER [--until T]           replay a finished folder at real speed, stopping at T seconds
 ```
 
-- **Follow.** It looks in `agent/runs/` every 200 ms for a folder whose name (it starts with the UTC time) is later than
-  the moment `view` started. It then reads new complete lines of `episode.jsonl` and `decisions.jsonl` every 50 ms, and
-  `result.json` when it appears. A half-written last line is left for the next read. When the episode ends it goes back
+- **Follow.** Every 25 ms it looks in `agent/runs/` for a folder of `kube-agent run` (UTC time, policy, seed, machine; not
+  `eval-` or probe folders) created at or after the moment `view` started, and reads the new complete lines of
+  `episode.jsonl` and `decisions.jsonl`, and `result.json` when it appears. The page asks for events every 50 ms, so a row
+  is on the page 80 ms after it is written at most (measured, V2). A half-written last line is left for the next read. When the episode ends it goes back
   to waiting, so one `view` serves many takes.
 - **Replay.** It loads the folder and releases each row at its own time: an episode row at `t`, a decision at its
   `answered_at` (or at `t` for `scripted`), the end at `survival_seconds`. With `--until T` it stops releasing at `T`,
@@ -71,16 +72,18 @@ Every event has `n` (its index) and `kind`:
 
 | `kind` | Fields | From |
 |---|---|---|
-| `run` | `run_id`, `policy`, `seed` | the folder's name |
+| `run` | `run_id`, `policy`, `seed`, `mode` (`live` or `replay`) | the folder's name |
 | `row` | `t`, `tactic` | `episode.jsonl` |
-| `decision` | `t`, `answered_at`, `tactic`, `applied`, `reason`, `probabilities` (Jev) or `null`, `confidence` (Jev) or `null`, `rules`, `read` | `decisions.jsonl`, plus two fields added by `view` |
+| `decision` | `t`, `answered_at`, `source`, `tactic`, `applied`, `reason`, `probabilities` (Jev) or `null`, `rules`, `read` | `decisions.jsonl`, plus two fields added by `view` |
 | `end` | `outcome`, `survival_seconds`, `damage_taken` | `result.json` |
 | `layout` | `x`, `y`, `width`, `height` of the game's drawing area, in screen pixels | `--place-game` |
 
 - `rules` = `policies.scripted_tactic(state)`: the real rules, not a copy of them.
-- `read` = `describe_state(state)`: at most three short facts, from a fixed table, in this order of priority:
-  the nearest threat (`runner, close, left`; or `nothing in view, 3 left`), `cornered` when true, `health low` or
-  `health medium` when not high, `boss here` when the boss is present. Tested on every value that occurs in the T9 runs.
+- `read` = `describe_state(state)`: at most three short facts, in this order: the nearest threat (`runner, close, left`; or
+  `no zombie left`), `being hit`, `cornered`, `health low` or `health medium` (when not high), and `1 in view, 3 left`. Every
+  word is a value of the state or one of these phrases; tested on every state of the T9 runs.
+- A decision that was not applied (`stale`, `below_threshold`, `episode_ended`, an error) is sent with `applied: false`; the
+  page does not show it. An answer that came after the end has `answered_at: null`.
 - The page counts "same as the rules" over the decisions that were applied.
 - Milliseconds are not sent to the page: it does not show them (design rule 7).
 
