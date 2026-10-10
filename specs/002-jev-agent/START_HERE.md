@@ -71,9 +71,12 @@
   idle lost 40 of 40. The finding of the development seeds, that Jev is slower on `pillars`, did not replicate. Jev cost $0.00087 and $0.00129 per
   episode, with latency p50 292 ms. AC11 and AC12 pass. The ledger reads `$0.156536 of $1.00`. **Report this as it is: Jev did not beat the
   rules; this test found nothing that tells them apart.**
-- **Next: T10**, the regression on the Mac (`check_bridge.py`, `dev/dev.sh check`, `uv run pytest -q`), then L5 on the owner's Linux and T12, the
-  push, **only when the owner asks**. Open and not started: the free control "scripted with the same delay" (does the lag explain the small
-  gap?), and a harder variant of the game, which is a decision for the owner.
+- **T10 is done (2026-10-10): the regression passes on the Mac.** `dev/dev.sh check` printed `ALL PASSED`, `check_bridge.py` passed its 24 checks
+  and `uv run pytest -q` gave 547 passed.
+- **Next: L5**, the last Linux checkpoint, run by the owner (see `tasks.md`; the Linux ledger has no open row, and L5 plays one free `scripted`
+  episode). It needs the branch pushed first, so that `git pull --ff-only` finds the final code. After it passes: tick L5 and T12 and commit
+  `specs: spec 002 complete`. **Push only when the owner asks.** Open and not started: the free control "scripted with the same delay" (does
+  the lag explain the small gap?), and a harder variant of the game, which is a decision for the owner.
 - **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
   Their terminal splits long pasted lines (it happened twice in L4).
 - **Already in the repo:**
@@ -82,7 +85,7 @@
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** everything in `specs/002-jev-agent/tasks.md` from T10 on.
+- **Not started:** L5 and T12 in `specs/002-jev-agent/tasks.md` (T11 is optional).
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

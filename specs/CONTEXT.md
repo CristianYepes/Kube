@@ -246,7 +246,8 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
   latency there was higher (p50 553 ms against 318 ms on the Mac; R14). **T8 and T8b are done: the Jev config is frozen** (R15, R16) after one
   tuning of the wording, and no map makes the rule bot lose. **T9 is done (2026-10-10): the final evaluation on the test seeds 101-120** (R17). On
   `subject_map` and on `pillars`, Jev and the rule bot tie: 20 of 20 wins each, no damage, no difference in the time to win; idle lost 40 of 40; Jev cost
-  about $0.001 an episode. **Next: T10.**
+  about $0.001 an episode. **T10 is done (2026-10-10): the regression passes on the Mac** (`dev/dev.sh check` `ALL PASSED`, `check_bridge.py` 24 of 24,
+  547 tests). **Next: L5**, the last Linux checkpoint, run by the owner.
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.
@@ -260,7 +261,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from T10.
+    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from L5.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;

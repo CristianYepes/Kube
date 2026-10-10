@@ -1315,11 +1315,16 @@ What does not change: the tests, the honest measurement, and the agent itself.
   - 🛑 **Report the results to the owner as they are.** If scripted beats Jev, say so.
   - **Commit** (with the whole evaluation folder): `agent: final evaluation on test seeds
     101-120`.
-- [ ] **T10** — Regression on the Mac.
+- [x] **T10** — Regression on the Mac. **Done 2026-10-10: the three checks pass.**
   - **Verify:** `check_bridge.py` passes in the container, `dev/dev.sh check` prints
     `ALL PASSED`, and `cd agent && uv run pytest -q` is green. (`check_isolation.sh` was
     dropped from here on 2026-10-06.)
-  - **Commit:** `specs: spec 002 complete`, with `CONTEXT.md` "Status" updated.
+  - **Done 2026-10-10**, on the tree of `7980a72` (T9), which `dev/dev.sh check` copied into the container: it printed `ALL PASSED`
+    (10 sections, 0 failures, 2 min 44 s); `make -s -C agent` then built the agent binary again (144,760 bytes, the size it had before the
+    copy); `check_bridge.py` printed `ALL PASSED` (24 checks); `uv run pytest -q` gave 547 passed in 8.2 s. No paid call, and the working tree
+    was still clean afterwards.
+  - **Commit:** `specs: T10 passes on the Mac, only L5 is left`, with `CONTEXT.md` "Status" updated. The message planned here, `specs: spec 002
+    complete`, would not be true while L5 is open, so it waits for the commit that ticks L5.
 - [ ] 🔑 **L5** — Linux checkpoint, the final one. **Every ledger row that is still open**:
   nothing may remain in the ledger when the spec is closed (rows 7 and 11, x86_64, were closed
   on 2026-10-06). On Linux, after `git pull --ff-only`, with `DISPLAY=:99` as in L1:
@@ -1333,7 +1338,8 @@ What does not change: the tests, the honest measurement, and the agent itself.
   git add runs && git commit -m "agent: Linux checkpoint L5 run" && git push
   ```
 
-  - **Done when:** every line passed.
+  - **Done when:** every line passed. Then tick L5 and T12 here and commit `specs: spec 002 complete`. (The Linux ledger has no open row:
+    L5 is the last run of the checks, on the final code.)
 - [ ] **T11** — (optional, only if the owner asks) Watch or record an episode: on a Linux
   desktop with `DISPLAY=:0` (see L3); on the Mac, `ffmpeg -f x11grab` in the container, or
   `x11vnc` plus macOS Screen Sharing. None of these is verified yet.
