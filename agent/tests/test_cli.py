@@ -522,7 +522,7 @@ def test_view_follows_the_live_run_on_port_8765_by_default(monkeypatch):
     calls = fake_serve(monkeypatch)
 
     assert main(["view"]) == 0
-    assert calls == [((8765, None, None), {})]
+    assert calls == [((8765, None, None), {"place_game": None})]
 
 
 def test_view_replays_a_folder_named_under_agent_runs(monkeypatch):
@@ -530,14 +530,14 @@ def test_view_replays_a_folder_named_under_agent_runs(monkeypatch):
     name = "20261008T090926Z-jev-s12-darwin"
 
     assert main(["view", "--replay", name, "--until", "3.5", "--port", "9000"]) == 0
-    assert calls == [((9000, cli.RUNS_DIR / name, 3.5), {})]
+    assert calls == [((9000, cli.RUNS_DIR / name, 3.5), {"place_game": None})]
 
 
 def test_view_replays_a_folder_given_as_a_path(monkeypatch, tmp_path):
     calls = fake_serve(monkeypatch)
 
     assert main(["view", "--replay", str(tmp_path)]) == 0
-    assert calls == [((8765, tmp_path, None), {})]
+    assert calls == [((8765, tmp_path, None), {"place_game": None})]
 
 
 def test_view_says_when_the_folder_to_replay_is_not_there(monkeypatch, capsys):
@@ -574,3 +574,27 @@ def test_view_exits_with_the_code_of_the_server(monkeypatch):
     fake_serve(monkeypatch, code=1)
 
     assert main(["view"]) == 1
+
+
+def test_view_places_the_game_window_when_asked_to(monkeypatch):
+    calls = fake_serve(monkeypatch)
+
+    assert main(["view", "--place-game", "0,0"]) == 0
+    assert calls == [((8765, None, None), {"place_game": (0, 0)})]
+    assert main(["view", "--place-game", "40,120"]) == 0
+    assert calls[1] == ((8765, None, None), {"place_game": (40, 120)})
+
+
+def test_a_replay_has_no_window_to_place(monkeypatch, capsys, tmp_path):
+    calls = fake_serve(monkeypatch)
+
+    assert main(["view", "--replay", str(tmp_path), "--place-game", "0,0"]) == 1
+    assert "--place-game is for the live run" in capsys.readouterr().err and calls == []
+
+
+@pytest.mark.parametrize("corner", ["0", "a,b", "-1,0", "1,2,3", "30000,0", "1.5,2", ",", ""])
+def test_a_corner_that_is_not_two_whole_numbers_is_refused(corner, capsys):
+    with pytest.raises(SystemExit) as exit_info:
+        main(["view", f"--place-game={corner}"])  # the = form: a value that starts with "-" must reach our check
+
+    assert exit_info.value.code == 2 and "corner" in capsys.readouterr().err

@@ -61,10 +61,14 @@ kube-agent view --replay FOLDER [--until T]           replay a finished folder a
 - **Replay.** It loads the folder and releases each row at its own time: an episode row at `t`, a decision at its
   `answered_at` (or at `t` for `scripted`), the end at `survival_seconds`. With `--until T` it stops releasing at `T`,
   which freezes the page for a screenshot. The page has one code path: in both modes it only receives events.
-- **`--place-game X,Y`** (Linux with an X11 session only). When a new run starts: `xdotool search --sync --name
-  '^cub3D$'` (5 s timeout), `xdotool windowmove <id> X Y`, then `xwininfo -id <id>` for the absolute position and size of
-  the drawing area, sent to the page as a `layout` event. Without it, or in replay, the page puts the game at (0, 0).
-  If a tool is missing or the session is Wayland, `view` says so once and goes on without placing.
+- **`--place-game X,Y`** (live runs only, and only where `xdotool` and `xwininfo` work, that is an X11 session). When a new run
+  starts, in a thread of its own (the call waits for the window): `xdotool search --sync --name '^cub3D$'`, `xdotool windowmove
+  <id> X Y`, a moment for the window manager (0.3 s), and `xwininfo -id <id>` for where the drawing area really is and its size.
+  Each call has a 10 s timeout. The result goes to the page as a `layout` event, so the page follows the window and not the
+  other way round: a title bar or a border only shifts the layout. `view` says, once, if a tool is missing (with the package to
+  install), if no window came, if the window ended more than 100 px from the corner (a session that did not let it move), or
+  if it is not 1280x720. Without the option, and in replay, the page puts the game at (0, 0). The page itself warns when the
+  browser zoom or the display scale is not 100%, because the window is placed in screen pixels.
 
 ## Events
 

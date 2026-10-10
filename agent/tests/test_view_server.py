@@ -166,9 +166,9 @@ def test_the_module_has_no_outgoing_network_and_does_not_read_the_environment():
 
 
 def test_serve_replays_a_folder_over_http_and_stops_when_asked():
-    holder = {}
+    holder, said = {}, []
     thread = threading.Thread(target=lambda: holder.update(code=view.serve(0, FOLDER, 1.0, on_ready=lambda s: holder.update(server=s),
-                                                                          say=lambda message: None)), daemon=True)
+                                                                          say=said.append)), daemon=True)
     thread.start()
     for _ in range(100):
         if "server" in holder:
@@ -180,6 +180,7 @@ def test_serve_replays_a_folder_over_http_and_stops_when_asked():
     thread.join(3)
 
     assert holder["code"] == 0 and not thread.is_alive()
+    assert "127.0.0.1" in said[0] and "full screen (F11)" in said[0] and "100% zoom" in said[0]  # what the owner must do before recording
     assert events[0]["kind"] == "run" and events[0]["mode"] == "replay"
     assert max(event.get("answered_at") or event.get("t") or 0.0 for event in events) <= 1.0
     assert not any(event["kind"] == "end" for event in events)

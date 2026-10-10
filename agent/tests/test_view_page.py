@@ -165,6 +165,11 @@ def test_the_conclusion_card_follows_the_same_rules_on_its_words():
     assert string_problems(_flatten(json.loads(view.CONCLUSION_PATH.read_text()))) == []
 
 
+def test_the_page_says_so_when_it_is_not_at_one_to_one():
+    """The game window is placed in screen pixels, so a zoomed page or a scaled display would not line up with it."""
+    assert "window.devicePixelRatio !== 1" in PAGE and json.loads(re.search(r'id="text">(.*?)</script>', PAGE, re.S).group(1))["zoom"]
+
+
 def test_the_game_corner_is_left_empty():
     css = re.sub(r"/\*.*?\*/", "", "\n".join(re.findall(r"<style>(.*?)</style>", PAGE, re.S)), flags=re.S)
     panel, bottom, stage = _rule(css, ".panel"), _rule(css, ".bottom"), _rule(css, ".stage")
@@ -240,6 +245,7 @@ BREAKS = [
     ("a tactic in another order", 'const TACTICS = ["ENGAGE", "KITE", "RETREAT", "SEARCH"];', 'const TACTICS = ["KITE", "ENGAGE", "RETREAT", "SEARCH"];', "TACTICS"),
     ("a tactic with no description", '    "SEARCH": "walk to the nearest zombie"', '    "SEARC": "walk to the nearest zombie"', "tactics of the TEXT"),
     ("an element the script cannot find", '$("does")', '$("doess")', "doess"),
+    ("a zoom warning with an exclamation mark", '"zoom": "browser zoom or display scale is not 100%"', '"zoom": "browser zoom is wrong!"', "exclamation"),
     ("no TEXT table", '<script type="application/json" id="text">', '<script type="application/x" id="text">', "no TEXT table"),
 ]
 

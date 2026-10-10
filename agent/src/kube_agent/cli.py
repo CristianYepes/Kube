@@ -82,6 +82,8 @@ def build_parser() -> argparse.ArgumentParser:
     view.add_argument("--replay", metavar="FOLDER",
                       help="replay a finished run folder at real speed (a name under agent/runs/ or a path) instead of following the live run")
     view.add_argument("--until", type=float, metavar="SECONDS", help="with --replay: stop at this game time, for a still")
+    view.add_argument("--place-game", type=_corner, metavar="X,Y",
+                      help="X11 only, live runs only: move the game window towards this corner of the screen and lay the page out around it")
     return parser
 
 
@@ -208,6 +210,9 @@ def _view(args: argparse.Namespace) -> int:
     if args.until is not None and args.replay is None:
         print("kube-agent view: --until needs --replay", file=sys.stderr)
         return 1
+    if args.place_game is not None and args.replay is not None:
+        print("kube-agent view: --place-game is for the live run: a replay has no game window", file=sys.stderr)
+        return 1
     folder = None
     if args.replay is not None:
         folder = next((path for path in (Path(args.replay).expanduser(), RUNS_DIR / args.replay) if path.is_dir()), None)
@@ -215,7 +220,7 @@ def _view(args: argparse.Namespace) -> int:
             print(f"kube-agent view: no run folder {args.replay!r}, here or under agent/runs/", file=sys.stderr)
             return 1
     try:
-        return serve(args.port, folder, args.until)
+        return serve(args.port, folder, args.until, place_game=args.place_game)
     except (ValueError, OSError) as error:  # a folder that is not a run, a file that cannot be read, a port that is taken
         print(f"kube-agent view: {error}", file=sys.stderr)
         return 1
@@ -225,6 +230,13 @@ def _port(text: str) -> int:
     if not text.isdigit() or not 1024 <= int(text) <= 65535:
         raise argparse.ArgumentTypeError(f"the port must be a number from 1024 to 65535, got {text!r}")
     return int(text)
+
+
+def _corner(text: str) -> tuple[int, int]:
+    parts = text.split(",")
+    if len(parts) != 2 or not all(part.isdigit() and int(part) <= 20000 for part in parts):
+        raise argparse.ArgumentTypeError(f"the corner must be two whole numbers, X,Y, from 0 to 20000, got {text!r}")
+    return int(parts[0]), int(parts[1])
 
 
 def _comma_list(text: str, what: str) -> list[str]:

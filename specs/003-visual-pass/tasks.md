@@ -106,12 +106,33 @@
     `floor` instead of `round` on the percentages, was not shown because it changes nothing: all 5,208 probabilities of the 40 games
     are whole percents.
   - **Done when:** 🔑 the owner says the look is right, or what to change (and V3-V4 are redone for it).
-- [ ] **V6** — `--place-game X,Y` for the Linux take.
-  - Tests with fake `xdotool` and `xwininfo` (no X needed): the window is looked for by its name with a 5 s timeout, moved,
-    and its drawing area read into a `layout` event; a missing tool, a timeout or a Wayland session give one clear
-    message and the view goes on unplaced.
+- [x] **V6** — `--place-game X,Y` for the Linux take. **Done 2026-10-11, on X11 in the container; on the owner's Linux it is V1 and V7.**
+  - Tests with fake `xdotool` and `xwininfo` (no X needed): the window is looked for by its name with a timeout, moved,
+    and its drawing area read into a `layout` event; a missing tool, a timeout or a window that did not go where it was asked give one
+    clear message and the view goes on unplaced.
   - **Commit:** `agent: the view places the game window on X11`.
   - **Done when:** the tests pass, each seen failing.
+  - **Done 2026-10-11.** `view.place_game_window` and the `--place-game X,Y` option. `test_view_place.py` 27 tests and 12 new ones
+    in `test_cli.py`; 24 of the first 25 failed before the code existed; then **27 deliberate breaks of `view.py` and `cli.py`, all caught**,
+    files restored and identical (`cmp`); the suite: 738 passed. Two holes of my own tests found while preparing the breaks, and closed:
+    nothing checked the moment given to the window manager between moving the window and measuring it, and nothing checked that a
+    placement that waits for the window does not stop the rows of the game from reaching the page.
+  - **Run for real against the real tools.** The container `kube-dev` (Xvfb `:99`, no window manager, `xdotool` of the image,
+    `xwininfo` of `x11-utils`, which I installed in the container for this, because the image does not have it): my code, through
+    `docker exec`, while a real game played (`scripted`, seed 3, won in 11.13 s; `agent/runs/20261010T221030Z-scripted-s3-darwin`):
+    it found the window by `^cub3D$`, moved it to 100,50 and measured **100,50, 1280x720, in 0.93 s**, with no warning. What that
+    showed: the labels of the real `xwininfo` are the ones the code reads, and its answer is now the fixture of the tests;
+    `xdotool search --name` takes a regular expression (`cub3` matches, `^cub$` does not); with no match it exits with 1 (with `--sync`
+    it waits instead, which is why every call has a 10 s timeout). A second game (`scripted`, seed 101, won in 10.69 s) gave real
+    frames of the game for the mock-ups of V5.
+  - **Mock-ups for the owner's look** (`~/jev/vista-previa-spec003/`, outside git): the page of a real Jev game with a real frame of
+    the game in the corner, made by overlaying a frame from the container on the screenshot. The frame is not from the same game as
+    the data: the mock-up shows the composition, not a synchronised recording.
+  - **The page also warns** when the browser zoom or the display scale is not 100% (`window.devicePixelRatio`), because the game
+    window is placed in screen pixels and the page must be at 1 to 1.
+  - **Not checked** (V1, V7, on the owner's Linux): that its window manager lets the window be moved in an X11 session, how much its
+    title bar offsets the drawing area (the page follows where the window lands, so only the margin matters), and Wayland, where
+    `xdotool windowmove` is not promised to work (research F4): there the code warns if the window ended far from the corner.
 
 - [ ] 🔑 **V7** — Rehearsal on the owner's Linux, free (`scripted`). After `git pull --ff-only`:
   - Terminal 1: `cd ~/Desktop/Kube/agent`, then `uv run kube-agent view --place-game 0,0`.

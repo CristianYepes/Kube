@@ -10,6 +10,7 @@ here (specs/003-visual-pass/spec.md, design rule 7).
 import json
 import os
 import re
+import subprocess
 import sys
 import threading
 import time
@@ -27,6 +28,12 @@ FOLLOW_POLL_SECONDS = 0.025  # how often the live mode looks at the run folder
 PAGE_POLL_SECONDS = 0.05  # how often the page asks for new events (plan.md)
 UNREADABLE_RESULT_POLLS = 80  # polls of a result.json that does not parse (2 s) before it is reported
 MAX_FACTS = 3
+GAME_WIDTH, GAME_HEIGHT = 1280, 720  # the drawing area of the game: the page is drawn around a window of this size
+GAME_WINDOW_NAME = "^cub3D$"  # a regular expression, for `xdotool search --name`
+PLACE_TIMEOUT_SECONDS = 10.0  # for each call to xdotool or xwininfo, and for the window to appear
+PLACE_SETTLE_SECONDS = 0.3  # a window manager moves a window a moment after being asked
+PLACE_TOLERANCE_PX = 100  # how far from the corner asked for the drawing area may be: a title bar and a border are not a problem
+INSTALL_HINT = {"xdotool": "sudo apt install xdotool", "xwininfo": "sudo apt install x11-utils"}
 DEFAULT_PORT = 8765
 PAGE_DIR = Path(__file__).resolve().parent / "view_page"
 CONCLUSION_PATH = Path(__file__).resolve().parent / "view_conclusion.json"
@@ -189,6 +196,68 @@ class RunReader:
             return None
 
 
+# --- putting the game window where the page expects it -----------------------------------------------------------------------
+
+
+class PlacementError(Exception):
+    """The game's window could not be found, moved or measured."""
+
+
+def _run_tool(run: Callable, argv: list[str], timeout: float) -> str:
+    try:
+        done = run(argv, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError:
+        raise PlacementError(f"{argv[0]} is not installed ({INSTALL_HINT[argv[0]]})") from None
+    except subprocess.TimeoutExpired:
+        raise PlacementError(f"`{' '.join(argv)}` did not finish in {timeout:g} s") from None
+    if done.returncode != 0:
+        raise PlacementError(f"`{' '.join(argv)}` failed with exit code {done.returncode}: {done.stderr.strip()[:200] or 'no message'}")
+    return done.stdout
+
+
+def _measure(info: str, label: str) -> int:
+    match = re.search(rf"^\s*{label}:\s*(-?\d+)\s*$", info, re.M)
+    if match is None:
+        raise PlacementError(f"the answer of xwininfo has no '{label}' line")
+    return int(match.group(1))
+
+
+def place_game_window(x: int, y: int, run: Callable = subprocess.run, sleep: Callable[[float], object] = time.sleep,
+                      timeout: float = PLACE_TIMEOUT_SECONDS) -> tuple[dict, list[str]]:
+    """Move the game's window towards (x, y) and say where its drawing area really is, in screen pixels (X11 only).
+
+    What a window manager does with a move is its own business (a title bar, a border, a refusal), so the layout is read
+    back with xwininfo and the page follows the window, not the other way round. Returns the layout event and what to warn about.
+    """
+    windows = _run_tool(run, ["xdotool", "search", "--sync", "--name", GAME_WINDOW_NAME], timeout).split()
+    if not windows:
+        raise PlacementError(f"no window named cub3D appeared in {timeout:g} s")
+    window = windows[-1]  # the newest, if an old one is still open
+    _run_tool(run, ["xdotool", "windowmove", window, str(x), str(y)], timeout)
+    sleep(PLACE_SETTLE_SECONDS)
+    info = _run_tool(run, ["xwininfo", "-id", window], timeout)
+    layout = {"kind": "layout", "x": _measure(info, "Absolute upper-left X"), "y": _measure(info, "Absolute upper-left Y"),
+              "width": _measure(info, "Width"), "height": _measure(info, "Height")}
+    warnings = []
+    if abs(layout["x"] - x) > PLACE_TOLERANCE_PX or abs(layout["y"] - y) > PLACE_TOLERANCE_PX:
+        warnings.append(f"the drawing area is at {layout['x']},{layout['y']}, far from {x},{y}: this session may not let the window be moved "
+                        f"(Wayland?). The page follows the window, but 1920x1080 from there must fit on the screen")
+    if (layout["width"], layout["height"]) != (GAME_WIDTH, GAME_HEIGHT):
+        warnings.append(f"the drawing area is {layout['width']}x{layout['height']} and the page is drawn for {GAME_WIDTH}x{GAME_HEIGHT}")
+    return layout, warnings
+
+
+def _place_in_background(log: EventLog, place: Callable[[], tuple[dict, list[str]]], say: Callable[[str], None]) -> None:
+    try:
+        layout, warnings = place()
+    except PlacementError as error:
+        say(f"view: could not place the game window: {error}")
+        return
+    for warning in warnings:
+        say(f"view: {warning}")
+    log.append(layout)
+
+
 # --- the live mode ----------------------------------------------------------------------------------------------------------
 
 
@@ -209,11 +278,12 @@ def _say(message: str) -> None:
 
 
 def follow(log: EventLog, stop: threading.Event, runs_dir: Path = RUNS_DIR, since: str | None = None,
-           say: Callable[[str], None] = _say) -> None:
+           say: Callable[[str], None] = _say, place: Callable[[], tuple[dict, list[str]]] | None = None) -> None:
     """Follow the newest run folder created at or after `since` (default: now) until `stop` is set.
 
     One call serves many runs: when a newer folder appears it starts a new run event. Folders of evaluations and
-    probes are not runs of `kube-agent run` and are left alone.
+    probes are not runs of `kube-agent run` and are left alone. With `place`, each new run also gets, a moment later,
+    a layout event with the place of its game window (the call waits for the window, so it runs apart from the polling).
     """
     since = since or utc_stamp()
     current, reader, reported = None, None, 0
@@ -222,6 +292,8 @@ def follow(log: EventLog, stop: threading.Event, runs_dir: Path = RUNS_DIR, sinc
         if newest is not None and newest != current:
             log.append(run_event(newest, "live"))
             current, reader, reported = newest, RunReader(runs_dir / newest), 0
+            if place is not None:
+                threading.Thread(target=_place_in_background, args=(log, place, say), daemon=True).start()
         if reader is not None:
             for event in reader.read_new():
                 log.append(event)
@@ -351,8 +423,11 @@ def make_server(log: EventLog, port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
 
 
 def serve(port: int, replay_folder: Path | None = None, until: float | None = None, runs_dir: Path = RUNS_DIR,
-          say: Callable[[str], None] = _say, on_ready: Callable[[ThreadingHTTPServer], None] | None = None) -> int:
-    """Serve the view until it is interrupted: the newest live run, or a replay of `replay_folder`. Returns the exit code."""
+          say: Callable[[str], None] = _say, on_ready: Callable[[ThreadingHTTPServer], None] | None = None,
+          place_game: tuple[int, int] | None = None) -> int:
+    """Serve the view until it is interrupted: the newest live run, or a replay of `replay_folder`. Returns the exit code.
+
+    With `place_game` = (x, y), the window of each live game is moved towards that corner of the screen (X11 only)."""
     if replay_folder is not None:
         replay_schedule(replay_folder)  # a folder that is not a run, or a file that cannot be read, fails here, before anything starts
     log, stop = EventLog(), threading.Event()
@@ -364,7 +439,7 @@ def serve(port: int, replay_folder: Path | None = None, until: float | None = No
             if replay_folder is not None:
                 replay(log, replay_folder, stop, until)
             else:
-                follow(log, stop, runs_dir, say=say)
+                follow(log, stop, runs_dir, say=say, place=(lambda: place_game_window(*place_game)) if place_game else None)
         except Exception as error:  # nothing would feed the page any more: say so and stop, rather than serve a frozen page
             failures.append(error)
             say(f"view: stopped: {type(error).__name__}: {error}")
@@ -372,7 +447,8 @@ def serve(port: int, replay_folder: Path | None = None, until: float | None = No
 
     worker = threading.Thread(target=work, daemon=True)
     worker.start()
-    say(f"view: open http://127.0.0.1:{server.server_address[1]}  (Ctrl-C to stop)")
+    say(f"view: open http://127.0.0.1:{server.server_address[1]} in a browser, full screen (F11) and at 100% zoom, so that the page lines up "
+        f"with the game window  (Ctrl-C to stop)")
     if on_ready:
         on_ready(server)
     try:

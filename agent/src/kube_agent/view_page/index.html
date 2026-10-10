@@ -109,7 +109,8 @@ body { font-family: "Plex Sans", sans-serif; font-weight: 400; font-size: 32px; 
     "noDamage": "no damage",
     "damage": "{n} hp lost"
   },
-  "noConnection": "no connection to the view"
+  "noConnection": "no connection to the view",
+  "zoom": "browser zoom or display scale is not 100%"
 }
 </script>
 
@@ -308,6 +309,11 @@ function build() {
   for (const name of TACTICS) legend.append(element("span", "c-" + name, name));
 }
 
+function problem(text) {
+  $("problem").textContent = text || "";
+  $("problem").classList.toggle("hidden", !text);
+}
+
 // --- talking to the server -------------------------------------------------------------------------------------------
 
 async function poll() {
@@ -320,10 +326,9 @@ async function poll() {
       state.after = event.n;
     }
     if (events.length) draw();
-    $("problem").classList.add("hidden");
+    problem(window.devicePixelRatio !== 1 ? TEXT.zoom : null);  // the game window is in screen pixels: the page must be at 1 to 1
   } catch (error) {
-    $("problem").textContent = TEXT.noConnection;
-    $("problem").classList.remove("hidden");
+    problem(TEXT.noConnection);
   }
   setTimeout(poll, POLL_MS);
 }
