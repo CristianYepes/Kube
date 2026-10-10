@@ -68,11 +68,12 @@ body { font-family: "Plex Sans", sans-serif; font-weight: 400; font-size: 32px; 
 .seg, .fill { background: var(--c); }
 .tactic.c-ENGAGE, .tactic.c-KITE, .tactic.c-RETREAT, .tactic.c-SEARCH, .rules .name { color: var(--c); }
 
-.card { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; padding: 96px 128px; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 200ms linear; }
+.card { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; padding: 72px 128px; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 200ms linear; }
 .card.on { opacity: 1; }
-.card .headline { font-weight: 600; font-size: 96px; line-height: 112px; margin-bottom: 48px; }
-.card .row { font-size: 64px; line-height: 84px; margin-bottom: 12px; }
-.card .source { position: absolute; left: 128px; bottom: 72px; width: 1664px; font-size: 32px; line-height: 42px; color: var(--muted); }
+.card .headline { font-weight: 600; font-size: 96px; line-height: 112px; margin-bottom: 32px; }
+.card .row { font-size: 64px; line-height: 80px; margin-bottom: 8px; }
+.card .gap { height: 32px; margin-bottom: 0; }
+.card .source { position: absolute; left: 128px; bottom: 72px; width: 1664px; font-size: 32px; line-height: 42px; color: var(--muted); white-space: pre-line; }
 
 .hidden { display: none; }
 .invisible { visibility: hidden; }
@@ -282,7 +283,7 @@ function drawCard() {
   card.replaceChildren();
   if (!state.conclusion) return;
   card.append(element("div", "headline", state.conclusion.headline));
-  for (const line of state.conclusion.lines) card.append(element("div", "row", line));
+  for (const line of state.conclusion.lines) card.append(element("div", line === "" ? "row gap" : "row", line));  // "" is a gap between groups
   card.append(element("div", "source", state.conclusion.source));
 }
 

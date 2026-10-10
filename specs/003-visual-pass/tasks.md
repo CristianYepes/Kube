@@ -79,19 +79,33 @@
   - **Not checked yet:** that the numbers on the page are the ones of the run, moment by moment (V5), and the game window on
     top of the page (V6, V7).
 
-- [ ] **V4** — The final card (the file exists since V3, with the draft text; V4 adds the facts and the check). `view_conclusion.json` with the text of `plan.md` and the source of each number;
-  `test_view_conclusion.py` recomputes them from `agent/runs/eval-20261010T122708Z-darwin` (AC5) and is seen failing
-  on a copy with one number changed.
-  - 🔑 The owner approves the text, or changes it; the test then checks the new text.
+- [ ] **V4** — The final card, with its numbers checked. **Built 2026-10-10; the one point left is the owner's OK of its words.**
+  - `view_conclusion.json` has the lines, the source and a `facts` object; `test_view_conclusion.py` recomputes every fact from the raw
+    runs of the evaluation (R17) and of the tuning (R15), and checks that each line says what its facts say, and that every number
+    in the lines is one of the facts.
+  - 🔑 **The owner approves the text, or changes it** (the test then checks the new words). What changed from the draft of `plan.md`,
+    and why: (1) the last line was "What changed its play was how I wrote the four options": a cause, and the only claim not measured
+    on the held-out seeds. It is now "Rewording the four options changed its play: games with damage went from 6 of 20 to 1 of 40",
+    which is a before-and-after with its numbers (R15), and the card's source says that this one is from development seeds, so that
+    the 120 held-out games are not credited with it. (2) "Jev chose what the rules choose" became "Jev matched the rules". (3) "Neither
+    won faster" became "No difference in how fast they won" (the sign test gives p of 0.82 on both maps; it is an observation, not
+    a proof of equality). The honest weak point is line 6: it is one change, before and after, on the same seeds, not a randomised test.
   - **Commit:** `agent: the conclusion card of the view`.
-  - **Done when:** the owner approved the text and the test passes.
-
-- [ ] **V5** — Stills on the Mac, free. A T9 Jev folder replayed and stopped at three moments (a choice the rules share,
-  one where they differ, the last decision), plus the result line and the card; Chrome headless at 1920×1080.
-  - Claude checks each still against that folder's `decisions.jsonl` (AC3) and looks at them; the owner gets the five
-    images.
+  - **Done 2026-10-10 (all but the OK):** 18 tests, 14 of them deliberately wrong cards, each caught; seen failing first (a card
+    with no `facts`). The recomputation agrees with numbers I had computed by other scripts (R17: 40 of 40 and 40 of 40; 91.0% and 97.7%;
+    p of 0.815 and 0.824; $0.00108 and 292 ms; and R15: 6 of 20 and 1 of 40). The card was rendered in Chrome until every line fit one
+    row at 64 px, the options sentence sits apart from the first five lines, and the source is two rows.
+- [ ] **V5** — Stills on the Mac, free. **Built and checked 2026-10-10; the one point left is the owner's OK of the look.**
+  - A T9 Jev folder replayed and stopped at three moments, plus the result line and the card; Chrome headless at 1920x1080.
+  - **Checked against the data (AC3):** `kube-agent view --replay <game> --until T`, Chrome dumps the DOM, and what the page paints
+    is compared with what `episode.jsonl` and `decisions.jsonl` give at T, computed apart: the word and whose it is, the clock, the
+    four percentages, the rules' choice, what Jev read, the count, and **the tactic of every segment of both bands, in order**. Two
+    games, three moments each (a choice Jev shares with the rules, one where it differs, the last decision): `subject_map` seed 101
+    (stopped at 6.24 s, 2.85 s and 13.85 s) and `pillars` seed 103 (5.68 s, 17.76 s and 21.17 s). **0 differences in the 2 x 3 moments.** Broken on purpose
+    five ways (the rules' name, the rules band, the count, the percentages, the facts), the check showed each one; a sixth break,
+    `floor` instead of `round` on the percentages, was not shown because it changes nothing: all 5,208 probabilities of the 40 games
+    are whole percents.
   - **Done when:** 🔑 the owner says the look is right, or what to change (and V3-V4 are redone for it).
-
 - [ ] **V6** — `--place-game X,Y` for the Linux take.
   - Tests with fake `xdotool` and `xwininfo` (no X needed): the window is looked for by its name with a 5 s timeout, moved,
     and its drawing area read into a `layout` event; a missing tool, a timeout or a Wayland session give one clear

@@ -173,17 +173,20 @@ Four hand-written rules won 40 of 40 too.
 Jev matched the rules in 91 to 98% of its decisions.
 No difference in how fast they won.
 About $0.001 a game, and an answer in 0.3 s.
-What changed its play was how I wrote the four options.
 
-120 games, 20 held-out seeds, two maps, a Mac, 2026-10-10. typesafe/jev-1.13. R17, R15.
+Rewording the four options changed its play:
+games with damage went from 6 of 20 to 1 of 40.
+
+Held-out seeds: 120 games, 20 seeds, 2 maps, a Mac, 2026-10-10.
+The options result is from development seeds. typesafe/jev-1.13. R17, R15.
 ```
 
-Each number has its source in the file (`facts`, V4), and `test_view_conclusion.py` recomputes it from
-`agent/runs/eval-20261010T122708Z-darwin` (wins of `jev` and `scripted`; agreement with `scripted_tactic` per map; the
-sign test's p above 0.8 on both maps for "no difference in how fast"; spend per Jev episode; latency p50). The last line
-rests on the tuning, where the wording was the only thing changed (R15: damage in 6 of 20 games before the rewording, 1 of 40
-after); it carries no number on the card. It was shortened in V3 until each line fits one row at 64 px (the page was
-rendered in Chrome to check it).
+Each number has its source in the file (`facts`) and `test_view_conclusion.py` recomputes it from the 120 games of
+`agent/runs/eval-20261010T122708Z-darwin` (wins of `jev` and `scripted`; agreement with `scripted_tactic` per map; the sign
+test's p above 0.8 on both maps for "no difference in how fast"; spend per Jev game; latency p50) and, for the last two lines, from
+the development runs of `subject_map` before and after the rewording (R15: 6 of 20 games with damage, then 1 of 40). The empty entry of
+`lines` is a gap on the card; the source has two rows (`\n`). The words were changed from the first draft (`tasks.md`, V4): the last line
+is now a before-and-after with its numbers, and says that it comes from development seeds, instead of a cause with no number.
 **The text is the owner's to approve (task V4).**
 
 ## Testing

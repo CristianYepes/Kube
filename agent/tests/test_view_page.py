@@ -232,7 +232,7 @@ BREAKS = [
     ("a font that is not bundled", 'url("/fonts/IBMPlexSans-Regular.woff2")', 'url("/other/x.woff2")', "not a bundled font"),
     ("small text", "font-size: 28px; line-height: 44px; padding-left: 10px;", "font-size: 20px; line-height: 44px; padding-left: 10px;", "text under 28"),
     ("a small tactic name", "font-size: 112px; line-height: 128px;", "font-size: 80px; line-height: 128px;", ".tactic under"),
-    ("small card lines", "font-size: 64px; line-height: 84px;", "font-size: 48px; line-height: 84px;", ".card .row under"),
+    ("small card lines", "font-size: 64px; line-height: 80px;", "font-size: 48px; line-height: 80px;", ".card .row under"),
     ("an exclamation mark", '"waiting": "waiting for a game"', '"waiting": "waiting for a game!"', "exclamation"),
     ("a marketing word", "The code aims, fires and walks.\",\n    \"scripted\"", "The code aims, fires and walks, seamless.\",\n    \"scripted\"", "marketing"),
     ("text in the markup", '<div class="does" id="does"></div>', '<div class="does" id="does"></div><p>Amazing results!</p>', "exclamation"),
