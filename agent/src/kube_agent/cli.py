@@ -2,12 +2,14 @@
 
 import argparse
 import asyncio
+import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 from typesafe_sdk import TypeSafeError
 
-from kube_agent.bridge import BridgeError
+from kube_agent.bridge import BridgeError, child_environment
 from kube_agent.config import (
     DEFAULT_MAP,
     DEFAULT_MAX_SECONDS,
@@ -28,6 +30,8 @@ from kube_agent.policies import POLICIES
 from kube_agent.probes import describe_latency, fixture_state, run_latency
 from kube_agent.view import DEFAULT_PORT, serve
 
+STRIP_SCRIPT = Path(__file__).resolve().parents[2] / "strip.py"  # agent/strip.py
+SYSTEM_PYTHON = "/usr/bin/python3"  # the strip needs GTK, which the system Python has and uv's has not
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,6 +51,9 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--budget-usd", type=float, default=DEFAULT_RUN_BUDGET_USD,
                      help="PAID, only for --policy jev: stop calling Jev once this much has been spent "
                           "(the ledger's remainder also caps it); the scripted rules take over")
+    run.add_argument("--strip", action="store_true",
+                     help="for a video: show over the game window who is playing, its tactic and the keys it presses "
+                          "(spec 003; needs GTK for the system Python and an X11 display, Xwayland included)")
 
     subparsers.add_parser("spend", help="what the Jev calls of every run have cost, against the $1.00 total")
 
@@ -103,15 +110,36 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _run(args: argparse.Namespace) -> int:
+    options = {"budget_usd": args.budget_usd}
+    if args.strip:
+        options["live_view"] = strip_starter(args.policy)
     try:
         result = asyncio.run(
-            run_episode(args.policy, args.seed, args.map, args.runner, args.max_seconds, budget_usd=args.budget_usd))
+            run_episode(args.policy, args.seed, args.map, args.runner, args.max_seconds, **options))
     except (BridgeError, OSError, KeyMissing, BudgetExhausted, LedgerError, TypeSafeError) as error:
         # OSError: a missing map, or a run folder that already exists. The others: no key, no budget, a bad ledger
         print(f"kube-agent run: {error}", file=sys.stderr)
         return 1
     print(summarize(result))
     return 0
+
+
+def strip_starter(policy: str) -> Callable[[Path], None]:
+    """What `run --strip` does once the run folder exists: start agent/strip.py on it, apart from this process.
+
+    The strip gets the environment without the credentials, as the game does (bridge.child_environment): this process
+    holds the OpenRouter key while Jev plays. A strip that cannot start is said, and the game goes on without it.
+    """
+
+    def start(run_dir: Path) -> None:
+        argv = [SYSTEM_PYTHON, str(STRIP_SCRIPT), str(run_dir), policy]
+        try:
+            subprocess.Popen(argv, env=child_environment(), stdin=subprocess.DEVNULL)
+        except OSError as error:
+            print(f"kube-agent run: the strip did not start ({' '.join(argv)}: {error}); the game goes on without it",
+                  file=sys.stderr)
+
+    return start
 
 
 def _spend() -> int:

@@ -47,13 +47,13 @@ def stdin_seen(folder):
     return (folder / "stdin_seen.txt").read_text().splitlines()
 
 
-async def play_fixture(folder, policy_name, max_seconds, fixture=FIXTURE, wrap=lambda controller: controller, jev_client=None, mode="normal"):
+async def play_fixture(folder, policy_name, max_seconds, fixture=FIXTURE, wrap=lambda controller: controller, jev_client=None, mode="normal", keys_file=None):
     async with GameBridge(fake_command(folder, fixture, mode)) as game:
         game_map = game.init["map"]
         policy = make_policy(policy_name, game_map, jev_client=jev_client)
         controller = wrap(Controller(game_map))
         episode_file, decisions_file = io.StringIO(), io.StringIO()
-        result = await play(game, policy, controller, episode_file, decisions_file, max_seconds)
+        result = await play(game, policy, controller, episode_file, decisions_file, max_seconds, keys_file=keys_file)
     return result, episode_file.getvalue(), decisions_file.getvalue()
 
 
@@ -586,3 +586,42 @@ def test_a_client_that_the_caller_passes_in_is_not_closed_by_the_run(tmp_path):
 
     assert closed == []  # whoever made it closes it
     asyncio.run(real_aclose())
+
+
+# --- the keys and the live view (spec 003: `kube-agent run --strip`) --------------------------------------------------------
+
+
+def test_with_a_keys_file_each_line_sent_to_the_game_is_logged_with_its_game_time(tmp_path):
+    keys_file = io.StringIO()
+    run(play_fixture(tmp_path, "scripted", 2.0, keys_file=keys_file))
+
+    rows = jsonl(keys_file.getvalue())
+    assert [row["keys"] for row in rows] == stdin_seen(tmp_path)[:-1]  # every C line, in order; the closing Q is no key
+    times = [row["t"] for row in rows]
+    assert times == sorted(times) and all(round(t, 2) == t for t in times)
+
+
+def test_a_live_view_gets_the_folder_before_the_game_starts_and_the_run_keeps_its_keys(tmp_path):
+    seen = []
+
+    def live_view(run_dir):
+        seen.append((run_dir, sorted(path.name for path in run_dir.iterdir()), (tmp_path / "stdin_seen.txt").exists()))
+
+    result = run_fake(tmp_path, live_view=live_view)
+
+    run_dir = tmp_path / "runs" / result["run_id"]
+    assert seen == [(run_dir, ["decisions.jsonl", "episode.jsonl", "keys.jsonl"], False)]  # False: the game had not started
+    assert {path.name for path in run_dir.iterdir()} == {"result.json", "episode.jsonl", "decisions.jsonl", "keys.jsonl"}
+    assert [row["keys"] for row in jsonl((run_dir / "keys.jsonl").read_text())] == stdin_seen(tmp_path)[:-1]
+
+
+def test_a_live_view_that_fails_leaves_a_result_that_says_so(tmp_path):
+    def broken(run_dir):
+        raise RuntimeError("no display")
+
+    with pytest.raises(RuntimeError, match="no display"):
+        run_fake(tmp_path, live_view=broken)
+
+    (run_dir,) = (tmp_path / "runs").iterdir()
+    result = json.loads((run_dir / "result.json").read_text())
+    assert result["outcome"] == "error" and "no display" in result["error"]

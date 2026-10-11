@@ -1,4 +1,5 @@
 import json
+import subprocess
 
 import pytest
 
@@ -598,3 +599,50 @@ def test_a_corner_that_is_not_two_whole_numbers_is_refused(corner, capsys):
         main(["view", f"--place-game={corner}"])  # the = form: a value that starts with "-" must reach our check
 
     assert exit_info.value.code == 2 and "corner" in capsys.readouterr().err
+
+
+# --- run --strip (spec 003) --------------------------------------------------------------------------------------------------
+
+
+def test_the_strip_is_off_unless_asked_for():
+    assert build_parser().parse_args(["run", "--policy", "jev", "--seed", "3"]).strip is False
+    assert build_parser().parse_args(["run", "--policy", "jev", "--seed", "3", "--strip"]).strip is True
+
+
+def test_run_with_strip_starts_the_strip_on_the_run_folder_without_the_key(monkeypatch, tmp_path):
+    run_dir, started = tmp_path / "20261011T000000Z-jev-s3-linux", []
+
+    async def fake_run_episode(*args, **kwargs):
+        kwargs["live_view"](run_dir)
+        return {
+            "run_id": run_dir.name, "policy": "jev", "seed": 3, "outcome": "win", "survival_seconds": 11.1,
+            "wave_reached": 3, "kills": 8, "decisions": 22, "decisions_applied": 22, "spend_usd": 0.0009,
+        }
+
+    def fake_popen(argv, **options):
+        started.append((argv, options))
+
+    monkeypatch.setattr(cli, "run_episode", fake_run_episode)
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-v1-" + "0" * 64)
+    monkeypatch.setenv("DISPLAY", ":0")
+
+    assert main(["run", "--policy", "jev", "--seed", "3", "--runner", "local", "--strip"]) == 0
+
+    ((argv, options),) = started
+    assert argv == ["/usr/bin/python3", str(cli.STRIP_SCRIPT), str(run_dir), "jev"]
+    assert cli.STRIP_SCRIPT.is_file()
+    assert "OPENROUTER_API_KEY" not in options["env"] and options["env"]["DISPLAY"] == ":0"
+    assert options["stdin"] == subprocess.DEVNULL
+
+
+def test_a_strip_that_cannot_start_is_said_and_the_game_goes_on(monkeypatch, tmp_path, capsys):
+    def missing_python(argv, **options):
+        raise FileNotFoundError(2, "No such file or directory", argv[0])
+
+    monkeypatch.setattr(subprocess, "Popen", missing_python)
+
+    cli.strip_starter("scripted")(tmp_path)  # does not raise
+
+    error = capsys.readouterr().err
+    assert "the strip did not start" in error and "/usr/bin/python3" in error and "the game goes on" in error
