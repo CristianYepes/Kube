@@ -1,0 +1,27 @@
+{
+  "run_id": "20261011T191139Z-scripted-s3-linux",
+  "policy": "scripted",
+  "seed": 3,
+  "map": "maps/bonus/subject_map.cub",
+  "map_sha256": "415c2a2d6dcffb132f18969252d7dd0ec7340cb0dfa7292a6d0395b9a723b00f",
+  "machine": "linux",
+  "runner": "local",
+  "config_sha256": "3642f98220b37592dcece5949435727eeea4976704dc100e0310e85defd84475",
+  "max_seconds": 180.0,
+  "outcome": "win",
+  "survival_seconds": 10.94,
+  "wave_reached": 3,
+  "kills": 8,
+  "damage_taken": 0,
+  "drops": 0,
+  "stalls": 0,
+  "tactic_seconds": {
+    "ENGAGE": 9.05,
+    "KITE": 1.51,
+    "SEARCH": 0.5
+  },
+  "switches": 6,
+  "decisions": 23,
+  "decisions_applied": 23,
+  "spend_usd": 0.0
+}
