@@ -73,10 +73,11 @@
   rules; this test found nothing that tells them apart.**
 - **T10 is done (2026-10-10): the regression passes on the Mac.** `dev/dev.sh check` printed `ALL PASSED`, `check_bridge.py` passed its 24 checks
   and `uv run pytest -q` gave 547 passed.
-- **Next: L5**, the last Linux checkpoint, run by the owner (see `tasks.md`; the Linux ledger has no open row, and L5 plays one free `scripted`
-  episode). It needs the branch pushed first, so that `git pull --ff-only` finds the final code. After it passes: tick L5 and T12 and commit
-  `specs: spec 002 complete`. **Push only when the owner asks.** Open and not started: the free control "scripted with the same delay" (does
-  the lag explain the small gap?), and a harder variant of the game, which is a decision for the owner.
+- **L5 passed on the owner's Linux (2026-10-11), and spec 002 is complete.** On the code of `817eb99`: the game and its battery `ALL PASSED`,
+  the bridge 24 of 24, **738 tests** in 16.6 s, and a free `scripted` episode won in 10.9 s (pushed from the Linux as `f40ba4d`). The Linux ledger has
+  no open row. **Push only when the owner asks.** Open and not started, none of them needed to close the spec: the free control "scripted with the
+  same delay" (does the lag explain the small gap?), a harder variant of the game (a decision for the owner), and T11, watching or recording an
+  episode, which spec 003 (`003-visual-pass/`) is now doing.
 - **Commands for the owner's terminal:** short lines, under 70 characters, one step at a time.
   Their terminal splits long pasted lines (it happened twice in L4).
 - **Already in the repo:**
@@ -85,7 +86,7 @@
   - `tests/check.sh`, the 10 acceptance checks of spec 001;
   - the C bridge and its checks;
   - the specs.
-- **Not started:** L5 and T12 in `specs/002-jev-agent/tasks.md` (T11 is optional).
+- **Not started:** nothing of spec 002 (T11 is optional and spec 003 does it). Spec 003 still needs the owner's Linux: V1, V7, V8, V9.
 - **The container may be off.** `colima status` tells; `colima start && dev/dev.sh up` brings it
   back (section 5).
 

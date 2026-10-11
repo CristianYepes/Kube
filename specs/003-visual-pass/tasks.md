@@ -12,13 +12,16 @@
   - **Done 2026-10-10:** the owner approved the spec ("me parece bien") and chose English. With the spec approved, each
     task below is a local commit; nothing is pushed until the owner asks.
 
-- [ ] 🔑 **V1** — What the owner's Linux has. Do L5 of spec 002 in the same sitting first (its first step is
-  `git pull --ff-only`), then, in a terminal on the Linux desktop:
+- [ ] 🔑 **V1** — What the owner's Linux has. (L5 of spec 002 was done first, in the same sitting, on 2026-10-11, and the branch is pulled.)
+  In a terminal on the Linux desktop. **Not in the terminal of L5**: there `DISPLAY` is `:99`, the virtual screen, so `xrandr` would measure
+  that one; the command below says `DISPLAY=:0`, the real one (Xwayland, if the session is Wayland):
 
   ```bash
   echo $XDG_SESSION_TYPE
-  xrandr | grep '\*'
-  command -v xdotool xwininfo xprop firefox
+  DISPLAY=:0 xrandr | grep '\*'
+  for t in xdotool xwininfo xprop firefox; do
+    printf '%-9s %s\n' $t "$(command -v $t || echo MISSING)"
+  done
   ```
 
   - `x11` is what `--place-game` needs. If it says `wayland`: log out and pick "Ubuntu on Xorg" on the gear of the

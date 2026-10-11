@@ -1325,7 +1325,7 @@ What does not change: the tests, the honest measurement, and the agent itself.
     was still clean afterwards.
   - **Commit:** `specs: T10 passes on the Mac, only L5 is left`, with `CONTEXT.md` "Status" updated. The message planned here, `specs: spec 002
     complete`, would not be true while L5 is open, so it waits for the commit that ticks L5.
-- [ ] 🔑 **L5** — Linux checkpoint, the final one. **Every ledger row that is still open**:
+- [x] 🔑 **L5** — Linux checkpoint, the final one. **Done 2026-10-11 on the owner's Linux: every line passed.** **Every ledger row that is still open**:
   nothing may remain in the ledger when the spec is closed (rows 7 and 11, x86_64, were closed
   on 2026-10-06). On Linux, after `git pull --ff-only`, with `DISPLAY=:99` as in L1:
 
@@ -1340,7 +1340,17 @@ What does not change: the tests, the honest measurement, and the agent itself.
 
   - **Done when:** every line passed. Then tick L5 and T12 here and commit `specs: spec 002 complete`. (The Linux ledger has no open row:
     L5 is the last run of the checks, on the final code.)
+  - **Done 2026-10-11, on the owner's Linux (UTM, aarch64), on the code of `817eb99`** (the owner pasted every output):
+    `uname -m` `aarch64`; `make && make bonus` compiled and `tests/check.sh` printed 10 `PASS` and `ALL PASSED`; `make -C agent` and
+    `check_bridge.py` 24 of 24, `ALL PASSED`; `uv sync` (21 packages resolved) and `uv run pytest -q` **738 passed in 16.62 s**; and
+    `kube-agent run --runner local --policy scripted --seed 3` won in 10.9 s (wave 3, 8 kills, 0 damage, 0 stalls, 23 of 23 decisions
+    applied, $0). The owner committed and pushed that run from the Linux as `f40ba4d` (`agent/runs/20261011T191139Z-scripted-s3-linux`).
+    Checked on the Mac after the pull: the folder is what the owner pasted (`machine` linux, `runner` local, `outcome` win, 10.94 s), its
+    config hash equals `frozen.json`'s, and the commit has no key (only the shape can be searched for there: the Linux key is another one,
+    and a `scripted` run uses no key).
 - [ ] **T11** — (optional, only if the owner asks) Watch or record an episode: on a Linux
   desktop with `DISPLAY=:0` (see L3); on the Mac, `ffmpeg -f x11grab` in the container, or
   `x11vnc` plus macOS Screen Sharing. None of these is verified yet.
-- [ ] 🛑 **T12** — The final push, only when the owner asks.
+- [x] 🛑 **T12** — The final push, only when the owner asks. **Done 2026-10-11:** every push was made at the owner's word and checked against GitHub
+  itself: `9dfdd68` (T10), `817eb99` (spec 003) and `f40ba4d` (L5, pushed by the owner from the Linux). The commit that closes this spec
+  only changes docs, and goes up with the owner's next word.

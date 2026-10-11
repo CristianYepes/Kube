@@ -234,7 +234,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       remains a good idea.
     - It is merged into the local `main`. On GitHub it lives on `feature/jev-agent`, pushed
       on 2026-09-29. `origin/main` stays at `34f4aff` until the owner decides.
-- **Spec 002 (Jev agent): in progress.** On 2026-10-06 phases 1 and 2 are done (T0 to T3e: the
+- **Spec 002 (Jev agent): complete (2026-10-11).** On 2026-10-06 phases 1 and 2 are done (T0 to T3e: the
   C bridge and its 24 checks) and L1 and L2 passed on the owner's Linux. phase 3 is built (T4a to T5c: the Python package, the bridge, the semantic state, the
   controller, the policies and the episode runner, with the first ten runs in `agent/runs/`).
   The checkpoint **L3 passed on the owner's Linux** (234 tests, the `local` runner, and the game
@@ -247,7 +247,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
   tuning of the wording, and no map makes the rule bot lose. **T9 is done (2026-10-10): the final evaluation on the test seeds 101-120** (R17). On
   `subject_map` and on `pillars`, Jev and the rule bot tie: 20 of 20 wins each, no damage, no difference in the time to win; idle lost 40 of 40; Jev cost
   about $0.001 an episode. **T10 is done (2026-10-10): the regression passes on the Mac** (`dev/dev.sh check` `ALL PASSED`, `check_bridge.py` 24 of 24,
-  547 tests). **Next: L5**, the last Linux checkpoint, run by the owner.
+  547 tests). **L5 passed on the owner's Linux on 2026-10-11** (738 tests, the bridge 24 of 24, the game's battery, a free episode won), and the spec is complete.
     - **The base** was `feature/jev-agent`: 001 complete, plus the strafing fix.
     - **Implementation branch:** `feature/jev-agentv1`, created from the base, and since
       2026-10-06 the only working branch.
@@ -261,7 +261,7 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: `002-jev-agent/START_HERE.md`, then `tasks.md` from L5.
+    - To resume: spec 002 has nothing left; for the visual pass, `003-visual-pass/tasks.md` from V1.
 - **Spec 003 (the visual pass): approved by the owner on 2026-10-10; V2-V6 built on the Mac (2026-10-11).** A clean live view of an
   episode (the game, Jev's decision beside it, what the rules would have chosen, and the conclusion of spec 002 at the end) that
   the owner records from the screen on the owner's Linux, in 16:9: `kube-agent view` serves one page on 127.0.0.1 from the run folder
