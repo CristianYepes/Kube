@@ -6,6 +6,14 @@
 > when the owner asks; files in English. 🔑 = the owner does it. Commands for the owner's terminal are short lines, one
 > step at a time, and the owner pastes the output.
 
+> **2026-10-11: the plan below is replaced.** V1 measured the owner's Linux: a Wayland session whose largest screen mode
+> is 1280x800, while the game window is a fixed 1280x720 (`includes/cub3d.h`). The 1920x1080 page of V2-V6 cannot sit
+> next to the game there, and the owner rejected its look ("AI slop"). The new direction, from the owner: everything on the
+> Linux, the game window and a minimal strip on top of it that says what is happening; nothing on the Mac. The Tk of uv's
+> Python draws bitmap fonts there, so the strip uses GTK with the system Python. First probe: `agent/strip_demo.py`, a
+> sample strip for 90 s that the owner runs while the bot plays. The tasks below stay as the record of what was built;
+> they are rewritten once the owner approves the strip.
+
 - [x] 🔑 **V0** — The owner reads `spec.md`, `plan.md` and this file, says OK or what to change, and answers the open
   question: the text on screen in English or in Spanish.
   - **Done when:** the OK is given and the language is written into `spec.md` (the open question removed).
