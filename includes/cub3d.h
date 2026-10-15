@@ -27,9 +27,10 @@
 # define WIN_W 1280
 # define WIN_H 720
 
-/*movement*/
-# define MOVE_SPEED 0.02
-# define ROT_SPEED 0.03
+/*movement, per second: the 60-fps reference the enemies use (dt * 60)*/
+# define MOVE_SPEED 1.2
+# define ROT_SPEED 1.8
+# define MOUSE_SENS 0.0003
 
 /*Keycodes*/
 # define KEY_M 109
@@ -47,8 +48,6 @@
 # define SUCCESS 0
 # define FAILURE 1
 # define ERR 2
-# define BREAK 3
-# define CONTINUE 4
 
 /*Line Types*/
 # define TYPE_EMPTY 0
@@ -111,7 +110,6 @@
 # define E_IDLE 0
 # define E_CHASE 1
 # define E_ATTACK 2
-# define E_DEAD 3
 
 /*Mod — weapon states*/
 # define W_IDLE 0
@@ -125,7 +123,6 @@
 /*Mod — timers*/
 # define FIRE_COOLDOWN 0.6
 # define ATTACK_RATE 1.0
-# define DEATH_TIME 0.4
 
 /*Structs*/
 typedef struct s_img
@@ -163,7 +160,6 @@ typedef struct s_enemy
 	int		type;
 	int		state;
 	int		hp;
-	double	timer;
 	double	atk_timer;
 }			t_enemy;
 
@@ -182,9 +178,6 @@ typedef struct s_sprite
 	double	transform_y;
 	int		screen_x;
 	int		size;
-	double	anim_timer;
-	int		frame_idx;
-	int		type;
 }			t_sprite;
 
 typedef struct s_ray
@@ -310,7 +303,7 @@ void			render_sprites(t_data *data);
 int				key_press(int keycode, t_data *data);
 int				key_release(int keycode, t_data *data);
 void			move_player(t_data *data);
-void			rotate_player(t_player *p, double dir);
+void			rotate_player(t_player *p, double angle);
 int				is_wall(t_data *data, double x, double y);
 void			toggle_door(t_data *data);
 # ifdef BONUS
@@ -351,7 +344,6 @@ int				has_los(t_data *data, double cx, double cy);
 void			restart_game(t_data *data);
 /*Mod — render*/
 void			render_enemies(t_data *data);
-void			render_weapon(t_data *data);
 void			render_hud(t_data *data);
 void			draw_text(t_data *data, char *s, int y, int color);
 int				apply_fog(int color, double dist, int fog);

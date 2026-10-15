@@ -19,7 +19,7 @@ branch's README has the details, the results and how to run it.
 
 ### Requirements
 
-- Linux (Ubuntu/Debian)
+- Linux (Ubuntu/Debian). On macOS, use the Linux container described in [Tests](#tests).
 - X11 development libraries (`libxext-dev`, `libx11-dev`)
 - `cc` compiler with `-Wall -Wextra -Werror`
 - `make`
@@ -37,8 +37,8 @@ make re     # Full recompile
 ### Execution
 
 ```bash
-./cub3D maps/good/example.cub
-./cub3D_bonus maps/good/example.cub
+./cub3D maps/good/minimal.cub
+./cub3D_bonus maps/bonus/subject_map.cub
 ```
 
 ### Controls
@@ -52,7 +52,35 @@ make re     # Full recompile
 | M | Toggle minimap (bonus) |
 | Mouse | Rotate camera (bonus) |
 | Up arrow | Shoot (bonus) |
+| Left mouse click | Shoot (bonus) |
 | R | Restart (bonus) |
+
+### Maps
+
+| Folder | Meaning |
+|--------|---------|
+| `maps/good/` | Valid for both binaries |
+| `maps/bonus/` | Valid for `cub3D_bonus` only (doors `D`, sprites `2`); `cub3D` rejects them |
+| `maps/bad/` | Invalid for both: each one exits with `Error` and a message |
+
+### Tests
+
+`tests/check.sh` builds both binaries and checks the Makefile (no relink, pinned MiniLibX),
+norminette, every map, the error messages, valgrind without suppressions, the player's speed
+across maps with different frame rates, dead code and this README. On Linux it needs Xvfb,
+xdotool, valgrind and norminette:
+
+```bash
+Xvfb :99 & DISPLAY=:99 bash tests/check.sh
+```
+
+On macOS the same checks run in a Linux container (Docker, e.g. through Colima):
+
+```bash
+dev/dev.sh up      # build the image and start the container
+dev/dev.sh check   # sync the tree, build, run tests/check.sh
+dev/dev.sh down    # remove the container
+```
 
 ## Development Phases
 

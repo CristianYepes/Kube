@@ -23,13 +23,11 @@ void	init_player(t_player *player)
 	player->rotate_right = 0;
 }
 
-void	rotate_player(t_player *p, double dir)
+void	rotate_player(t_player *p, double angle)
 {
-	double	angle;
 	double	old_dir_x;
 	double	old_plane_x;
 
-	angle = ROT_SPEED * dir;
 	old_dir_x = p->dir_x;
 	p->dir_x = p->dir_x * cos(angle) - p->dir_y * sin(angle);
 	p->dir_y = old_dir_x * sin(angle) + p->dir_y * cos(angle);
@@ -60,21 +58,30 @@ static void	try_move(t_data *data, double dx, double dy)
 		p->pos_y += dy;
 }
 
+/*
+** Strafing goes along the unit vector to the right of dir, (-dir_y, dir_x).
+** plane points the same way but is 0.66 long, since it sets the field of view,
+** so strafing along it was a third slower than walking.
+*/
 void	move_player(t_data *data)
 {
 	t_player	*p;
+	double		step;
+	double		turn;
 
 	p = &data->player;
+	step = MOVE_SPEED * data->dt;
+	turn = ROT_SPEED * data->dt;
 	if (p->rotate_left)
-		rotate_player(p, -1);
+		rotate_player(p, -turn);
 	if (p->rotate_right)
-		rotate_player(p, 1);
+		rotate_player(p, turn);
 	if (p->key_up)
-		try_move(data, p->dir_x * MOVE_SPEED, p->dir_y * MOVE_SPEED);
+		try_move(data, p->dir_x * step, p->dir_y * step);
 	if (p->key_down)
-		try_move(data, -p->dir_x * MOVE_SPEED, -p->dir_y * MOVE_SPEED);
+		try_move(data, -p->dir_x * step, -p->dir_y * step);
 	if (p->key_left)
-		try_move(data, -p->plane_x * MOVE_SPEED, -p->plane_y * MOVE_SPEED);
+		try_move(data, p->dir_y * step, -p->dir_x * step);
 	if (p->key_right)
-		try_move(data, p->plane_x * MOVE_SPEED, p->plane_y * MOVE_SPEED);
+		try_move(data, -p->dir_y * step, p->dir_x * step);
 }

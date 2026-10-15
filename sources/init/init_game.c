@@ -66,7 +66,10 @@ int	init_game(t_data *data)
 {
 	init_player(&data->player);
 	if (init_mlx(data) == FAILURE)
+	{
+		destroy_game(data);
 		return (FAILURE);
+	}
 	data->z_buffer = malloc(sizeof(double) * WIN_W);
 	if (!data->z_buffer)
 	{
@@ -91,7 +94,10 @@ int	init_game(t_data *data)
 {
 	init_player(&data->player);
 	if (init_mlx(data) == FAILURE)
+	{
+		destroy_game(data);
 		return (FAILURE);
+	}
 	data->z_buffer = malloc(sizeof(double) * WIN_W);
 	if (!data->z_buffer)
 	{

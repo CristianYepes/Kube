@@ -31,7 +31,6 @@ static int	place_enemy(t_data *data, int idx, int type)
 		+ (lcg_next(&data->seed) % 40) / 100.0;
 	data->enemies[idx].type = type;
 	data->enemies[idx].state = E_IDLE;
-	data->enemies[idx].timer = 0;
 	data->enemies[idx].atk_timer = 0;
 	data->map[y][x] = 'Z';
 	return (1);
