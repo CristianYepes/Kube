@@ -261,14 +261,11 @@ xdotool`, then the same `make`, `make bonus` and Xvfb commands without `docker e
       - harder maps with obstacles may follow v1, in `agent/maps/`.
     - Decision 9 (2026-10-06): the game is no longer handed in at 42, so the rules that
       protected it are retired (`002-jev-agent/tasks.md`, "Decided 2026-10-06").
-    - To resume: spec 002 has nothing left; for the visual pass, `003-visual-pass/tasks.md` from V1.
-- **Spec 003 (the visual pass): approved by the owner on 2026-10-10; V2-V6 built on the Mac (2026-10-11).** A clean live view of an
-  episode (the game, Jev's decision beside it, what the rules would have chosen, and the conclusion of spec 002 at the end) that
-  the owner records from the screen on the owner's Linux, in 16:9: `kube-agent view` serves one page on 127.0.0.1 from the run folder
-  while the agent writes it. Checked on the Mac against the data (in Chrome, two real games, three moments each) and against the
-  real X11 tools in the container; **what is left needs the owner's Linux: V1 (what it has), V7 (the rehearsal) and V8-V9 (the takes, which
-  are paid and need the owner's OK), together with L5 of spec 002.** The owner still has to approve the words of the card (V4) and the
-  look (V5, mock-ups in `~/jev/vista-previa-spec003/`). `003-visual-pass/spec.md`, `plan.md`, `tasks.md`; facts in `research-2026-10-10.md`.
+    - To resume: specs 002 and 003 have nothing left.
+- **Spec 003 (the strip for the video): done 2026-10-15.** The web view of v0.2 was rejected on the owner's Linux (a
+  1280x800 Wayland screen, while the game window is a fixed 1280x720) and removed. Built instead: `kube-agent run --strip`,
+  a minimal strip over the game window that shows who plays, the tactic and the keys (`agent/strip.py`, GTK with the system
+  Python). The owner recorded the takes on the Linux (2026-10-12/13). `003-visual-pass/spec.md`, `plan.md`, `tasks.md`.
 - Tooling now in the repo:
     - `dev/dev.sh up|sync|build|check|down`, the Linux container;
     - `tests/check.sh`, with one section per acceptance criterion of 001;

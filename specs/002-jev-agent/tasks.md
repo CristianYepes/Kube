@@ -1348,9 +1348,8 @@ What does not change: the tests, the honest measurement, and the agent itself.
     Checked on the Mac after the pull: the folder is what the owner pasted (`machine` linux, `runner` local, `outcome` win, 10.94 s), its
     config hash equals `frozen.json`'s, and the commit has no key (only the shape can be searched for there: the Linux key is another one,
     and a `scripted` run uses no key).
-- [ ] **T11** — (optional, only if the owner asks) Watch or record an episode: on a Linux
-  desktop with `DISPLAY=:0` (see L3); on the Mac, `ffmpeg -f x11grab` in the container, or
-  `x11vnc` plus macOS Screen Sharing. None of these is verified yet.
+- [x] **T11** — (optional, only if the owner asks) Watch or record an episode. **Done through spec 003:** `kube-agent run
+  --strip` on the owner's Linux desktop, recorded by the owner (2026-10-12/13).
 - [x] 🛑 **T12** — The final push, only when the owner asks. **Done 2026-10-11:** every push was made at the owner's word and checked against GitHub
   itself: `9dfdd68` (T10), `817eb99` (spec 003) and `f40ba4d` (L5, pushed by the owner from the Linux). The commit that closes this spec
   only changes docs, and goes up with the owner's next word.
