@@ -58,3 +58,7 @@ dkms.conf
 /cub3D
 /cub3D_bonus
 /minilibx-linux/
+
+# Secrets: a key file never goes into the repo
+.env
+*.env

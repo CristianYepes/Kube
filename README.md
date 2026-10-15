@@ -8,6 +8,46 @@ cub3D is a raycasting engine inspired by Wolfenstein 3D (1992), the first true f
 
 The player can navigate the maze in real time with textured walls (different textures per cardinal direction), configurable floor/ceiling colors, smooth movement with wall-sliding collisions, and keyboard/mouse controls.
 
+## Jev plays cub3D (this branch)
+
+This branch adds an agent that plays the zombie mode of `cub3D_bonus`. Every half second [Jev](https://docs.typesafe.ai),
+TypeSafe's decision model (`typesafe/jev-1.13` through OpenRouter), picks one of four tactics, and plain code aims, shoots
+and moves:
+
+| Tactic | What the code does |
+|--------|--------------------|
+| `ENGAGE` | Stand and shoot the nearest zombie |
+| `KITE` | Back off while shooting |
+| `RETREAT` | Run to the open area farthest from the zombies |
+| `SEARCH` | Go after the zombies out of view |
+
+The baseline picks from the same four with hand-written rules: low health and a zombie close, `RETREAT`; a zombie close,
+`KITE`; one in view, `ENGAGE`; otherwise `SEARCH`.
+
+**Result.** 20 held-out seeds on each of two maps, measured once with a frozen configuration: Jev and the rules both won
+40 of 40 without taking damage, and their time to win could not be told apart (sign test, p = 0.82 on both maps). Jev cost
+about $0.001 per game and picked the tactic the rules would have picked in 91% and 98% of its decisions. Report:
+[`agent/runs/eval-20261010T122708Z-darwin/report.md`](agent/runs/eval-20261010T122708Z-darwin/report.md).
+
+**Run it** on Linux (setup: [`specs/002-jev-agent/START_HERE.md`](specs/002-jev-agent/START_HERE.md), section 2b):
+
+```bash
+make -C agent        # builds agent/cub3D_agent
+cd agent && uv sync
+uv run kube-agent run --runner local --policy scripted --seed 3 --strip
+```
+
+`--policy jev` plays with Jev. It is paid and needs `OPENROUTER_API_KEY`: keep the key in a file outside the repo that only
+you can read, and load it for that one command:
+
+```bash
+( set -a; . ~/.config/kube/.env; set +a; uv run kube-agent run --runner local --policy jev --seed 3 --strip )
+```
+
+`--strip` shows over the game window who is playing, the tactic and the keys being pressed (it needs
+`sudo apt install python3-gi gir1.2-gtk-3.0`). Every run is logged in `agent/runs/`, and `uv run kube-agent spend` adds up
+what Jev has cost. How it was built and measured: [`specs/`](specs/).
+
 ## Instructions
 
 ### Requirements
@@ -112,6 +152,7 @@ dev/dev.sh down    # remove the container
 ### AI Usage
 
 AI tools (Claude) were used as an implementation partner for:
+- Building the Jev agent of this branch (`agent/`) and its specs (`specs/002-jev-agent/`, `specs/003-visual-pass/`)
 - Debugging and fixing compilation errors
 - Code review for norm compliance and memory leak detection
 - Identifying and fixing edge-case bugs in the game simulation
