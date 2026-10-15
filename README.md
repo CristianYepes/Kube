@@ -8,6 +8,13 @@ cub3D is a raycasting engine inspired by Wolfenstein 3D (1992), the first true f
 
 The player can navigate the maze in real time with textured walls (different textures per cardinal direction), configurable floor/ceiling colors, smooth movement with wall-sliding collisions, and keyboard/mouse controls.
 
+## Jev plays cub3D
+
+On the branch [`feature/jev-agentv1`](https://github.com/CristianYepes/Kube/tree/feature/jev-agentv1), an agent plays the
+zombie mode: [Jev](https://docs.typesafe.ai), TypeSafe's decision model, picks a tactic every half second, and plain code
+aims, shoots and moves. Against four hand-written rules it tied: both won 40 of 40 games without taking damage. That
+branch's README has the details, the results and how to run it.
+
 ## Instructions
 
 ### Requirements
